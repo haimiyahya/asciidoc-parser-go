@@ -151,7 +151,39 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 
 // convertParagraph converts a paragraph to HTML.
 func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) {
-	c.writeElement("p", c.escape(para.Text), w)
+	// Open paragraph tag
+	c.writeOpenTag("p", w)
+
+	// Write text content (mixed with inline nodes)
+	lastEnd := 0
+	for _, node := range para.InlineNodes {
+		end := node.Position().Line
+		// Write any text before this inline node
+		if end > lastEnd {
+			text := para.Text[lastEnd:end]
+			c.writeRawString(c.escape(text), w)
+		}
+		lastEnd = end
+
+		// Render the inline node
+		c.convertNode(node, w)
+	}
+
+	// Write any remaining text after last inline node
+	if lastEnd < len(para.Text) {
+		text := para.Text[lastEnd:]
+		c.writeRawString(c.escape(text), w)
+	}
+
+	c.writeCloseTag("p", w)
+}
+
+// writeRawString writes raw text without indentation or newlines.
+func (c *HTML5Converter) writeRawString(s string, w io.Writer) {
+	fmt.Fprint(w, s)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
 }
 
 // convertSection converts a section to HTML.
@@ -216,8 +248,14 @@ func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 		// Labeled list: dt and dd
 		c.writeElement("dt", c.escape(item.Term), w)
 		c.writeElement("dd", c.escape(item.Definition), w)
+	} else if item.NestedList != nil {
+		// Has nested list - open li, render text, nested list, close li
+		c.writeOpenTag("li", w)
+		c.writeElement("span", c.escape(item.Text), w)
+		c.convertNode(item.NestedList, w)
+		c.writeCloseTag("li", w)
 	} else {
-		// Regular list item
+		// Regular list item without nested list
 		c.writeElement("li", c.escape(item.Text), w)
 	}
 }

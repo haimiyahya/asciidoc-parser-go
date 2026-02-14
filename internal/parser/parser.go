@@ -354,12 +354,12 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 
 	// Parse inline markup within the paragraph
 	inlineParser := inline.NewParser(content)
-	_ = inlineParser.Parse()
+	inlineNodes := inlineParser.Parse()
 
 	return &ast.NodeParagraph{
-		Text:     content,
-		Pos:      ast.Position{Line: lineno},
-		// InlineNodes: inlineNodes, // TODO: Implement inline parsing
+		Text:       content,
+		InlineNodes,
+		Pos:        ast.Position{Line: lineno},
 	}
 }
 

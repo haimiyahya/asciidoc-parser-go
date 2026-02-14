@@ -103,9 +103,10 @@ type NodeParagraph struct {
 	Kind NodeType
 	// Text is the paragraph text content.
 	Text string
-	// InlineNodes contains inline markup nodes found within the paragraph (future).
-	// InlineNodes []Node // TODO: Implement inline parsing
+	// InlineNodes contains inline markup nodes found within the paragraph.
+	// InlineNodes []Node
 	// Pos is the location in the source.
+	Pos Position
 	Pos Position
 }
 

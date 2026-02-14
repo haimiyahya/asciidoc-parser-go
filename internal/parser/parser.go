@@ -134,9 +134,18 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				paragraphLines = nil
 			}
 
+			// For level 0 (document title), set the document header
+			if classification.Section.Level == 0 && doc.Header == nil {
+				doc.Header = &ast.DocumentHeader{Title: classification.Section.Title}
+			}
+
 			section := p.createSection(classification.Section, lineno)
 			if section != nil {
-				doc.Blocks = append(doc.Blocks, section)
+				// Level 0 is the document title - don't add as a block
+				// It's already been handled by setting doc.Header
+				if sec, ok := section.(*ast.NodeSection); ok && sec.Level > 0 {
+					doc.Blocks = append(doc.Blocks, section)
+				}
 			}
 			p.reader.Advance()
 			continue

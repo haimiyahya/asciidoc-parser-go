@@ -181,13 +181,13 @@ func TestReaderSkipBlankLines(t *testing.T) {
 		{
 			name:        "skips leading blanks",
 			source:      "\n\n\nText",
-			wantSkipped: 2,
+			wantSkipped: 3,
 			wantNext:    "Text",
 		},
 		{
 			name:        "skips whitespace lines",
 			source:      "   \n  \t\nText",
-			wantSkipped: 3,
+			wantSkipped: 2,
 			wantNext:    "Text",
 		},
 		{
@@ -199,8 +199,8 @@ func TestReaderSkipBlankLines(t *testing.T) {
 		{
 			name:        "stops at non-blank",
 			source:      "Line 1\nLine 2\nLine 3\n",
-			wantSkipped: 2,
-			wantNext:    "Line 3",
+			wantSkipped: 0,
+			wantNext:    "Line 1",
 		},
 	}
 
@@ -295,12 +295,16 @@ func TestPosition(t *testing.T) {
 func TestPrepareLines(t *testing.T) {
 	t.Run("splits on newline", func(t *testing.T) {
 		lines := prepareLines("a\nb\nc\n")
-		assert.Equal(t, []string{"a", "b", "c", ""}, lines)
+		// prepareLines removes trailing empty line when source ends with \n
+		// This matches Asciidoctor behavior
+		assert.Equal(t, []string{"a", "b", "c"}, lines)
 	})
 
 	t.Run("strips trailing whitespace", func(t *testing.T) {
 		lines := prepareLines("a  \n  b\t\nc")
-		assert.Equal(t, []string{"a", "b", "c"}, lines)
+		// prepareLines only strips TRAILING whitespace, not leading
+		// The test was incorrectly expecting both to be stripped
+		assert.Equal(t, []string{"a", "  b", "c"}, lines)
 	})
 
 	t.Run("handles empty string", func(t *testing.T) {
@@ -762,6 +766,11 @@ func TestLineClassifierAdmonitions(t *testing.T) {
 		t.Run(adm, func(t *testing.T) {
 			classification := lc.ClassifyLine(adm)
 
+			// Note: BlockAdmonition is at position 15 in BlockType enum
+			// The test may have been written for a different ordering
+			if classification.Type != BlockAdmonition {
+				t.Logf("Classified %q as %v (expected %v)", adm, classification.Type, BlockAdmonition)
+			}
 			assert.Equal(t, BlockAdmonition, classification.Type)
 		})
 	}

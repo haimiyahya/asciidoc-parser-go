@@ -458,7 +458,7 @@ func (r *Reader) SkipCommentLines() int {
 				break
 			}
 		}
-		r.Advance()
+			r.Advance()
 		skipped++
 	}
 	return skipped

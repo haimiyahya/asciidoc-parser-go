@@ -196,6 +196,9 @@ type ListInfo struct {
 	// Text is the item text (excluding the marker)
 	Text string
 
+	// Term is the term text for labeled lists (text before ::)
+	Term string
+
 	// Continuation is true if this line ends with +
 	Continuation bool
 
@@ -435,8 +438,18 @@ func (lc *LineClassifier) checkDelimitedBlock(line string) BlockType {
 		return BlockUnknown
 	}
 
+	// Special case: table block delimiter is |=== (pipe + equals)
+	// This is the only delimited block that uses two different characters
+	if strings.HasPrefix(trimmed, "|") {
+		// Check if rest of line is all '='
+		rest := trimmed[1:]
+		if len(rest) >= 3 && isAllEquals(rest) {
+			return BlockTable
+		}
+	}
+
 	// Check if the entire line is the same character
-	// Delimiters: ----, ====, ____, +++, ////, ****, ...., |===, ====
+	// Delimiters: ----, ====, ____, +++, ////, ****, ....
 	first := trimmed[0]
 	if !isDelimiterChar(first) {
 		return BlockUnknown
@@ -481,6 +494,16 @@ func (lc *LineClassifier) checkDelimitedBlock(line string) BlockType {
 func isDelimiterChar(c byte) bool {
 	return c == '-' || c == '=' || c == '_' || c == '+' ||
 		c == '*' || c == '/' || c == '.' || c == '|'
+}
+
+// isAllEquals returns true if the string contains only '=' characters.
+func isAllEquals(s string) bool {
+	for _, c := range s {
+		if c != '=' {
+			return false
+		}
+	}
+	return true
 }
 
 // isHorizontalRule checks for horizontal rule syntax.
@@ -870,13 +893,15 @@ func (lc *LineClassifier) isLabeledListItem(line string, info *ListInfo) bool {
 		if before != ' ' && before != '\t' {
 			// Check for "term::" pattern (single :: with no space before)
 			// This is a labeled list term
-			after := ""
-			if doubleColon+1 < len(line) {
-				after = strings.TrimSpace(line[doubleColon+2:])
+			term := strings.TrimSpace(line[:doubleColon])
+			definition := ""
+			if doubleColon+2 < len(line) {
+				definition = strings.TrimSpace(line[doubleColon+2:])
 			}
 			info.Type = BlockListLabeled
 			info.Marker = "::"
-			info.Text = after
+			info.Term = term
+			info.Text = definition
 			return true
 		}
 	}
@@ -885,14 +910,16 @@ func (lc *LineClassifier) isLabeledListItem(line string, info *ListInfo) bool {
 	if doubleColon > 0 {
 		before := line[doubleColon-1]
 		if before == ' ' || before == '\t' {
-			// Check if there's text after
-			after := ""
+			// Extract term (before ::) and definition (after ::)
+			term := strings.TrimSpace(line[:doubleColon-1])
+			definition := ""
 			if doubleColon+1 < len(line) {
-				after = strings.TrimSpace(line[doubleColon+2:])
+				definition = strings.TrimSpace(line[doubleColon+2:])
 			}
 			info.Type = BlockListLabeled
 			info.Marker = "::"
-			info.Text = after
+			info.Term = term
+			info.Text = definition
 			return true
 		}
 	}
@@ -949,10 +976,9 @@ func (lc *LineClassifier) isCalloutItem(line string, info *ListInfo) bool {
 	// Patterns: "NOTE>:", "WARNING>:", "TIP>:", "CAUTION>:", "IMPORTANT>:", etc.
 	trimmed := strings.TrimSpace(line)
 
+	// Callouts use >, not :
 	callouts := []string{
-		"NOTE>", "WARNING>", "TIP>", "CAUTION>",
-		"IMPORTANT>", "NOTE:", "WARNING:", "TIP:",
-		"CAUTION:", "IMPORTANT:",
+		"NOTE>", "WARNING>", "TIP>", "CAUTION>", "IMPORTANT>",
 	}
 
 	for _, callout := range callouts {

@@ -369,8 +369,22 @@ func identifyBlockType(line string) BlockType {
 		return BlockComment
 	}
 
-	if strings.HasPrefix(trimmed, "=") && len(trimmed) > 1 && trimmed[1] == ' ' {
-		return BlockSection
+	// Check for section headers: = Title, == Section, === Subsection, etc.
+	// Must start with = followed by at least one space after the = symbols
+	if strings.HasPrefix(trimmed, "=") && len(trimmed) > 1 {
+		// Count leading = characters
+		equalsCount := 0
+		for _, c := range trimmed {
+			if c == '=' {
+				equalsCount++
+			} else {
+				break
+			}
+		}
+		// After the = characters, there must be a space
+		if equalsCount < len(trimmed) && trimmed[equalsCount] == ' ' {
+			return BlockSection
+		}
 	}
 
 	if strings.HasPrefix(trimmed, ":") && len(trimmed) > 1 {

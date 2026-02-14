@@ -1122,7 +1122,7 @@ func (bt BlockType) IsListItem() bool {
 func (bt BlockType) IsDelimitedBlock() bool {
 	switch bt {
 	case BlockLiteral, BlockVerbatim, BlockExample, BlockQuote,
-		BlockPassthrough, BlockSidebar, BlockCommentBlock:
+		BlockPassthrough, BlockSidebar, BlockCommentBlock, BlockTable:
 		return true
 	default:
 		return false

@@ -163,6 +163,9 @@ func TestReaderPeekLine(t *testing.T) {
 		r, err := NewReader("Single line")
 		require.NoError(t, err)
 
+		// Consume the only line first
+		r.NextLine()
+		// Now peek should return empty
 		assert.Equal(t, "", r.PeekLine())
 	})
 }

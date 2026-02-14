@@ -140,6 +140,10 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 		c.convertBlock(n, w)
 	case *ast.Table:
 		c.convertTable(n, w)
+	case *ast.AdmonitionNode:
+		c.convertAdmonition(n, w)
+	case *ast.MacroNode:
+		c.convertMacro(n, w)
 	default:
 		// Unknown node type - skip
 	}
@@ -233,6 +237,54 @@ func (c *HTML5Converter) convertBlock(block *ast.NodeBlock, w io.Writer) {
 	content := c.escape(strings.Join(block.Lines, "\n"))
 
 	c.writeElementWithClass(tag, class, content, w)
+}
+
+// convertAdmonition converts an admonition to HTML.
+func (c *HTML5Converter) convertAdmonition(admonition *ast.AdmonitionNode, w io.Writer) {
+	// Determine class based on admonition kind
+	class := "admonition-" + strings.ToLower(admonition.Kind)
+	c.writeElementWithClass("div", class, c.escape(admonition.Text), w)
+}
+
+// convertMacro converts a block macro to HTML.
+func (c *HTML5Converter) convertMacro(macro *ast.MacroNode, w io.Writer) {
+	// For now, render as a comment showing the macro
+	// In a full implementation, this would handle specific macro types
+	// (image -> <img>, video -> <video>, etc.)
+	switch macro.Target {
+	case "image":
+		// <img src="path" />
+		fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(macro.Path), c.escape(macro.Path))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	case "video":
+		// <video src="path"></video>
+		fmt.Fprintf(w, `<video src="%s">`, c.escape(macro.Path))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		fmt.Fprint(w, `</video>`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	case "audio":
+		// <audio src="path"></audio>
+		fmt.Fprintf(w, `<audio src="%s">`, c.escape(macro.Path))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		fmt.Fprint(w, `</audio>`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	default:
+		// Unknown macro - render as a comment for now
+		fmt.Fprintf(w, `<!-- %s::%s -->`, macro.Target, c.escape(macro.Path))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	}
 }
 
 // blockClass returns CSS class for a delimited block.

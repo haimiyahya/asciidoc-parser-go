@@ -42,6 +42,11 @@ const (
 	TypeSection
 	// TypeParagraph is a paragraph node type.
 	TypeParagraph
+
+	// TypeAdmonition is an admonition node type.
+	TypeAdmonition
+	// TypeMacro is a block macro node type.
+	TypeMacro
 	// TypeList is a list node type.
 	TypeList
 	// TypeListItem is an item in a list node type.
@@ -162,7 +167,31 @@ type NodeBlock struct {
 	Pos Position
 }
 
-// NodeTable is a table.
+// AdmonitionNode is an admonition block.
+type AdmonitionNode struct {
+	// Kind is the admonition kind (NOTE, WARNING, TIP, CAUTION, IMPORTANT).
+	Kind string
+	// Text is the admonition content.
+	Text string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// MacroNode is a block macro (image, video, audio, include, etc.).
+type MacroNode struct {
+	// Kind is the node type.
+	Kind NodeType
+	// Target is the macro target (image, video, audio, include, etc.).
+	Target string
+	// Path is the macro path or reference.
+	Path string
+	// Attributes are macro-specific attributes.
+	Attributes map[string]string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// Table is a table.
 type Table struct {
 	// Header is the table header.
 	Header []string
@@ -197,3 +226,9 @@ func (n *NodeBlock) Position() Position { return n.Pos }
 
 func (n *Table) Type() NodeType   { return TypeTable }
 func (n *Table) Position() Position { return n.Pos }
+
+func (n *AdmonitionNode) Type() NodeType   { return TypeAdmonition }
+func (n *AdmonitionNode) Position() Position { return n.Pos }
+
+func (n *MacroNode) Type() NodeType   { return TypeMacro }
+func (n *MacroNode) Position() Position { return n.Pos }

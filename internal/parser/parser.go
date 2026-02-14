@@ -286,7 +286,13 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				}
 				paragraphLines = nil
 			}
-			// For now, skip macros
+
+			// Create macro node
+			macro := p.createMacro(classification.Macro, lineno)
+			if macro != nil {
+				doc.Blocks = append(doc.Blocks, macro)
+			}
+
 			p.reader.Advance()
 			continue
 		}
@@ -304,6 +310,13 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				}
 				paragraphLines = nil
 			}
+
+			// Create admonition node
+			admonition := p.createAdmonition(classification.Admonition, lineno)
+			if admonition != nil {
+				doc.Blocks = append(doc.Blocks, admonition)
+			}
+
 			p.reader.Advance()
 			continue
 		}
@@ -393,6 +406,35 @@ func (p *Parser) createListItem(info *reader.ListInfo, lineno int) ast.Node {
 		Term:          info.Term,
 		Definition:    info.Text, // For labeled lists, Text contains the definition
 		Pos:          ast.Position{Line: lineno},
+	}
+}
+
+// createDelimitedBlock creates a delimited block node.
+// createAdmonition creates an admonition node.
+func (p *Parser) createAdmonition(admonition *reader.AdmonitionInfo, lineno int) ast.Node {
+	if admonition == nil {
+		return nil
+	}
+
+	return &ast.AdmonitionNode{
+		Kind: admonition.Kind,
+		Text: admonition.Text,
+		Pos:  ast.Position{Line: lineno},
+	}
+}
+
+// createMacro creates a block macro node.
+func (p *Parser) createMacro(macro *reader.MacroInfo, lineno int) ast.Node {
+	if macro == nil {
+		return nil
+	}
+
+	return &ast.MacroNode{
+		Kind:       ast.TypeMacro,
+		Target:      macro.Target,
+		Path:        macro.Path,
+		Attributes:  macro.Attributes,
+		Pos:         ast.Position{Line: lineno},
 	}
 }
 

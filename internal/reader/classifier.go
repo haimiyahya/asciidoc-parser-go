@@ -52,6 +52,9 @@ const (
 	// BlockListCallout is a callout list item (NOTE>, WARNING>, etc.).
 	BlockListCallout
 
+	// BlockAdmonition is an admonition paragraph/block (NOTE:, WARNING:, etc.).
+	BlockAdmonition
+
 	// BlockLiteral is a literal block (indented or .... delimited).
 	BlockLiteral
 
@@ -93,9 +96,6 @@ const (
 
 	// BlockAnchor is a block anchor ([#anchor] or [[anchor]]).
 	BlockAnchor
-
-	// BlockAdmonition is an admonition paragraph/block (NOTE:, WARNING:, etc.).
-	BlockAdmonition
 
 	// BlockParagraph is a regular paragraph (default).
 	BlockParagraph
@@ -235,6 +235,27 @@ type AttributeInfo struct {
 	IsEntry bool
 }
 
+// AdmonitionInfo contains information about an admonition block.
+type AdmonitionInfo struct {
+	// Kind is the admonition kind (NOTE, WARNING, TIP, CAUTION, IMPORTANT)
+	Kind string
+
+	// Text is the admonition content (without the kind prefix)
+	Text string
+}
+
+// MacroInfo contains information about a block macro.
+type MacroInfo struct {
+	// Target is the macro target (image, video, audio, include, etc.)
+	Target string
+
+	// Path is the macro path or reference
+	Path string
+
+	// Attributes are macro-specific attributes
+	Attributes map[string]string
+}
+
 // Classification contains the complete classification of a line.
 type Classification struct {
 	// Type is the primary block type
@@ -248,6 +269,12 @@ type Classification struct {
 
 	// Attribute is populated for attribute entries
 	Attribute *AttributeInfo
+
+	// Admonition is populated for admonition blocks (NOTE, WARNING, etc.)
+	Admonition *AdmonitionInfo
+
+	// Macro is populated for block macros (image::, video::, etc.)
+	Macro *MacroInfo
 
 	// Style contains any block style information
 	Style *BlockStyleInfo
@@ -387,8 +414,9 @@ func (lc *LineClassifier) ClassifyLine(line string) *Classification {
 	}
 
 	// Check for block macros
-	if lc.isBlockMacro(trimmed) {
+	if macro := lc.checkBlockMacro(trimmed); macro != nil {
 		result.Type = BlockMacro
+		result.Macro = macro
 		return result
 	}
 
@@ -415,6 +443,17 @@ func (lc *LineClassifier) ClassifyLine(line string) *Classification {
 	// Check for admonitions
 	if admonition := lc.checkAdmonition(trimmed); admonition != "" {
 		result.Type = BlockAdmonition
+		// Extract admonition kind (without colon) and text
+		kind := admonition[:len(admonition)-1] // "NOTE", "WARNING", etc.
+		text := ""
+		if len(trimmed) > len(admonition) {
+			// Text starts after kind:space (e.g., "NOTE: text here")
+			text = trimmed[len(admonition)+1:]
+		}
+		result.Admonition = &AdmonitionInfo{
+			Kind: kind,
+			Text: text,
+		}
 		return result
 	}
 
@@ -701,20 +740,20 @@ func (lc *LineClassifier) isValidAttributeName(name string) bool {
 	return !allDigits
 }
 
-// isBlockMacro checks for block macro syntax.
+// checkBlockMacro checks for block macro syntax.
 // Pattern: target::path[attrlist] or just target::path
-func (lc *LineClassifier) isBlockMacro(line string) bool {
+func (lc *LineClassifier) checkBlockMacro(line string) *MacroInfo {
 	trimmed := strings.TrimSpace(line)
 
 	// Must contain :: (double colon)
 	if !strings.Contains(trimmed, "::") {
-		return false
+		return nil
 	}
 
 	// Find the position of ::
 	doubleColon := strings.Index(trimmed, "::")
 	if doubleColon == 0 {
-		return false
+		return nil
 	}
 
 	// The target must be before ::
@@ -722,21 +761,43 @@ func (lc *LineClassifier) isBlockMacro(line string) bool {
 
 	// Target must be valid (letters, digits, underscore, dash)
 	if !lc.isValidMacroTarget(target) {
-		return false
+		return nil
 	}
 
-	// Optional: check for attribute list [...]
+	// Extract path after ::
+	path := ""
+	attrs := make(map[string]string)
+
 	afterMacro := trimmed[doubleColon+2:]
-	if strings.HasPrefix(afterMacro, "[") {
-		// Has attribute list, validate closing ]
-		closeBracket := strings.Index(afterMacro, "]")
-		if closeBracket == -1 {
-			// Invalid macro
-			return false
+
+	// Check for attribute list at the end: [...]
+	// First check if it ends with ]
+	if strings.HasSuffix(afterMacro, "]") {
+		closeBracket := strings.LastIndex(afterMacro, "]")
+		openBracket := strings.LastIndex(afterMacro[:closeBracket], "[")
+		if openBracket != -1 && openBracket < closeBracket {
+			// Has attribute list
+			path = strings.TrimSpace(afterMacro[:openBracket])
+			attrContent := afterMacro[openBracket+1 : closeBracket]
+			if attrContent != "" {
+				attrs["raw"] = attrContent
+			}
+			return &MacroInfo{
+				Target:     target,
+				Path:        path,
+				Attributes:  attrs,
+			}
 		}
 	}
 
-	return true
+	// No attribute list found
+	path = strings.TrimSpace(afterMacro)
+
+	return &MacroInfo{
+		Target:     target,
+		Path:        path,
+		Attributes:  attrs,
+	}
 }
 
 // isValidMacroTarget checks if the macro target is valid.
@@ -1052,14 +1113,15 @@ func (lc *LineClassifier) checkAdmonition(line string) string {
 	}
 
 	for _, adm := range admonitions {
+		// Exact match: "NOTE:" only
 		if trimmed == adm {
-			// DEBUG: This should match for "NOTE:" == "NOTE:"
 			return adm
 		}
-		// Check for admonition with space after :
-		if len(trimmed) >= len(adm)-1 && strings.HasPrefix(trimmed, adm[:len(adm)-1]) {
-			if len(trimmed) >= len(adm) && trimmed[len(adm)-1] == ' ' {
-				// Also valid: "NOTE: text"
+		// With content: "NOTE: text" (space after colon is required)
+		// Check if line starts with adm prefix and has space after colon
+		if strings.HasPrefix(trimmed, adm) {
+			// After the prefix (e.g., "NOTE:"), check if there's a space
+			if len(trimmed) > len(adm) && trimmed[len(adm)] == ' ' {
 				return adm
 			}
 		}

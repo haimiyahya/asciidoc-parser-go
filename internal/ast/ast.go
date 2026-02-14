@@ -6,184 +6,194 @@ type Node interface {
 	// Type returns the node type.
 	Type() NodeType
 
-	// Position returns the source position.
+	// Position returns the source location.
 	Position() Position
+}
+
+// DocumentHeader contains the document header information.
+type DocumentHeader struct {
+	// Title is the document title.
+	Title string
+	// Author is the document author.
+	Author string
+	// Version is the document version.
+	Version string
+	// Attributes are header-level attributes.
+	Attributes map[string]string
+	// RevisionInfo contains revision information.
+	RevisionInfo *RevisionInfo
+}
+
+// RevisionInfo contains document revision information.
+type RevisionInfo struct {
+	Number    string
+	Date      string
+	Remark    string
 }
 
 // NodeType represents the type of an AST node.
 type NodeType int
 
 const (
-	// NodeDocument is the root document node.
-	NodeDocument NodeType = iota
+	// TypeDocument is the root document node type.
+	TypeDocument NodeType = iota
 
-	// NodeSection is a section heading.
-	NodeSection
-
-	// NodeParagraph is a paragraph.
-	NodeParagraph
-
-	// NodeList is a list (ordered, unordered, labeled, checklist).
-	NodeList
-
-	// NodeListItem is an item in a list.
-	NodeListItem
-
-	// NodeLiteral is a literal block (verbatim, source, etc.).
-	NodeLiteral
-
-	// NodeBlock is a delimited block (example, quote, etc.).
-	NodeBlock
-
-	// NodeTable is a table.
-	NodeTable
-
-	// NodeAttribute is an attribute entry.
-	NodeAttribute
-
-	// NodeInline is inline content (text, formatting, links, etc.).
-	NodeInline
+	// TypeSection is a section heading node type.
+	TypeSection
+	// TypeParagraph is a paragraph node type.
+	TypeParagraph
+	// TypeList is a list node type.
+	TypeList
+	// TypeListItem is an item in a list node type.
+	TypeListItem
+	// TypeLiteral is a literal/verbatim block node type.
+	TypeLiteral
+	// TypeBlock is a delimited block node type.
+	TypeBlock
+	// TypeTable is a table node type.
+	TypeTable
+	// TypeAttribute is an attribute entry node type.
+	TypeAttribute
+	// TypeInline is inline content type (text, formatting, links, etc.).
+	TypeInline
 )
 
 // Position represents a location in the source.
 type Position struct {
 	File   string
-	Line    int
-	Column   int
+	Line   int
 }
 
-// Document is the root node of an AsciiDoc document.
-type Document struct {
-	// Header contains the document header (title, attributes, etc.).
+// NodeDocument is the root document node.
+type NodeDocument struct {
+	// Kind is the node type.
+	Kind NodeType
+	// Header contains the document header (title, attributes, etc).
 	Header *DocumentHeader
-
 	// Blocks are the top-level blocks in the document.
 	Blocks []Node
-
 	// Attributes are document-level attributes.
 	Attributes map[string]string
-
 	// Pos is the location in the source.
 	Pos Position
 }
 
-func (d *Document) Type() NodeType { return NodeDocument }
-func (d *Document) Position() Position { return d.Pos }
-
-// DocumentHeader contains the document header.
-type DocumentHeader struct {
-	// Title is the document title.
-	Title string
-
-	// Authors are the document authors.
-	Authors []string
-
-	// Revision information (version, date, etc.).
-	Revision *RevisionInfo
-}
-
-// RevisionInfo contains document revision information.
-type RevisionInfo struct {
-	Version string
-	Date    string
-	Remark  string
-}
-
-// Section is a section heading (== Title, === Title, etc.).
-type Section struct {
-	// Level is the section level (1-6, where 1 is highest).
+// NodeSection is a section heading.
+type NodeSection struct {
+	// Level is the section level (1-6, where 1 is document title).
 	Level int
-
 	// Title is the section title text.
 	Title string
-
-	// ID is the optional section ID.
+	// ID is the section ID (for anchors).
 	ID string
-
+	// Attributes are section-level attributes.
+	Attributes map[string]string
 	// Pos is the location in the source.
 	Pos Position
 }
 
-func (s *Section) Type() NodeType { return NodeSection }
-func (s *Section) Position() Position { return s.Pos }
-
-// Title is a document title (= Title).
-type Title struct {
-	// Text is the title text.
-	Text string
-
-	// ID is the optional title ID.
-	ID string
-
-	// Pos is the location in the source.
-	Pos Position
-}
-
-func (t *Title) Type() NodeType { return NodeSection }
-func (t *Title) Position() Position { return t.Pos }
-
-// Paragraph is a paragraph block.
-type Paragraph struct {
+// NodeParagraph is a paragraph.
+type NodeParagraph struct {
+	// Kind is the node type.
+	Kind NodeType
 	// Text is the paragraph text content.
 	Text string
-
+	// InlineNodes contains inline markup nodes found within the paragraph (future).
+	// InlineNodes []Node // TODO: Implement inline parsing
 	// Pos is the location in the source.
 	Pos Position
 }
 
-func (p *Paragraph) Type() NodeType { return NodeParagraph }
-func (p *Paragraph) Position() Position { return p.Pos }
+// NodeList is a list (ordered, unordered, labeled, checklist).
+type NodeList struct {
+	// Kind is the node type.
+	Kind NodeType
+	// Items are the list items.
+	Items []Node
+	// Pos is the location in the source.
+	Pos Position
+}
 
-// ListItem is an item in a list.
-type ListItem struct {
-	// NodeType is the list item type (unordered, ordered, labeled, etc.).
-	NodeType NodeType
-
-	// Marker is the list marker character (-, *, ., etc.).
+// NodeListItem is an item in a list.
+type NodeListItem struct {
+	// Kind is the node type.
+	Kind NodeType
+	// Marker is the list marker character (-, *, ., etc).
 	Marker string
-
-	// Level is the nesting level (1-based).
+	// Level is the nesting level (1-based for ordered lists).
 	Level int
-
-	// Ordinal is the ordinal number for ordered lists.
+	// Ordinal is the ordinal number for ordered lists (1, 2, etc.).
 	Ordinal int
-
 	// Text is the item text content.
 	Text string
-
+	// Definition is the definition text for labeled lists (item.Definition).
+	Definition string
+	// Term is the term text for labeled lists (item.Term).
+	Term string
+	// InlineNodes contains inline markup nodes found within the list item (future).
+	// InlineNodes []Node // TODO: Implement inline parsing
 	// Pos is the location in the source.
 	Pos Position
 }
 
-func (l *ListItem) Type() NodeType { return l.NodeType }
-func (l *ListItem) Position() Position { return l.Pos }
-
-// Literal is a literal or verbatim block.
-type Literal struct {
-	// Text is the literal text content.
-	Text string
-
+// NodeLiteral is a literal/verbatim block.
+type NodeLiteral struct {
+	// Kind is the node type.
+	Kind NodeType
+	// Lines are the literal block lines.
+	Lines []string
 	// Pos is the location in the source.
 	Pos Position
 }
 
-func (l *Literal) Type() NodeType { return NodeLiteral }
-func (l *Literal) Position() Position { return l.Pos }
-
-// Block is a delimited block (example, quote, sidebar, etc.).
-type Block struct {
-	// NodeType is the block node type.
-	NodeType NodeType
-
-	// Style is the block style (example, quote, sidebar, etc.).
+// NodeBlock is a delimited block (example, quote, etc.).
+type NodeBlock struct {
+	// Kind is the node type.
+	Kind NodeType
+	// Delimiter is the block delimiter character.
+	Delimiter string
+	// Lines are the block lines.
+	Lines []string
+	// Style is the block style (optional, in brackets).
 	Style string
-
-	// Content is the block content.
-	Content string
-
+	// Attributes are block-level attributes.
+	Attributes map[string]string
 	// Pos is the location in the source.
 	Pos Position
 }
 
-func (b *Block) Type() NodeType { return b.NodeType }
-func (b *Block) Position() Position { return b.Pos }
+// NodeTable is a table.
+type Table struct {
+	// Header is the table header.
+	Header []string
+	// Body is the table body (rows).
+	Body [][]string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// Node interface methods for each type.
+
+func (n *NodeDocument) Type() NodeType   { return n.Kind }
+func (n *NodeDocument) Position() Position { return n.Pos }
+
+func (n *NodeSection) Type() NodeType   { return TypeSection }
+func (n *NodeSection) Position() Position { return n.Pos }
+
+func (n *NodeParagraph) Type() NodeType   { return TypeParagraph }
+func (n *NodeParagraph) Position() Position { return n.Pos }
+
+func (n *NodeList) Type() NodeType   { return TypeList }
+func (n *NodeList) Position() Position { return n.Pos }
+
+func (n *NodeListItem) Type() NodeType   { return TypeListItem }
+func (n *NodeListItem) Position() Position { return n.Pos }
+
+func (n *NodeLiteral) Type() NodeType   { return TypeLiteral }
+func (n *NodeLiteral) Position() Position { return n.Pos }
+
+func (n *NodeBlock) Type() NodeType   { return TypeBlock }
+func (n *NodeBlock) Position() Position { return n.Pos }
+
+func (n *Table) Type() NodeType   { return TypeTable }
+func (n *Table) Position() Position { return n.Pos }

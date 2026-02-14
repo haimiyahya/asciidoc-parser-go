@@ -7,6 +7,7 @@ import (
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
 )
 
 // Parser parses AsciiDoc source into an AST.
@@ -19,6 +20,11 @@ type Parser struct {
 
 	// options configures parser behavior.
 	options []ParserOption
+
+	// List tracking state
+	currentList      *ast.NodeList
+	currentListBlockType reader.BlockType
+	currentListLevel int
 }
 
 // ParserOption configures a parser.
@@ -52,8 +58,8 @@ func NewParserFromString(source string, opts ...ParserOption) (*Parser, error) {
 }
 
 // Parse parses the AsciiDoc source into a document AST.
-func (p *Parser) Parse() (*ast.Document, error) {
-	doc := &ast.Document{
+func (p *Parser) Parse() (*ast.NodeDocument, error) {
+	doc := &ast.NodeDocument{
 		Attributes: make(map[string]string),
 		Blocks:    make([]ast.Node, 0),
 	}
@@ -116,6 +122,9 @@ func (p *Parser) Parse() (*ast.Document, error) {
 
 		// Handle section headers
 		if classification.Type == reader.BlockSection && classification.Section != nil {
+			// Close any open list first
+			p.closeCurrentList(doc)
+
 			// Flush any pending paragraph first
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
@@ -135,6 +144,9 @@ func (p *Parser) Parse() (*ast.Document, error) {
 
 		// Handle attribute entries
 		if classification.Type == reader.BlockAttribute && classification.Attribute != nil {
+			// Close any open list first
+			p.closeCurrentList(doc)
+
 			// Flush any pending paragraph
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
@@ -171,16 +183,42 @@ func (p *Parser) Parse() (*ast.Document, error) {
 				paragraphLines = nil
 			}
 
-			listItem := p.createListItem(classification.List, lineno)
-			if listItem != nil {
-				doc.Blocks = append(doc.Blocks, listItem)
+			// Check if we need to close the current list
+			if p.currentList == nil {
+				// No current list - need to check if this item starts a new list
+				if classification.List != nil {
+					p.startNewList(classification, lineno, doc)
+				}
+			} else {
+				// We have a current list - check if this item belongs to it
+				itemInfo := classification.List
+				sameType := (itemInfo.Type == p.currentListBlockType)
+				sameLevel := (itemInfo.Level == p.currentListLevel)
+
+				if sameType && sameLevel {
+					// Same list - add item to it
+					p.addListItemToList(classification, lineno)
+				} else if itemInfo.Level > p.currentListLevel {
+					// Nested list - add as child of current list item
+					p.addNestedList(classification, lineno, doc)
+				} else {
+					// Different list - close current and start new
+					p.closeCurrentList(doc)
+					if classification.List != nil {
+						p.startNewList(classification, lineno, doc)
+					}
+				}
 			}
+
 			p.reader.Advance()
 			continue
 		}
 
-		// Handle blank lines - they terminate paragraphs
+		// Handle blank lines - they terminate paragraphs and lists
 		if classification.Type == reader.BlockBlank {
+			// Close any open list
+			p.closeCurrentList(doc)
+
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
@@ -194,6 +232,9 @@ func (p *Parser) Parse() (*ast.Document, error) {
 
 		// Handle comments (skip them)
 		if classification.Type == reader.BlockComment {
+			// Close any open list first
+			p.closeCurrentList(doc)
+
 			// Flush any pending paragraph
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
@@ -208,6 +249,9 @@ func (p *Parser) Parse() (*ast.Document, error) {
 
 		// Handle horizontal rules, page breaks
 		if classification.Type == reader.BlockHorizontalRule || classification.Type == reader.BlockPageBreak {
+			// Close any open list first
+			p.closeCurrentList(doc)
+
 			// Flush any pending paragraph
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
@@ -222,6 +266,9 @@ func (p *Parser) Parse() (*ast.Document, error) {
 
 		// Handle block macros
 		if classification.Type == reader.BlockMacro {
+			// Close any open list first
+			p.closeCurrentList(doc)
+
 			// Flush any pending paragraph
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
@@ -237,6 +284,9 @@ func (p *Parser) Parse() (*ast.Document, error) {
 
 		// Handle admonitions
 		if classification.Type == reader.BlockAdmonition {
+			// Close any open list first
+			p.closeCurrentList(doc)
+
 			// Flush any pending paragraph
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
@@ -265,6 +315,9 @@ func (p *Parser) Parse() (*ast.Document, error) {
 		}
 	}
 
+	// Close any remaining open list
+	p.closeCurrentList(doc)
+
 	return doc, nil
 }
 
@@ -277,9 +330,14 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 	// Join lines with spaces
 	content := strings.Join(lines, " ")
 
-	return &ast.Paragraph{
-		Text: strings.TrimSpace(content),
-		Pos:  ast.Position{Line: lineno},
+	// Parse inline markup within the paragraph
+	inlineParser := inline.NewParser(content)
+	_ = inlineParser.Parse()
+
+	return &ast.NodeParagraph{
+		Text:     content,
+		Pos:      ast.Position{Line: lineno},
+		// InlineNodes: inlineNodes, // TODO: Implement inline parsing
 	}
 }
 
@@ -291,16 +349,16 @@ func (p *Parser) createSection(info *reader.SectionInfo, lineno int) ast.Node {
 
 	// For level 0 (document title), set the document header
 	if info.Level == 0 {
-		return &ast.Title{
-			Text: info.Title,
-			Pos:  ast.Position{Line: lineno},
+		return &ast.NodeSection{
+			Level: 0,
+			Title: info.Title,
+			Pos:   ast.Position{Line: lineno},
 		}
 	}
 
-	return &ast.Section{
+	return &ast.NodeSection{
 		Level: info.Level,
 		Title: info.Title,
-		ID:    info.ID,
 		Pos:   ast.Position{Line: lineno},
 	}
 }
@@ -311,13 +369,21 @@ func (p *Parser) createListItem(info *reader.ListInfo, lineno int) ast.Node {
 		return nil
 	}
 
-	return &ast.ListItem{
-		NodeType: ast.NodeType(info.Type),
-		Marker:   info.Marker,
-		Level:    info.Level,
-		Ordinal:  info.Ordinal,
-		Text:     info.Text,
-		Pos:      ast.Position{Line: lineno},
+	// For labeled lists, Text contains the term (before ::), and Definition contains the definition
+	text := info.Text
+	if info.Type == reader.BlockListLabeled && info.Term != "" {
+		text = info.Term
+	}
+
+	return &ast.NodeListItem{
+		Kind:       ast.TypeListItem,
+		Marker:      info.Marker,
+		Level:       info.Level,
+		Ordinal:     info.Ordinal,
+		Text:         text,
+		Term:          info.Term,
+		Definition:    info.Text, // For labeled lists, Text contains the definition
+		Pos:          ast.Position{Line: lineno},
 	}
 }
 
@@ -327,31 +393,129 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 
 	switch blockType {
 	case reader.BlockLiteral:
-		return &ast.Literal{
-			Text: content,
-			Pos:  ast.Position{Line: lineno},
+		return &ast.NodeLiteral{
+			Lines: strings.Split(content, "\n"),
+			Pos:   ast.Position{Line: lineno},
 		}
 	case reader.BlockVerbatim:
-		return &ast.Literal{
-			Text: content,
-			Pos:  ast.Position{Line: lineno},
+		return &ast.NodeLiteral{
+			Lines: strings.Split(content, "\n"),
+			Pos:   ast.Position{Line: lineno},
 		}
 	case reader.BlockExample:
-		return &ast.Block{
-			NodeType: ast.NodeBlock,
-			Pos:  ast.Position{Line: lineno},
+		return &ast.NodeBlock{
+			Delimiter: "=",
+			Lines:    strings.Split(content, "\n"),
+			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockQuote:
-		return &ast.Block{
-			NodeType: ast.NodeBlock,
-			Pos:  ast.Position{Line: lineno},
+		return &ast.NodeBlock{
+			Delimiter: "_",
+			Lines:    strings.Split(content, "\n"),
+			Pos:       ast.Position{Line: lineno},
 		}
 	default:
-		return &ast.Block{
-			NodeType: ast.NodeBlock,
-			Pos:  ast.Position{Line: lineno},
+		return &ast.NodeBlock{
+			Lines: strings.Split(content, "\n"),
+			Pos:   ast.Position{Line: lineno},
 		}
 	}
+}
+
+// closeCurrentList closes the current open list if any.
+func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
+	if p.currentList != nil {
+		doc.Blocks = append(doc.Blocks, p.currentList)
+		p.currentList = nil
+		p.currentListBlockType = 0
+		p.currentListLevel = 0
+	}
+}
+
+// startNewList starts a new list with the given item as its first element.
+func (p *Parser) startNewList(classification *reader.Classification, lineno int, doc *ast.NodeDocument) {
+	info := classification.List
+	if info == nil {
+		return
+	}
+
+	// Create a new list with this item as its first element
+	listItem := p.createListItem(info, lineno)
+	if listItem == nil {
+		return
+	}
+
+	// Create the list node - all lists use TypeList as the Kind
+	p.currentList = &ast.NodeList{
+		Kind:  ast.TypeList,
+		Items: []ast.Node{listItem},
+		Pos:   ast.Position{Line: lineno},
+	}
+	p.currentListBlockType = info.Type
+	p.currentListLevel = info.Level
+
+	// Note: Don't add to doc.Blocks yet - wait until list is closed
+}
+
+// addListItemToList adds a list item to the current list.
+func (p *Parser) addListItemToList(classification *reader.Classification, lineno int) {
+	info := classification.List
+	if info == nil || p.currentList == nil {
+		return
+	}
+
+	listItem := p.createListItem(info, lineno)
+	if listItem != nil {
+		p.currentList.Items = append(p.currentList.Items, listItem)
+	}
+}
+
+// addNestedList adds a nested list as a child of the current list's last item.
+func (p *Parser) addNestedList(classification *reader.Classification, lineno int, doc *ast.NodeDocument) {
+	info := classification.List
+	if info == nil || p.currentList == nil {
+		return
+	}
+
+	// Get the last item in the current list
+	if len(p.currentList.Items) == 0 {
+		return
+	}
+
+	// Check if we already have a nested list pending (in doc.Blocks but not properly structured)
+	// For now, check if the last block is a nested list we should extend
+	lastBlockIdx := len(doc.Blocks) - 1
+	if lastBlockIdx >= 0 {
+		if lastList, ok := doc.Blocks[lastBlockIdx].(*ast.NodeList); ok {
+			// Check if this is a nested list (higher level than parent)
+			if len(lastList.Items) > 0 && lastList.Items[0].Position().Line > p.currentList.Position().Line {
+				// This appears to be a nested list following our parent
+				// Add the new item to this nested list
+				listItem := p.createListItem(info, lineno)
+				if listItem != nil {
+					lastList.Items = append(lastList.Items, listItem)
+				}
+				return
+			}
+		}
+	}
+
+	// Create a new nested list
+	listItem := p.createListItem(info, lineno)
+	if listItem == nil {
+		return
+	}
+
+	nestedList := &ast.NodeList{
+		Kind:  ast.TypeList,
+		Items: []ast.Node{listItem},
+		Pos:   ast.Position{Line: lineno},
+	}
+
+	// For now, add the nested list as a separate block after the parent list
+	// The parent list will be closed later when we see a non-nested, same-level item
+	// TODO: Implement proper nesting structure where nested lists are children of parent list items
+	doc.Blocks = append(doc.Blocks, nestedList)
 }
 
 // Advance is a helper that consumes the next line.

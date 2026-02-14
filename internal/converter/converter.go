@@ -10,7 +10,7 @@ import (
 // Converter converts an AsciiDoc AST to an output format.
 type Converter interface {
 	// Convert converts the document to the target format.
-	Convert(doc *ast.Document, w io.Writer) error
+	Convert(doc *ast.NodeDocument, w io.Writer) error
 }
 
 // BackendType represents the output backend type.
@@ -35,11 +35,14 @@ type ConverterFactory struct {
 	backends map[BackendType]Converter
 }
 
-// NewConverterFactory creates a new converter factory.
+// NewConverterFactory creates a new converter factory with HTML5 registered.
 func NewConverterFactory() *ConverterFactory {
-	return &ConverterFactory{
+	f := &ConverterFactory{
 		backends: make(map[BackendType]Converter),
 	}
+	// Register HTML5 as default backend
+	f.Register(BackendHTML5, NewHTML5Converter())
+	return f
 }
 
 // Register registers a converter for a backend.
@@ -51,4 +54,13 @@ func (f *ConverterFactory) Register(backend BackendType, c Converter) {
 func (f *ConverterFactory) Get(backend BackendType) (Converter, bool) {
 	c, ok := f.backends[backend]
 	return c, ok
+}
+
+// GetDefault returns the default HTML5 converter.
+func (f *ConverterFactory) GetDefault() Converter {
+	c, ok := f.Get(BackendHTML5)
+	if !ok {
+		return NewHTML5Converter()
+	}
+	return c
 }

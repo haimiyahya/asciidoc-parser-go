@@ -3,9 +3,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
+	_ "github.com/haimiyahya/asciidoc-parser-go/internal/reader"
 )
 
 func main() {

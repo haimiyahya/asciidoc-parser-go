@@ -3,7 +3,6 @@ package processor
 
 import (
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
-	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
 )
 
 // Processor processes an AsciiDoc document after parsing.

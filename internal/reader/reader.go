@@ -255,8 +255,9 @@ func NewReaderFromReader(rdr io.Reader, opts ...ReaderOption) (*Reader, error) {
 //
 // Normalization:
 //   - Validates UTF-8 encoding
-//   - Strips trailing whitespace (including newlines)
-//   - Preserves trailing empty lines (unlike strings.Split)
+//   - Strips trailing whitespace from each line
+//   - Removes trailing empty line from final newline (matches Asciidoctor)
+//   - Preserves intentional empty lines
 //   - Returns empty slice for empty source
 //
 // This mirrors Asciidoctor's Reader#prepare_lines with normalize: true.
@@ -275,6 +276,12 @@ func prepareLines(source string) []string {
 	result := make([]string, len(lines))
 	for i, line := range lines {
 		result[i] = strings.TrimRight(line, " \t\r\n")
+	}
+
+	// Remove trailing empty line if source ends with newline
+	// This matches Asciidoctor's behavior where "a\nb\nc\n" → ["a", "b", "c"]
+	if len(result) > 0 && result[len(result)-1] == "" && strings.HasSuffix(source, "\n") {
+		result = result[:len(result)-1]
 	}
 
 	return result

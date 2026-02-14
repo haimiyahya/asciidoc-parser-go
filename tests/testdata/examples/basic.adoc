@@ -1,0 +1,3 @@
+= Document Title
+
+This is a paragraph.

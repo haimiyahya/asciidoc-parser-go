@@ -1027,10 +1027,11 @@ func (lc *LineClassifier) checkAdmonition(line string) string {
 
 	for _, adm := range admonitions {
 		if trimmed == adm {
+			// DEBUG: This should match for "NOTE:" == "NOTE:"
 			return adm
 		}
 		// Check for admonition with space after :
-		if strings.HasPrefix(trimmed, adm[:len(adm)-1]) {
+		if len(trimmed) >= len(adm)-1 && strings.HasPrefix(trimmed, adm[:len(adm)-1]) {
 			if len(trimmed) >= len(adm) && trimmed[len(adm)-1] == ' ' {
 				// Also valid: "NOTE: text"
 				return adm

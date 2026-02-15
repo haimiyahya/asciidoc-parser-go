@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -51,7 +52,7 @@ func main() {
 
 	// Define flags - compatible with Asciidoctor CLI
 	flag.StringVarP(&outputFile, "out-file", "o", "", "Output file (default: based on input file; use - for STDOUT)")
-	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5] (default: html5)")
+	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5, pdf] (default: html5)")
 	flag.StringVarP(&docType, "doctype", "d", "article", "Document type: [article, book, manpage, inline] (default: article)")
 	flag.StringSliceVarP(&attributeDefs, "attribute", "a", nil, "Define a document attribute: name, name!, or name=value (may be specified multiple times)")
 	flag.StringVarP(&baseDir, "base-dir", "B", "", "Base directory containing the document and resources (default: directory of input file)")
@@ -212,7 +213,9 @@ func main() {
 	}
 
 	// Convert to output format
-	var output string
+	var output []byte
+	var outputExt string
+
 	switch strings.ToLower(backend) {
 	case "html5", "html":
 		htmlConverter := converter.NewHTML5Converter()
@@ -224,9 +227,19 @@ func main() {
 			printError("failed to convert document: %v", err)
 			os.Exit(1)
 		}
-		output = buf.String()
+		output = []byte(buf.String())
+		outputExt = ".html"
+	case "pdf":
+		pdfConverter := converter.NewPDFConverter()
+		var buf bytes.Buffer
+		if err := pdfConverter.Convert(doc, &buf); err != nil {
+			printError("failed to convert document: %v", err)
+			os.Exit(1)
+		}
+		output = buf.Bytes()
+		outputExt = ".pdf"
 	default:
-		printError("unsupported backend '%s' (supported: html5)", backend)
+		printError("unsupported backend '%s' (supported: html5, pdf)", backend)
 		os.Exit(1)
 	}
 
@@ -235,7 +248,7 @@ func main() {
 	if outputFilePath == "" && inputPath != "" && inputPath != "-" {
 		// Auto-generate output filename based on input
 		baseName := strings.TrimSuffix(inputPath, filepath.Ext(inputPath))
-		outputFilePath = baseName + ".html"
+		outputFilePath = baseName + outputExt
 	}
 
 	// Handle destination directory
@@ -278,11 +291,11 @@ func main() {
 
 // printHelp prints the help message
 func printHelp() {
-	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5 Converter
+	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5/PDF Converter
 Version %s
 
 Usage: asciidoctor [OPTIONS] FILE
-Convert the AsciiDoc input FILE to HTML5 output.
+Convert the AsciiDoc input FILE to HTML5 or PDF output.
 Unless specified otherwise, output is written to a file whose name is derived
 from the input file. Application log messages are printed to STDERR.
 
@@ -291,7 +304,7 @@ Arguments:
                           Use '-' to read from STDIN.
 
 Options:
-  -b, --backend BACKEND           Set backend output format: [html5] (default: html5)
+  -b, --backend BACKEND           Set backend output format: [html5, pdf] (default: html5)
   -d, --doctype DOCTYPE           Document type: [article, book, manpage, inline] (default: article)
   -e, --embedded                  Suppress enclosing document structure (same as -s)
   -o, --out-file FILE             Output file (default: based on input file; use - for STDOUT)
@@ -314,6 +327,9 @@ Options:
 Examples:
   # Convert file to HTML
   asciidoctor document.adoc
+
+  # Convert file to PDF
+  asciidoctor -b pdf document.adoc
 
   # Convert with custom output file
   asciidoctor -o output.html document.adoc

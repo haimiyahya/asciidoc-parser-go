@@ -143,13 +143,37 @@ This document outlines the phased implementation plan for building a native Go i
 - Plugin/extension system - TODO
 - Watch mode (fsnotify or polling) - TODO
 
+## Phase 9: PDF Backend ✅
+
+**Status**: Complete
+
+**Objectives**:
+- Convert AsciiDoc to PDF using Chrome/Chromium headless
+- Support page size and margin configuration
+- Professional PDF styling with custom CSS
+
+**Implementation**:
+- `internal/converter/pdf.go`: PDF converter using chromedp
+- Converts AST → HTML → PDF via headless Chrome
+- Supports Letter, A4, and custom page sizes
+- Configurable margins and print options
+- Professional CSS styling for PDF output
+
+**Note**: Requires Chrome or Chromium to be installed for PDF generation.
+
 ## Future Enhancements (Post-MVP)
 
 ### Additional Backends
 - DocBook 5.1.1
-- PDF via wkhtmltopdf or prince
 - Man page via groff/troff
 - EPUB via asciidoc-epub3
+
+### PDF Enhancements
+- Table of contents generation
+- Page numbering options
+- Cover page support
+- Custom headers and footers
+- PDF metadata (author, title, keywords)
 
 ### Extension Points
 - Custom block macros

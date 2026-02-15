@@ -194,12 +194,29 @@ This document outlines the phased implementation plan for building a native Go i
 - Supports literal blocks with .nf/.fi
 - Auto-detects manual name and section from input
 
+## Phase 12: EPUB Backend ✅
+
+**Status**: Complete
+
+**Objectives**:
+- Convert AsciiDoc to EPUB e-book format
+- Support e-reader compatibility
+- Enable e-book publishing
+
+**Implementation**:
+- `internal/converter/epub.go`: EPUB converter
+- Creates valid EPUB 2.0.1 ZIP archive
+- Complete file structure: mimetype, container.xml, content.opf, toc.ncx, etc.
+- XHTML content with CSS styling for e-readers
+- Metadata support: title, author, language, publisher, identifier
+- Converts all AsciiDoc elements to EPUB-compatible XHTML
+
 ## Future Enhancements (Post-MVP)
 
 ### Additional Backends
 - DocBook 5.1.1 ✅
 - Man page via groff/troff ✅
-- EPUB via asciidoc-epub3
+- EPUB via asciidoc-epub3 ✅
 
 ### PDF Enhancements
 - Table of contents generation

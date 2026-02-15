@@ -171,3 +171,88 @@ func TestInlineInListItems(t *testing.T) {
 	assert.Contains(t, output, "<em>Italic</em>", "HTML should contain <em>Italic</em>")
 	assert.Contains(t, output, "Normal item", "HTML should contain normal list item text")
 }
+
+func TestInlineImageParsing(t *testing.T) {
+	// Test image:url[alt-text] syntax
+	source := `See image:logo.png[Our Logo] for details.`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	para, ok := doc.Blocks[0].(*ast.NodeParagraph)
+	require.True(t, ok)
+
+	// Check inline nodes - should have an image node
+	require.NotEmpty(t, para.InlineNodes)
+
+	// Find the image node
+	var foundImage bool
+	for _, node := range para.InlineNodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			if inlineNode.Type == inline.NodeImage {
+				foundImage = true
+				assert.Equal(t, "logo.png", inlineNode.URL)
+				assert.Equal(t, "Our Logo", inlineNode.Alt)
+			}
+		}
+	}
+	assert.True(t, foundImage, "Should have found an image node")
+
+	// Verify HTML output
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, `<img src="logo.png" alt="Our Logo">`, "HTML should contain img tag")
+}
+
+func TestInlineImageWithoutAlt(t *testing.T) {
+	// Test image:url without alt text
+	source := `See image:photo.jpg`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	para, ok := doc.Blocks[0].(*ast.NodeParagraph)
+	require.True(t, ok)
+
+	// Check inline nodes
+	require.NotEmpty(t, para.InlineNodes)
+
+	// Verify HTML output
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, `<img src="photo.jpg"`, "HTML should contain img tag")
+}
+
+func TestInlineImageWithFullPath(t *testing.T) {
+	// Test image with full path
+	source := `External image:https://example.com/pic.png[Alt text]`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	// Verify HTML output
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, `<img src="https://example.com/pic.png" alt="Alt text">`, "HTML should contain img with full URL")
+}

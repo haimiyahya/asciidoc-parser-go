@@ -129,6 +129,12 @@ func (p *Parser) Parse() []*Node {
 
 	for p.pos < len(p.text) {
 		// Try to match inline constructs
+		if node, newPos := p.tryImage(); node != nil {
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
 		if node, newPos := p.tryLink(); node != nil {
 			nodes = append(nodes, node)
 			p.pos = newPos
@@ -160,7 +166,8 @@ func (p *Parser) Parse() []*Node {
 		// Look for next inline construct marker
 		for i := p.pos; i < len(p.text); i++ {
 			remaining := p.text[i:]
-			if strings.HasPrefix(remaining, "link:") ||
+			if strings.HasPrefix(remaining, "image:") ||
+				strings.HasPrefix(remaining, "link:") ||
 				strings.HasPrefix(remaining, "**") ||
 				strings.HasPrefix(remaining, "*") ||
 				strings.HasPrefix(remaining, "__") ||
@@ -181,6 +188,68 @@ func (p *Parser) Parse() []*Node {
 	}
 
 	return nodes
+}
+
+// tryImage attempts to parse an inline image at current position.
+// Supports: image:url[alt-text] where alt-text is optional.
+func (p *Parser) tryImage() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for image macro: image:url[alt-text]
+	if strings.HasPrefix(remaining, "image:") {
+		// Find the closing ] or end of line
+		closeBracket := strings.Index(remaining, "]")
+		if closeBracket == -1 {
+			// No alt-text bracket, use rest of line as URL
+			url := remaining[6:]
+			if url == "" {
+				return nil, p.pos
+			}
+			// Trim any trailing whitespace
+			url = strings.TrimRight(url, " \t\n")
+			return &Node{
+				Type: NodeImage,
+				URL:  url,
+				Alt:  "",
+				Text: "",
+				Position: p.pos + len(url) + 6,
+			}, p.pos + len(url) + 6
+		}
+
+		// Extract image:url[alt-text]
+		imageSpec := remaining[6:closeBracket]
+		// Find the [ to split url from alt-text
+		openBracket := strings.Index(imageSpec, "[")
+		if openBracket == -1 {
+			// No [ found, treat entire spec as URL without alt
+			url := strings.TrimRight(imageSpec, " \t\n")
+			return &Node{
+				Type: NodeImage,
+				URL:  url,
+				Alt:  "",
+				Text: "",
+				Position: p.pos + closeBracket + 1,
+			}, p.pos + closeBracket + 1
+		}
+
+		// URL is before [, alt-text is after it
+		url := strings.TrimRight(imageSpec[:openBracket], " \t\n")
+		alt := imageSpec[openBracket+1:]
+
+		if url == "" {
+			return nil, p.pos
+		}
+
+		return &Node{
+			Type: NodeImage,
+			URL:  url,
+			Alt:  alt,
+			Text: alt, // Use alt as display text
+			Position: p.pos + closeBracket + 1,
+		}, p.pos + closeBracket + 1
+	}
+
+	return nil, p.pos
 }
 
 // tryLink attempts to parse a link at the current position.

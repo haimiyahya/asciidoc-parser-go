@@ -659,6 +659,32 @@ func (r *Reader) GetSource() string {
 	return strings.Join(r.sourceLines, "\n")
 }
 
+// Dir returns the directory path for the reader.
+func (r *Reader) Dir() string {
+	return r.dir
+}
+
+// SetDir sets the directory path for the reader.
+func (r *Reader) SetDir(dir string) {
+	r.dir = dir
+}
+
+// InjectLines adds new lines at the current position in the reader.
+//
+// The lines are inserted such that they will be read before any remaining
+// lines in the reader. This is used for include directive processing.
+func (r *Reader) InjectLines(newLines []string) {
+	// Reverse the new lines and append to the end
+	// Since reader pops from the end, this makes injected lines read first
+	for i := len(newLines) - 1; i >= 0; i-- {
+		line := newLines[i]
+		// Strip trailing whitespace
+		line = strings.TrimRight(line, " \t")
+		// Add to the end of current lines
+		r.lines = append(r.lines, line)
+	}
+}
+
 // Mark saves the current reader state for potential rollback.
 func (r *Reader) Mark() {
 	r.mark = &savedState{

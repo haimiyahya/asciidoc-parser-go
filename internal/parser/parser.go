@@ -9,6 +9,7 @@ import (
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/processor"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
 )
 
@@ -34,6 +35,9 @@ type Parser struct {
 
 	// Block anchor tracking - [[id]] before a section applies to that section
 	pendingAnchorID string
+
+	// Include processor handles include::[] directives
+	includeProcessor *processor.IncludeProcessor
 }
 
 // ParserOption configures a parser.
@@ -41,11 +45,16 @@ type ParserOption func(*Parser)
 
 // NewParser creates a new Parser.
 func NewParser(r *reader.Reader, opts ...ParserOption) *Parser {
-	return &Parser{
+	p := &Parser{
 		reader:    r,
 		classifier: reader.NewLineClassifier(),
 		options:   opts,
 	}
+	// Apply options
+	for _, opt := range opts {
+		opt(p)
+	}
+	return p
 }
 
 // NewParserFromReader creates a parser from an io.Reader.
@@ -64,6 +73,20 @@ func NewParserFromString(source string, opts ...ParserOption) (*Parser, error) {
 		return nil, err
 	}
 	return NewParser(rd, opts...), nil
+}
+
+// WithIncludeProcessor sets an include processor for handling include::[] directives.
+func WithIncludeProcessor(ip *processor.IncludeProcessor) ParserOption {
+	return func(p *Parser) {
+		p.includeProcessor = ip
+	}
+}
+
+// WithBaseDir sets the base directory for resolving relative paths (e.g., includes).
+func WithBaseDir(dir string) ParserOption {
+	return func(p *Parser) {
+		p.reader.SetDir(dir)
+	}
 }
 
 // Parse parses the AsciiDoc source into a document AST.
@@ -305,7 +328,43 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				paragraphLines = nil
 			}
 
-			// Create macro node
+			// Check if this is an include directive
+			if classification.Macro != nil && classification.Macro.Target == "include" && p.includeProcessor != nil {
+				// Get the line content
+				line := classification.Original
+				directive, err := processor.ParseInclude(line, lineno)
+				if err == nil {
+					// Get base directory from reader or default to current directory
+					baseDir := p.reader.Dir()
+					if baseDir == "" {
+						baseDir = "."
+					}
+					// Create a new processor for this include with proper base dir
+					includeProc := processor.NewIncludeProcessor(baseDir)
+
+					// Process the include
+					content, err := includeProc.Process(directive)
+					if err != nil {
+						// Include error - consume directive and continue
+						p.reader.Advance()
+						continue
+					}
+					if content != "" {
+						// Split content into lines and inject into reader
+						includedLines := strings.Split(content, "\n")
+						// Consume the include directive line first, then inject
+						p.reader.Advance()
+						p.reader.InjectLines(includedLines)
+						// Continue to next iteration without advancing again
+						continue
+					}
+				}
+				// If include failed or no content, just consume and continue
+				p.reader.Advance()
+				continue
+			}
+
+			// Create macro node (for non-include macros)
 			macro := p.createMacro(classification.Macro, lineno)
 			if macro != nil {
 				p.addBlockToCurrentSection(doc, macro)

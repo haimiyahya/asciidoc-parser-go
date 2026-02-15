@@ -38,6 +38,24 @@ type Parser struct {
 
 	// Include processor handles include::[] directives
 	includeProcessor *processor.IncludeProcessor
+
+	// Conditional tracking - stack of conditional states
+	conditionalStack []conditionalState
+
+	// Current document being parsed (for attribute access)
+	currentDocument *ast.NodeDocument
+}
+
+// conditionalState represents the state of a conditional directive.
+type conditionalState struct {
+	// active is true if the conditional is currently including content
+	active bool
+
+	// endifTarget is the attribute name for endif::[] matching
+	endifTarget string
+
+	// depth tracks nesting depth within this conditional
+	depth int
 }
 
 // ParserOption configures a parser.
@@ -93,8 +111,10 @@ func WithBaseDir(dir string) ParserOption {
 func (p *Parser) Parse() (*ast.NodeDocument, error) {
 	doc := &ast.NodeDocument{
 		Attributes: make(map[string]string),
-		Blocks:    make([]ast.Node, 0),
+		Blocks:     make([]ast.Node, 0),
 	}
+	p.currentDocument = doc
+	p.conditionalStack = nil
 
 	// Track current paragraph lines being accumulated
 	var paragraphLines []string
@@ -210,6 +230,39 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				doc.Header = &ast.DocumentHeader{Title: attr.Value}
 			}
 
+			p.reader.Advance()
+			continue
+		}
+
+		// Handle conditional directives (ifdef, ifndef, ifeval, endif)
+		if classification.Type == reader.BlockConditionalIfdef ||
+			classification.Type == reader.BlockConditionalIfndef ||
+			classification.Type == reader.BlockConditionalIfeval {
+
+			// Flush any pending paragraph
+			if len(paragraphLines) > 0 {
+				para := p.createParagraph(paragraphLines, paragraphLineno)
+				if para != nil {
+					p.addBlockToCurrentSection(doc, para)
+				}
+				paragraphLines = nil
+			}
+
+			p.handleConditionalDirective(classification, doc)
+			p.reader.Advance()
+			continue
+		}
+
+		// Check for endif::[] directive
+		if p.isEndifDirective(line) {
+			p.handleEndifDirective(line)
+			p.reader.Advance()
+			continue
+		}
+
+		// Check if we're currently in an inactive conditional
+		if p.isInConditionalSkip() {
+			// Skip all content until we find the matching endif
 			p.reader.Advance()
 			continue
 		}
@@ -834,4 +887,223 @@ func (p *Parser) closeSectionsToLevel(doc *ast.NodeDocument, level int) {
 			}
 		}
 	}
+}
+
+// isEndifDirective checks if the line is an endif::[] directive.
+func (p *Parser) isEndifDirective(line string) bool {
+	trimmed := strings.TrimSpace(line)
+	// Pattern: endif::attribute[]
+	return strings.HasPrefix(trimmed, "endif::") && strings.HasSuffix(trimmed, "[]")
+}
+
+// handleEndifDirective processes an endif::[] directive.
+func (p *Parser) handleEndifDirective(line string) {
+	trimmed := strings.TrimSpace(line)
+	// Extract the attribute name from endif::attribute[] or endif::[]
+	if !strings.HasPrefix(trimmed, "endif::") || !strings.HasSuffix(trimmed, "[]") {
+		return
+	}
+
+	between := trimmed[7 : len(trimmed)-2] // Strip "endif::" and "[]"
+	target := strings.TrimSpace(between)
+
+	// If target is empty, pop the most recent conditional
+	if target == "" {
+		if len(p.conditionalStack) > 0 {
+			p.conditionalStack = p.conditionalStack[:len(p.conditionalStack)-1]
+		}
+		return
+	}
+
+	// Pop from stack until we find matching conditional
+	for len(p.conditionalStack) > 0 {
+		top := p.conditionalStack[len(p.conditionalStack)-1]
+		if top.endifTarget == target {
+			p.conditionalStack = p.conditionalStack[:len(p.conditionalStack)-1]
+			return
+		}
+		// Mismatch - pop and continue (could be nested conditionals)
+		p.conditionalStack = p.conditionalStack[:len(p.conditionalStack)-1]
+	}
+}
+
+// isInConditionalSkip returns true if we're currently in an inactive conditional.
+func (p *Parser) isInConditionalSkip() bool {
+	if len(p.conditionalStack) == 0 {
+		return false
+	}
+	// We're skipping if any conditional in the stack is inactive
+	for _, cond := range p.conditionalStack {
+		if !cond.active {
+			return true
+		}
+	}
+	return false
+}
+
+// handleConditionalDirective processes ifdef, ifndef, and ifeval directives.
+func (p *Parser) handleConditionalDirective(classification *reader.Classification, doc *ast.NodeDocument) {
+	cond := classification.Conditional
+	if cond == nil {
+		return
+	}
+
+	var active bool
+	var endifTarget string
+
+	switch cond.Type {
+	case "ifdef":
+		// Include content if attribute is defined and non-empty
+		endifTarget = cond.Attribute
+		value, exists := doc.Attributes[cond.Attribute]
+		active = exists && value != ""
+
+	case "ifndef":
+		// Include content if attribute is NOT defined or is empty
+		endifTarget = cond.Attribute
+		value, exists := doc.Attributes[cond.Attribute]
+		active = !exists || value == ""
+
+	case "ifeval":
+		// For now, treat ifeval as inactive (full expression evaluation to be implemented)
+		// Expression format: "{attribute} == 'value'" or similar
+		endifTarget = "" // Use empty target for ifeval (endif::[] closes it)
+		active = p.evaluateIfeval(cond.Expression, doc)
+	default:
+		return
+	}
+
+	// Push the conditional state onto the stack
+	p.conditionalStack = append(p.conditionalStack, conditionalState{
+		active:      active,
+		endifTarget: endifTarget,
+		depth:       0,
+	})
+}
+
+// evaluateIfeval evaluates an ifeval expression.
+// Supported formats:
+// - {attr} == "value"
+// - {attr} != "value"
+// - {attr} =~ "regex" (basic regex match)
+// - "{attr}" == "value" (quoted attribute reference)
+func (p *Parser) evaluateIfeval(expr string, doc *ast.NodeDocument) bool {
+	// Simple expression parsing
+	trimmed := strings.TrimSpace(expr)
+
+	// Check for == operator
+	if strings.Contains(trimmed, "==") {
+		parts := strings.SplitN(trimmed, "==", 2)
+		if len(parts) != 2 {
+			return false
+		}
+		left := strings.TrimSpace(parts[0])
+		right := strings.TrimSpace(parts[1])
+
+		// Extract attribute name from {attr} or "{attr}"
+		attrName := p.extractAttrName(left)
+		if attrName == "" {
+			return false
+		}
+
+		// Extract value from "value" or 'value'
+		rightVal := right
+		if strings.HasPrefix(right, "\"") && strings.HasSuffix(right, "\"") {
+			rightVal = right[1 : len(right)-1]
+		} else if strings.HasPrefix(right, "'") && strings.HasSuffix(right, "'") {
+			rightVal = right[1 : len(right)-1]
+		}
+
+		attrValue, exists := doc.Attributes[attrName]
+		if !exists {
+			return false
+		}
+		return attrValue == rightVal
+	}
+
+	// Check for != operator
+	if strings.Contains(trimmed, "!=") {
+		parts := strings.SplitN(trimmed, "!=", 2)
+		if len(parts) != 2 {
+			return false
+		}
+		left := strings.TrimSpace(parts[0])
+		right := strings.TrimSpace(parts[1])
+
+		// Extract attribute name from {attr} or "{attr}"
+		attrName := p.extractAttrName(left)
+		if attrName == "" {
+			return false
+		}
+
+		// Extract value from "value" or 'value'
+		rightVal := right
+		if strings.HasPrefix(right, "\"") && strings.HasSuffix(right, "\"") {
+			rightVal = right[1 : len(right)-1]
+		} else if strings.HasPrefix(right, "'") && strings.HasSuffix(right, "'") {
+			rightVal = right[1 : len(right)-1]
+		}
+
+		attrValue, exists := doc.Attributes[attrName]
+		if !exists {
+			return true
+		}
+		return attrValue != rightVal
+	}
+
+	// Check for =~ operator (basic regex match)
+	if strings.Contains(trimmed, "=~") {
+		parts := strings.SplitN(trimmed, "=~", 2)
+		if len(parts) != 2 {
+			return false
+		}
+		left := strings.TrimSpace(parts[0])
+		right := strings.TrimSpace(parts[1])
+
+		// Extract attribute name from {attr} or "{attr}"
+		attrName := p.extractAttrName(left)
+		if attrName == "" {
+			return false
+		}
+
+		// Extract pattern from "pattern" or 'pattern'
+		pattern := right
+		if strings.HasPrefix(right, "\"") && strings.HasSuffix(right, "\"") {
+			pattern = right[1 : len(right)-1]
+		} else if strings.HasPrefix(right, "'") && strings.HasSuffix(right, "'") {
+			pattern = right[1 : len(right)-1]
+		}
+
+		attrValue, exists := doc.Attributes[attrName]
+		if !exists {
+			return false
+		}
+
+		// Simple contains check for now (full regex support to be added)
+		return strings.Contains(attrValue, pattern)
+	}
+
+	return false
+}
+
+// extractAttrName extracts the attribute name from expressions like {attr} or "{attr}"
+func (p *Parser) extractAttrName(s string) string {
+	s = strings.TrimSpace(s)
+
+	// Try "{attr}" format first
+	if strings.HasPrefix(s, "\"{") && strings.HasSuffix(s, "}\"") {
+		return s[2 : len(s)-2]
+	}
+
+	// Try '{attr}' format
+	if strings.HasPrefix(s, "'{") && strings.HasSuffix(s, "}'") {
+		return s[2 : len(s)-2]
+	}
+
+	// Try {attr} format
+	if strings.HasPrefix(s, "{") && strings.HasSuffix(s, "}") {
+		return s[1 : len(s)-1]
+	}
+
+	return ""
 }

@@ -127,7 +127,7 @@ This document outlines the phased implementation plan for building a native Go i
 - Examples from AsciiDoc Language Specification
 - Benchmarking for optimization opportunities
 
-## Phase 8: CLI and Tooling ✅
+## Phase 8: CLI and Tooling 🚧
 
 **Objectives**:
 - Command-line interface for common operations

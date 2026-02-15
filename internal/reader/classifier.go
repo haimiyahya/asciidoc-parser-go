@@ -97,6 +97,15 @@ const (
 	// BlockAnchor is a block anchor ([#anchor] or [[anchor]]).
 	BlockAnchor
 
+	// BlockConditionalIfdef is an ifdef::attribute[] conditional block.
+	BlockConditionalIfdef
+
+	// BlockConditionalIfndef is an ifndef::attribute[] conditional block.
+	BlockConditionalIfndef
+
+	// BlockConditionalIfeval is an ifeval::expression[] conditional block.
+	BlockConditionalIfeval
+
 	// BlockParagraph is a regular paragraph (default).
 	BlockParagraph
 )
@@ -130,6 +139,9 @@ func (bt BlockType) String() string {
 		BlockStyle:          "Style",
 		BlockAnchor:         "Anchor",
 		BlockAdmonition:     "Admonition",
+		BlockConditionalIfdef: "ConditionalIfdef",
+		BlockConditionalIfndef: "ConditionalIfndef",
+		BlockConditionalIfeval: "ConditionalIfeval",
 		BlockParagraph:      "Paragraph",
 	}
 	if name, ok := names[bt]; ok {
@@ -262,6 +274,24 @@ type AnchorInfo struct {
 	ID string
 }
 
+// ConditionalInfo contains information about a conditional directive.
+type ConditionalInfo struct {
+	// BlockType is the block type for this conditional
+	BlockType BlockType
+
+	// Type is the conditional type: "ifdef", "ifndef", or "ifeval"
+	Type string
+
+	// Attribute is the attribute name for ifdef/ifndef
+	Attribute string
+
+	// Expression is the expression for ifeval
+	Expression string
+
+	// Content is the lines within the conditional block
+	Content []string
+}
+
 // Classification contains the complete classification of a line.
 type Classification struct {
 	// Type is the primary block type
@@ -284,6 +314,9 @@ type Classification struct {
 
 	// Anchor is populated for block anchors ([#id] or [[id]])
 	Anchor *AnchorInfo
+
+	// Conditional is populated for conditional directives (ifdef, ifndef, ifeval)
+	Conditional *ConditionalInfo
 
 	// Style contains any block style information
 	Style *BlockStyleInfo
@@ -419,6 +452,13 @@ func (lc *LineClassifier) ClassifyLine(line string) *Classification {
 	if attr := lc.checkAttribute(trimmed); attr != nil {
 		result.Type = BlockAttribute
 		result.Attribute = attr
+		return result
+	}
+
+	// Check for conditional directives (ifdef, ifndef, ifeval)
+	if cond := lc.checkConditional(trimmed); cond != nil {
+		result.Type = cond.BlockType
+		result.Conditional = cond
 		return result
 	}
 
@@ -748,6 +788,77 @@ func (lc *LineClassifier) isValidAttributeName(name string) bool {
 	}
 
 	return !allDigits
+}
+
+// checkConditional checks for conditional directive syntax.
+// Patterns: ifdef::attr[], ifndef::attr[], ifeval::expr[]
+// Also supports: ifeval::["{attr}" == "value"]
+func (lc *LineClassifier) checkConditional(line string) *ConditionalInfo {
+	trimmed := strings.TrimSpace(line)
+
+	// Must end with ]
+	if !strings.HasSuffix(trimmed, "]") {
+		return nil
+	}
+
+	// Check for :: in the line
+	doubleColon := strings.Index(trimmed, "::")
+	if doubleColon == -1 {
+		return nil
+	}
+
+	// Extract the directive name (before ::)
+	directive := trimmed[:doubleColon]
+
+	// Extract the attribute/expression (between :: and ])
+	// Need to find the matching [ for the ]
+	openBracket := strings.Index(trimmed[doubleColon:], "[")
+	if openBracket == -1 {
+		return nil
+	}
+	openBracket += doubleColon // Adjust to absolute position
+
+	between := trimmed[doubleColon+2 : openBracket]
+	between = strings.TrimSpace(between)
+
+	var cond *ConditionalInfo
+
+	switch directive {
+	case "ifdef":
+		if between == "" {
+			return nil
+		}
+		cond = &ConditionalInfo{
+			BlockType: BlockConditionalIfdef,
+			Type:      "ifdef",
+			Attribute: between,
+		}
+	case "ifndef":
+		if between == "" {
+			return nil
+		}
+		cond = &ConditionalInfo{
+			BlockType: BlockConditionalIfndef,
+			Type:      "ifndef",
+			Attribute: between,
+		}
+	case "ifeval":
+		// For ifeval, the expression is between [ and ]
+		expr := trimmed[openBracket+1 : len(trimmed)-1]
+		expr = strings.TrimSpace(expr)
+		if expr == "" {
+			return nil
+		}
+		cond = &ConditionalInfo{
+			BlockType:  BlockConditionalIfeval,
+			Type:       "ifeval",
+			Expression: expr,
+		}
+	default:
+		return nil
+	}
+
+	return cond
 }
 
 // checkBlockMacro checks for block macro syntax.

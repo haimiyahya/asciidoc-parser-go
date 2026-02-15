@@ -52,7 +52,7 @@ func main() {
 
 	// Define flags - compatible with Asciidoctor CLI
 	flag.StringVarP(&outputFile, "out-file", "o", "", "Output file (default: based on input file; use - for STDOUT)")
-	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5, pdf, docbook, manpage] (default: html5)")
+	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5, pdf, docbook, manpage, epub] (default: html5)")
 	flag.StringVarP(&docType, "doctype", "d", "article", "Document type: [article, book, manpage, inline] (default: article)")
 	flag.StringSliceVarP(&attributeDefs, "attribute", "a", nil, "Define a document attribute: name, name!, or name=value (may be specified multiple times)")
 	flag.StringVarP(&baseDir, "base-dir", "B", "", "Base directory containing the document and resources (default: directory of input file)")
@@ -281,8 +281,39 @@ func main() {
 		}
 		output = buf.Bytes()
 		outputExt = "." + manualSection
+	case "epub":
+		// Extract title and author from document
+		epubConverter := converter.NewEPUBConverter()
+		if doc.Header != nil {
+			if doc.Header.Title != "" {
+				epubConverter.WithTitle(doc.Header.Title)
+			}
+			if doc.Header.Author != "" {
+				epubConverter.WithAuthor(doc.Header.Author)
+			}
+		}
+		// Override with attributes if present
+		if title, ok := doc.Attributes["title"]; ok {
+			epubConverter.WithTitle(title)
+		}
+		if author, ok := doc.Attributes["author"]; ok {
+			epubConverter.WithAuthor(author)
+		}
+		if lang, ok := doc.Attributes["lang"]; ok {
+			epubConverter.WithLanguage(lang)
+		}
+		if publisher, ok := doc.Attributes["publisher"]; ok {
+			epubConverter.WithPublisher(publisher)
+		}
+		var buf bytes.Buffer
+		if err := epubConverter.Convert(doc, &buf); err != nil {
+			printError("failed to convert document: %v", err)
+			os.Exit(1)
+		}
+		output = buf.Bytes()
+		outputExt = ".epub"
 	default:
-		printError("unsupported backend '%s' (supported: html5, pdf, docbook, manpage)", backend)
+		printError("unsupported backend '%s' (supported: html5, pdf, docbook, manpage, epub)", backend)
 		os.Exit(1)
 	}
 
@@ -334,11 +365,11 @@ func main() {
 
 // printHelp prints the help message
 func printHelp() {
-	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5/PDF/DocBook/Man Page Converter
+	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5/PDF/DocBook/Man Page/EPUB Converter
 Version %s
 
 Usage: asciidoctor [OPTIONS] FILE
-Convert the AsciiDoc input FILE to HTML5, PDF, DocBook, or Man Page output.
+Convert the AsciiDoc input FILE to HTML5, PDF, DocBook, Man Page, or EPUB output.
 Unless specified otherwise, output is written to a file whose name is derived
 from the input file. Application log messages are printed to STDERR.
 
@@ -347,7 +378,7 @@ Arguments:
                           Use '-' to read from STDIN.
 
 Options:
-  -b, --backend BACKEND           Set backend output format: [html5, pdf, docbook, manpage] (default: html5)
+  -b, --backend BACKEND           Set backend output format: [html5, pdf, docbook, manpage, epub] (default: html5)
   -d, --doctype DOCTYPE           Document type: [article, book, manpage, inline] (default: article)
   -e, --embedded                  Suppress enclosing document structure (same as -s)
   -o, --out-file FILE             Output file (default: based on input file; use - for STDOUT)
@@ -379,6 +410,9 @@ Examples:
 
   # Convert file to Man Page
   asciidoctor -b manpage mycommand.adoc
+
+  # Convert file to EPUB
+  asciidoctor -b epub document.adoc
 
   # Convert with custom output file
   asciidoctor -o output.html document.adoc

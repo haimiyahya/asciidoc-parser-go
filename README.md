@@ -6,20 +6,58 @@ A native Go implementation of an [AsciiDoc](https://asciidoc.org/) parser and pr
 
 - **Line-oriented Reader** - Mimics human visual scanning of AsciiDoc markup
 - **Block Classifier** - Identifies paragraphs, lists, sections, delimited blocks, tables, etc.
-- **Inline Parser** - Handles bold, italic, monospace, links, images, etc.
+- **Inline Parser** - Handles bold, italic, monospace, links, images, superscript, subscript
 - **AST Builder** - Rich Abstract Syntax Tree preserving source locations
-- **HTML5 Converter** - Produces semantic HTML5 via visitor pattern
-- **Extensible Design** - Interface-based architecture for custom converters/processors
+- **Attribute Processor** - Document attribute management and substitution
+- **Include Processor** - `include::[]` directive with tag filtering and line ranges
+- **Conditional Processing** - `ifdef`, `ifndef`, `ifeval` directives
+- **Multiple Output Backends**:
+  - HTML5 converter
+  - PDF converter (with TOC, cover page, metadata)
+  - DocBook 5.1.1 converter
+  - Man Page (troff/nroff) converter
+  - EPUB converter
+- **CLI Tool** - Full-featured command-line interface compatible with Asciidoctor options
 
 ## Installation
 
 ```bash
-go get github.com/haimiyahya/asciidoc-parser-go
+go install github.com/haimiyahya/asciidoc-parser-go/cmd/asciidoc@latest
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/haimiyahya/asciidoc-parser-go
+cd asciidoc-parser-go
+go build ./cmd/asciidoc
 ```
 
 ## Quick Start
 
-### Parsing a Document
+### Using the CLI
+
+```bash
+# Convert to HTML (default)
+asciidoc document.adoc
+
+# Convert to PDF
+asciidoc -b pdf document.adoc
+
+# Convert to PDF with TOC and cover page
+asciidoc -b pdf --pdf-toc --pdf-cover-page document.adoc
+
+# Convert to DocBook
+asciidoc -b docbook document.adoc
+
+# Convert to Man Page
+asciidoc -b manpage mycommand.adoc
+
+# Convert to EPUB
+asciidoc -b epub document.adoc
+```
+
+### Parsing a Document (Library)
 
 ```go
 package main
@@ -56,7 +94,7 @@ func main() {
 }
 ```
 
-### Converting to HTML5
+### Converting to HTML5 (Library)
 
 ```go
 package main
@@ -96,6 +134,23 @@ func main() {
 </html>
 ```
 
+### Converting to PDF (Library)
+
+```go
+pdfConverter := converter.NewPDFConverter()
+
+// Enable PDF enhancements
+pdfConverter.WithTOC(true)              // Table of contents
+pdfConverter.WithCoverPage(true)        // Cover page
+pdfConverter.WithA4()                   // A4 page size
+
+// Set PDF metadata
+pdfConverter.WithPDFTitle("My Document")
+pdfConverter.WithPDFAuthor("John Doe")
+
+pdfConverter.Convert(doc, &buf)
+```
+
 ## Supported Syntax
 
 ### Blocks
@@ -122,8 +177,10 @@ func main() {
 | `*word*` | *word* | Unconstrained bold (single word) |
 | `__italic__` | __italic__ | Constrained italic |
 | `_word_` | _word_ | Unconstrained italic (single word) |
-| `` `code` ` | `code` | Monospace |
+| `` `code` `` | `code` | Monospace |
 | `++code++` | `++code++` | Monospace alternative |
+| `^sup^` | sup | Superscript |
+| `~sub~` | sub | Subscript |
 | `link:text[url]` | <a href="url">text</a> | Macro link |
 | `https://url` | <a href="url">url</a> | Bare URL |
 | `image:path[alt]` | <img src="path" alt="alt"> | Inline image |
@@ -145,17 +202,43 @@ IMPORTANT: Pay attention.
 | Cell 1 | Cell 2 |
 ```
 
+## CLI Options
+
+```
+Options:
+  -b, --backend BACKEND           Set backend output format: [html5, pdf, docbook, manpage, epub]
+  -d, --doctype DOCTYPE           Document type: [article, book, manpage, inline]
+  -e, --embedded                  Suppress enclosing document structure
+  -o, --out-file FILE             Output file (default: based on input file; use - for STDOUT)
+  -n, --section-numbers           Auto-number section titles
+  -a, --attribute name[=value]    Define a document attribute
+  -B, --base-dir DIR              Base directory containing the document and resources
+  -D, --destination-dir DIR       Destination output directory
+  -q, --quiet                     Silence application log messages
+  -v, --verbose                   Enable verbose output
+  -h, --help                      Show help message
+
+PDF Options:
+  --pdf-page-size SIZE            PDF page size: [letter, a4]
+  --pdf-toc                       Generate table of contents
+  --pdf-cover-page                Generate cover page
+  --pdf-no-page-numbers           Disable page numbers
+  --pdf-header TEMPLATE           PDF header template
+  --pdf-footer TEMPLATE           PDF footer template
+```
+
 ## Architecture
 
 ```
 internal/
-├── ast/          # Abstract Syntax Tree node definitions
-├── blocks/       # Block-level AST node types
-├── converter/    # Output converters (HTML5, extensible)
-├── inline/       # Inline markup parser
-├── parser/       # Main parser orchestrator
-├── processor/    # Attribute & conditional processor
-└── reader/       # Line-oriented reader with classifier
+├── ast/              # Abstract Syntax Tree node definitions
+├── attribute_parser/ # Attribute parsing and substitution
+├── blocks/           # Block-level AST node types
+├── converter/        # Output converters (HTML5, PDF, DocBook, ManPage, EPUB)
+├── inline/           # Inline markup parser
+├── parser/           # Main parser orchestrator
+├── processor/        # Attribute, include, conditional processors
+└── reader/           # Line-oriented reader with classifier
 ```
 
 ### Data Flow
@@ -169,7 +252,9 @@ Source Text
     ↓
 [Parser] → AST (Document + Blocks + Inline)
     ↓
-[Converter] → HTML5 (or other format)
+[Processor] → Attribute substitution, Include expansion
+    ↓
+[Converter] → HTML5, PDF, DocBook, Man Page, EPUB
 ```
 
 ## Roadmap
@@ -181,8 +266,12 @@ Source Text
 - [x] Phase 4: Attribute Processor
 - [x] Phase 5: Include Processor
 - [x] Phase 6: HTML5 Converter
-- [ ] Phase 7: Testing and Validation
-- [ ] Phase 8: CLI and Tooling
+- [x] Phase 7: Testing and Validation
+- [x] Phase 8: CLI and Tooling
+- [x] Phase 9: PDF Backend
+- [x] Phase 10: DocBook Backend
+- [x] Phase 11: Man Page Backend
+- [x] Phase 12: EPUB Backend
 
 See [ROADMAP.md](ROADMAP.md) for details.
 
@@ -212,27 +301,31 @@ go test ./internal/inline/... -v
 | Table Parsing | ✅ Complete | Basic tables |
 | Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript |
 | Admonitions | ✅ Complete | All 5 types |
-| Block Macros | ✅ Complete | Image, video, audio |
+| Block Macros | ✅ Complete | Image, video, audio, include |
 | Delimited Blocks | ✅ Complete | Example, quote, literal, etc. |
 | AST Builder | ✅ Complete | Rich node hierarchy |
 | HTML5 Converter | ✅ Complete | Semantic HTML5 |
-| Attribute Processor | 🚧 In Progress | Basic attribute handling |
-| Include Processor | 🚧 In Progress | Basic include directive |
-| CLI | 📝 Planned | Phase 8 |
+| PDF Converter | ✅ Complete | With TOC, cover page, metadata |
+| DocBook Converter | ✅ Complete | DocBook 5.1.1 |
+| Man Page Converter | ✅ Complete | troff/nroff format |
+| EPUB Converter | ✅ Complete | EPUB 2.0.1 |
+| Attribute Processor | ✅ Complete | Document attribute handling |
+| Include Processor | ✅ Complete | Include directive with tag filtering |
+| Conditional Processing | ✅ Complete | ifdef, ifndef, ifeval |
+| CLI | ✅ Complete | Full Asciidoctor-compatible options |
 
-### Missing/Incomplete Features
+### Missing/Incomplete Features (Post-MVP)
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
-| **Full Attribute System** | Key-value pairs like `toc:[]`, `role-based attributes`, document attributes | High | Asciidoctor has extensive attribute system |
-| **Preprocessor** | Include directive (`include::[]`), macro expansion | Medium | Allows reusing content across files |
-| **Conditionals** | `ifdef::endif`, attribute-based conditionals | Low | Conditional content inclusion |
-| **Callouts** | Reusable content blocks | Low | Define content once, reference multiple times |
-| **Extensions System** | Custom block/inline macros | Low | Like `example-block::[]` custom blocks |
-| **More Inline Types** | Additional inline markup | Low | `++` monospace alternative, `[ ]` for roles, etc. |
-| **More Delimited Block Types** | All types (pass::[ ], sidebar::[ ], etc.) | Medium | Complete support for all AsciiDoc delimited block types |
-| **Cross-references** | `<<section-id>>` syntax | Medium | Internal links to other sections |
-| **Bibliography** | Citation processing | Low | Academic citation support |
+| **Cross-references** | `<<section-id>>` syntax for internal links | High |
+| **Bibliography** | Citation processing for academic use | Low |
+| **Extensions System** | Custom block/inline macros, tree processors | Medium |
+| **More Inline Types** | `[ ]` for roles, etc. | Low |
+| **More Delimited Block Types** | All types (pass::[ ], sidebar::[ ], etc.) | Medium |
+| **Callouts** | Reusable content blocks with `<<block-id>>` | Medium |
+| **Index Terms** | `(((term)))` indexing | Low |
+| **LSP Support** | Language Server Protocol for editor integration | Medium |
 
 ## Contributing
 

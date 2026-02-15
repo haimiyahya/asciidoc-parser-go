@@ -38,19 +38,23 @@ const (
 
 	// NodeImage is an inline image (image:url[alt-text]).
 	NodeImage
+
+	// NodeCrossRef is a cross-reference (<<section-id>>).
+	NodeCrossRef
 )
 
 // String returns the string representation of NodeType.
 func (nt NodeType) String() string {
 	names := map[NodeType]string{
-		NodeText:       "Text",
-		NodeBold:       "Bold",
-		NodeItalic:      "Italic",
-		NodeMonospace:   "Monospace",
-		NodeSubscript:   "Subscript",
+		NodeText:      "Text",
+		NodeBold:      "Bold",
+		NodeItalic:     "Italic",
+		NodeMonospace:  "Monospace",
+		NodeSubscript:  "Subscript",
 		NodeSuperscript: "Superscript",
-		NodeLink:        "Link",
-		NodeImage:       "Image",
+		NodeLink:       "Link",
+		NodeImage:      "Image",
+		NodeCrossRef:   "CrossRef",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -71,6 +75,9 @@ type Node struct {
 
 	// Alt is the alt text (for Image nodes).
 	Alt string
+
+	// Ref is the cross-reference target ID (for CrossRef nodes).
+	Ref string
 
 	// StartPos is the starting position of this node's markup in source text.
 	StartPos int
@@ -104,6 +111,8 @@ func (n *Node) String() string {
 		return n.Text
 	case NodeImage:
 		return fmt.Sprintf("image:%s[%s]", n.URL, n.Alt)
+	case NodeCrossRef:
+		return fmt.Sprintf("<<%s>>", n.Ref)
 	default:
 		return n.Text
 	}
@@ -131,6 +140,12 @@ func (p *Parser) Parse() []*Node {
 
 	for p.pos < len(p.text) {
 		// Try to match inline constructs
+		if node, newPos := p.tryCrossRef(); node != nil {
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
 		if node, newPos := p.tryImage(); node != nil {
 			nodes = append(nodes, node)
 			p.pos = newPos
@@ -180,7 +195,8 @@ func (p *Parser) Parse() []*Node {
 		// Look for next inline construct marker
 		for i := p.pos; i < len(p.text); i++ {
 			remaining := p.text[i:]
-			if strings.HasPrefix(remaining, "image:") ||
+			if strings.HasPrefix(remaining, "<<") ||
+				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
 				strings.HasPrefix(remaining, "**") ||
 				strings.HasPrefix(remaining, "*") ||
@@ -510,6 +526,33 @@ func (p *Parser) trySuperscript() (*Node, int) {
 				StartPos:  p.pos,
 				Position:  p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
+		}
+	}
+
+	return nil, p.pos
+}
+
+// tryCrossRef attempts to parse a cross-reference: <<section-id>>.
+func (p *Parser) tryCrossRef() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for cross-reference: <<section-id>>
+	if strings.HasPrefix(remaining, "<<") {
+		// Find the closing >>
+		closeIndex := strings.Index(remaining[2:], ">>")
+		if closeIndex != -1 && closeIndex > 0 {
+			ref := remaining[2 : closeIndex+2]
+			// Trim any whitespace from the reference ID
+			ref = strings.TrimSpace(ref)
+			if ref != "" {
+				return &Node{
+					Type:     NodeCrossRef,
+					Ref:      ref,
+					Text:     ref, // Use ref as display text
+					StartPos:  p.pos,
+					Position:  p.pos + closeIndex + 4,
+				}, p.pos + closeIndex + 4
+			}
 		}
 	}
 

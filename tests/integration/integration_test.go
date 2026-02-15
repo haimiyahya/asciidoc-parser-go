@@ -156,9 +156,9 @@ Deeper content.`
 	require.NoError(t, err)
 
 	// Verify heading tags (level 1 -> h2, level 2 -> h3, level 3 -> h4)
-	assert.Contains(t, output, "<h2>Section One</h2>")
-	assert.Contains(t, output, "<h3>Section Two</h3>")
-	assert.Contains(t, output, "<h4>Section Three</h4>")
+	assert.Contains(t, output, "Section One</h2>")
+	assert.Contains(t, output, "Section Two</h3>")
+	assert.Contains(t, output, "Section Three</h4>")
 }
 
 // TestGolden_documentTitleOnly tests document with only a title.

@@ -3,7 +3,9 @@ package parser
 
 import (
 	"io"
+	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
@@ -29,6 +31,9 @@ type Parser struct {
 	currentList      *ast.NodeList
 	currentListBlockType reader.BlockType
 	currentListLevel int
+
+	// Block anchor tracking - [[id]] before a section applies to that section
+	pendingAnchorID string
 }
 
 // ParserOption configures a parser.
@@ -261,6 +266,14 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			continue
 		}
 
+		// Handle block anchors ([#id] or [[id]])
+		if classification.Type == reader.BlockAnchor && classification.Anchor != nil {
+			// Store the anchor ID to apply to the next section
+			p.pendingAnchorID = classification.Anchor.ID
+			p.reader.Advance()
+			continue
+		}
+
 		// Handle horizontal rules, page breaks
 		if classification.Type == reader.BlockHorizontalRule || classification.Type == reader.BlockPageBreak {
 			// Close any open list first
@@ -377,25 +390,76 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 	}
 }
 
+// generateSectionID creates a section ID from a section title.
+// This follows AsciiDoc conventions: lowercase, hyphens for spaces,
+// removes special characters, etc.
+func generateSectionID(title string) string {
+	// Convert to lowercase
+	id := strings.ToLower(title)
+
+	// Replace spaces and special chars with hyphens
+	// Keep only alphanumeric, hyphens, and underscores
+	reg := regexp.MustCompile(`[^a-z0-9_\-]+`)
+	id = reg.ReplaceAllString(id, "-")
+
+	// Trim hyphens from start/end
+	id = strings.Trim(id, "-")
+
+	// Collapse multiple hyphens
+	reg = regexp.MustCompile(`-+`)
+	id = reg.ReplaceAllString(id, "-")
+
+	// Ensure ID doesn't start with a digit
+	if len(id) > 0 && unicode.IsDigit(rune(id[0])) {
+		id = "_" + id
+	}
+
+	// Fallback if ID is empty
+	if id == "" {
+		id = "_"
+	}
+
+	return id
+}
+
 // createSection creates a section node from section info.
 func (p *Parser) createSection(info *reader.SectionInfo, lineno int) ast.Node {
 	if info == nil {
 		return nil
 	}
 
+	// Use explicit ID if provided, otherwise use pending anchor ID, then auto-generate from title
+	sectionID := info.ID
+	if sectionID == "" {
+		// Check if there's a pending block anchor ID
+		if p.pendingAnchorID != "" {
+			sectionID = p.pendingAnchorID
+			p.pendingAnchorID = "" // Consume the pending anchor
+		} else {
+			sectionID = generateSectionID(info.Title)
+		}
+	} else {
+		// Explicit ID was provided, clear any pending anchor
+		p.pendingAnchorID = ""
+	}
+
 	// For level 0 (document title), set the document header
 	if info.Level == 0 {
 		return &ast.NodeSection{
-			Level: 0,
-			Title: info.Title,
-			Pos:   ast.Position{Line: lineno},
+			Level:      0,
+			Title:       info.Title,
+			ID:          sectionID,
+			Attributes:  info.Attributes,
+			Pos:         ast.Position{Line: lineno},
 		}
 	}
 
 	return &ast.NodeSection{
-		Level: info.Level,
-		Title: info.Title,
-		Pos:   ast.Position{Line: lineno},
+		Level:      info.Level,
+		Title:       info.Title,
+		ID:          sectionID,
+		Attributes:  info.Attributes,
+		Pos:         ast.Position{Line: lineno},
 	}
 }
 

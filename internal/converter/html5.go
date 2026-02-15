@@ -246,6 +246,11 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			alt = node.Text
 		}
 		fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
+	case inline.NodeCrossRef:
+		// Cross-reference: <<section-id>> becomes <a href="#section-id">
+		fmt.Fprintf(w, `<a href="#%s">`, c.escape(node.Ref))
+		c.renderInlineChildren(node, w)
+		c.writeRawString("</a>", w)
 	}
 }
 
@@ -285,7 +290,21 @@ func (c *HTML5Converter) writeRawString(s string, w io.Writer) {
 func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 	// Determine heading tag based on level
 	tag := c.headingTag(section.Level)
-	c.writeElement(tag, c.escape(section.Title), w)
+
+	// Write opening heading tag with id attribute if section has an ID
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	if section.ID != "" {
+		fmt.Fprintf(w, `<%s id="%s">`, tag, c.escape(section.ID))
+	} else {
+		fmt.Fprintf(w, "<%s>", tag)
+	}
+	fmt.Fprint(w, c.escape(section.Title))
+	fmt.Fprintf(w, "</%s>", tag)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
 
 	// Convert section children (paragraphs, lists, subsections, etc.)
 	for _, child := range section.Children {

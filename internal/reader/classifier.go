@@ -256,6 +256,12 @@ type MacroInfo struct {
 	Attributes map[string]string
 }
 
+// AnchorInfo contains information about a block anchor.
+type AnchorInfo struct {
+	// ID is the anchor identifier
+	ID string
+}
+
 // Classification contains the complete classification of a line.
 type Classification struct {
 	// Type is the primary block type
@@ -275,6 +281,9 @@ type Classification struct {
 
 	// Macro is populated for block macros (image::, video::, etc.)
 	Macro *MacroInfo
+
+	// Anchor is populated for block anchors ([#id] or [[id]])
+	Anchor *AnchorInfo
 
 	// Style contains any block style information
 	Style *BlockStyleInfo
@@ -437,6 +446,7 @@ func (lc *LineClassifier) ClassifyLine(line string) *Classification {
 	// Check for block anchors
 	if lc.isBlockAnchor(trimmed) {
 		result.Type = BlockAnchor
+		result.Anchor = lc.parseBlockAnchor(trimmed)
 		return result
 	}
 
@@ -1100,6 +1110,25 @@ func (lc *LineClassifier) isBlockAnchor(line string) bool {
 	}
 
 	return false
+}
+
+// parseBlockAnchor extracts the anchor ID from a block anchor line.
+func (lc *LineClassifier) parseBlockAnchor(line string) *AnchorInfo {
+	trimmed := strings.TrimSpace(line)
+
+	// Check for [[id]] format
+	if strings.HasPrefix(trimmed, "[[") && strings.HasSuffix(trimmed, "]]") {
+		id := trimmed[2 : len(trimmed)-2]
+		return &AnchorInfo{ID: id}
+	}
+
+	// Check for [#id] format
+	if strings.HasPrefix(trimmed, "[#") && strings.HasSuffix(trimmed, "]") {
+		id := trimmed[2 : len(trimmed)-1]
+		return &AnchorInfo{ID: id}
+	}
+
+	return nil
 }
 
 // checkAdmonition checks for admonition syntax.

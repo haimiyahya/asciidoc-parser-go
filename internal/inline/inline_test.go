@@ -251,3 +251,82 @@ func TestParseMixed(t *testing.T) {
 		})
 	}
 }
+
+func TestParseCrossRef(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected []*Node
+	}{
+		{
+			name:   "simple cross-reference",
+			source: "<<section-id>>",
+			expected: []*Node{
+				{Type: NodeCrossRef, Ref: "section-id", Text: "section-id"},
+			},
+		},
+		{
+			name:   "cross-reference with hyphen",
+			source: "<<my-section>>",
+			expected: []*Node{
+				{Type: NodeCrossRef, Ref: "my-section", Text: "my-section"},
+			},
+		},
+		{
+			name:   "cross-reference with text before",
+			source: "See <<intro>> for details",
+			expected: []*Node{
+				{Type: NodeText, Text: "See "},
+				{Type: NodeCrossRef, Ref: "intro", Text: "intro"},
+				{Type: NodeText, Text: " for details"},
+			},
+		},
+		{
+			name:   "cross-reference with underscore",
+			source: "<<_section_id>>",
+			expected: []*Node{
+				{Type: NodeCrossRef, Ref: "_section_id", Text: "_section_id"},
+			},
+		},
+		{
+			name:   "multiple cross-references",
+			source: "<<section1>> and <<section2>>",
+			expected: []*Node{
+				{Type: NodeCrossRef, Ref: "section1", Text: "section1"},
+				{Type: NodeText, Text: " and "},
+				{Type: NodeCrossRef, Ref: "section2", Text: "section2"},
+			},
+		},
+		{
+			name: "cross-reference with whitespace",
+			source: "<< section-id >>",
+			expected: []*Node{
+				{Type: NodeCrossRef, Ref: "section-id", Text: "section-id"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser := NewParser(tt.source)
+			nodes := parser.Parse()
+
+			require.Equal(t, len(tt.expected), len(nodes), "node count mismatch")
+			for i, expectedNode := range tt.expected {
+				if i < len(nodes) {
+					actualNode := nodes[i]
+					assert.Equal(t, expectedNode.Type, actualNode.Type, "node type mismatch at index %d", i)
+					assert.Equal(t, expectedNode.Text, actualNode.Text, "text mismatch at index %d", i)
+					if expectedNode.Type == NodeCrossRef && expectedNode.Ref != "" {
+						assert.Equal(t, expectedNode.Ref, actualNode.Ref, "ref mismatch at index %d", i)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestNodeTypeStringWithCrossRef(t *testing.T) {
+	assert.Equal(t, "CrossRef", NodeCrossRef.String())
+}
+

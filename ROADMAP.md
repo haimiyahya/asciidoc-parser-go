@@ -127,7 +127,7 @@ This document outlines the phased implementation plan for building a native Go i
 - Examples from AsciiDoc Language Specification
 - Benchmarking for optimization opportunities
 
-## Phase 8: CLI and Tooling 🚧
+## Phase 8: CLI and Tooling ✅
 
 **Objectives**:
 - Command-line interface for common operations
@@ -137,9 +137,11 @@ This document outlines the phased implementation plan for building a native Go i
 
 **Implementation**:
 - `cmd/asciidoc/main.go` CLI implementation
-- Config file support (`~/.config/asciidoc/config.toml`)
-- Plugin/extension system
-- Watch mode (fsnotify or polling)
+- Full flag support: input/output files, backend selection, attributes
+- Stdin/stdout support for pipeline usage
+- Config file support (`~/.config/asciidoc/config.toml`) - TODO
+- Plugin/extension system - TODO
+- Watch mode (fsnotify or polling) - TODO
 
 ## Future Enhancements (Post-MVP)
 

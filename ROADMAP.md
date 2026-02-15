@@ -218,12 +218,12 @@ This document outlines the phased implementation plan for building a native Go i
 - Man page via groff/troff ✅
 - EPUB via asciidoc-epub3 ✅
 
-### PDF Enhancements
-- Table of contents generation
-- Page numbering options
-- Cover page support
-- Custom headers and footers
-- PDF metadata (author, title, keywords)
+### PDF Enhancements ✅
+- Table of contents generation ✅
+- Page numbering options ✅
+- Cover page support ✅
+- Custom headers and footers ✅
+- PDF metadata (author, title, keywords) ✅
 
 ### Extension Points
 - Custom block macros

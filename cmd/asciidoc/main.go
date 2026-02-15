@@ -48,6 +48,13 @@ func main() {
 		timings          bool
 		showVersion      bool
 		help             bool
+		// PDF-specific options
+		pdfPageSize       string
+		pdfTOC            bool
+		pdfCoverPage      bool
+		pdfNoPageNumbers  bool
+		pdfHeaderTemplate string
+		pdfFooterTemplate string
 	)
 
 	// Define flags - compatible with Asciidoctor CLI
@@ -67,6 +74,14 @@ func main() {
 	flag.BoolVarP(&timings, "timings", "t", false, "Print timings report")
 	flag.BoolVarP(&showVersion, "version", "V", false, "Display version information")
 	flag.BoolVarP(&help, "help", "h", false, "Show this help message")
+
+	// PDF-specific flags
+	flag.StringVar(&pdfPageSize, "pdf-page-size", "letter", "PDF page size: [letter, a4] (default: letter)")
+	flag.BoolVar(&pdfTOC, "pdf-toc", false, "Generate table of contents in PDF")
+	flag.BoolVar(&pdfCoverPage, "pdf-cover-page", false, "Generate cover page in PDF")
+	flag.BoolVar(&pdfNoPageNumbers, "pdf-no-page-numbers", false, "Disable page numbers in PDF")
+	flag.StringVar(&pdfHeaderTemplate, "pdf-header", "", "PDF header template")
+	flag.StringVar(&pdfFooterTemplate, "pdf-footer", "", "PDF footer template")
 
 	flag.Parse()
 
@@ -231,6 +246,49 @@ func main() {
 		outputExt = ".html"
 	case "pdf":
 		pdfConverter := converter.NewPDFConverter()
+
+		// Apply PDF-specific options
+		switch strings.ToLower(pdfPageSize) {
+		case "a4":
+			pdfConverter.WithA4()
+		case "letter":
+			pdfConverter.WithLetter()
+		}
+
+		if pdfTOC {
+			pdfConverter.WithTOC(true)
+		}
+
+		if pdfCoverPage {
+			pdfConverter.WithCoverPage(true)
+		}
+
+		if pdfNoPageNumbers {
+			pdfConverter.WithPageNumbers(false)
+		}
+
+		if pdfHeaderTemplate != "" {
+			pdfConverter.WithHeaderTemplate(pdfHeaderTemplate)
+		}
+
+		if pdfFooterTemplate != "" {
+			pdfConverter.WithFooterTemplate(pdfFooterTemplate)
+		}
+
+		// Extract metadata from document attributes
+		if title, ok := doc.Attributes["title"]; ok {
+			pdfConverter.WithPDFTitle(title)
+		}
+		if author, ok := doc.Attributes["author"]; ok {
+			pdfConverter.WithPDFAuthor(author)
+		}
+		if keywords, ok := doc.Attributes["keywords"]; ok {
+			pdfConverter.WithPDFKeywords(keywords)
+		}
+		if subject, ok := doc.Attributes["subject"]; ok {
+			pdfConverter.WithPDFSubject(subject)
+		}
+
 		var buf bytes.Buffer
 		if err := pdfConverter.Convert(doc, &buf); err != nil {
 			printError("failed to convert document: %v", err)
@@ -398,12 +456,26 @@ Options:
   -V, --version                   Display version information
   -h, --help                      Show this help message
 
+PDF Options:
+  --pdf-page-size SIZE            PDF page size: [letter, a4] (default: letter)
+  --pdf-toc                       Generate table of contents in PDF
+  --pdf-cover-page                Generate cover page in PDF
+  --pdf-no-page-numbers           Disable page numbers in PDF
+  --pdf-header TEMPLATE           PDF header template
+  --pdf-footer TEMPLATE           PDF footer template
+
 Examples:
   # Convert file to HTML
   asciidoctor document.adoc
 
   # Convert file to PDF
   asciidoctor -b pdf document.adoc
+
+  # Convert file to PDF with TOC and cover page
+  asciidoctor -b pdf --pdf-toc --pdf-cover-page document.adoc
+
+  # Convert file to PDF with A4 page size
+  asciidoctor -b pdf --pdf-page-size a4 document.adoc
 
   # Convert file to DocBook
   asciidoctor -b docbook document.adoc

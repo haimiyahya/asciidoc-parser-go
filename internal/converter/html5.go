@@ -168,7 +168,10 @@ func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 	tag := c.headingTag(section.Level)
 	c.writeElement(tag, c.escape(section.Title), w)
 
-	// TODO: Process section content (children)
+	// Convert section children (paragraphs, lists, subsections, etc.)
+	for _, child := range section.Children {
+		c.convertNode(child, w)
+	}
 }
 
 // headingTag returns appropriate HTML tag for a section level.

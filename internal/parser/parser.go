@@ -20,6 +20,10 @@ type Parser struct {
 	// options configures parser behavior.
 	options []ParserOption
 
+	// Section tracking state (stack of open sections)
+	sectionStack   []*ast.NodeSection
+	currentSection *ast.NodeSection
+
 	// List tracking state
 	currentList      *ast.NodeList
 	currentListBlockType reader.BlockType
@@ -128,7 +132,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -140,10 +144,11 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 
 			section := p.createSection(classification.Section, lineno)
 			if section != nil {
-				// Level 0 is the document title - don't add as a block
-				// It's already been handled by setting doc.Header
-				if sec, ok := section.(*ast.NodeSection); ok && sec.Level > 0 {
-					doc.Blocks = append(doc.Blocks, section)
+				if sec, ok := section.(*ast.NodeSection); ok {
+					if sec.Level > 0 {
+						// Handle section nesting
+						p.pushSection(doc, sec)
+					}
 				}
 			}
 			p.reader.Advance()
@@ -159,7 +164,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -186,7 +191,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -230,7 +235,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -247,7 +252,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -264,7 +269,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -281,7 +286,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -289,7 +294,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			// Create macro node
 			macro := p.createMacro(classification.Macro, lineno)
 			if macro != nil {
-				doc.Blocks = append(doc.Blocks, macro)
+				p.addBlockToCurrentSection(doc, macro)
 			}
 
 			p.reader.Advance()
@@ -305,7 +310,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
-					doc.Blocks = append(doc.Blocks, para)
+					p.addBlockToCurrentSection(doc, para)
 				}
 				paragraphLines = nil
 			}
@@ -313,7 +318,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			// Create admonition node
 			admonition := p.createAdmonition(classification.Admonition, lineno)
 			if admonition != nil {
-				doc.Blocks = append(doc.Blocks, admonition)
+				p.addBlockToCurrentSection(doc, admonition)
 			}
 
 			p.reader.Advance()
@@ -332,7 +337,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 	if len(paragraphLines) > 0 {
 		para := p.createParagraph(paragraphLines, paragraphLineno)
 		if para != nil {
-			doc.Blocks = append(doc.Blocks, para)
+			p.addBlockToCurrentSection(doc, para)
 		}
 	}
 
@@ -527,7 +532,7 @@ func (p *Parser) splitTableRow(row string) []string {
 // closeCurrentList closes the current open list if any.
 func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
 	if p.currentList != nil {
-		doc.Blocks = append(doc.Blocks, p.currentList)
+		p.addBlockToCurrentSection(doc, p.currentList)
 		p.currentList = nil
 		p.currentListBlockType = 0
 		p.currentListLevel = 0
@@ -623,4 +628,58 @@ func (p *Parser) addNestedList(classification *reader.Classification, lineno int
 // Advance is a helper that consumes the next line.
 func (p *Parser) Advance() bool {
 	return p.reader.Advance()
+}
+
+// addBlockToCurrentSection adds a block to either the current section's children
+// or to doc.Blocks if there's no current section.
+func (p *Parser) addBlockToCurrentSection(doc *ast.NodeDocument, block ast.Node) {
+	if p.currentSection != nil {
+		p.currentSection.Children = append(p.currentSection.Children, block)
+	} else {
+		doc.Blocks = append(doc.Blocks, block)
+	}
+}
+
+// pushSection adds a new section to the document, handling section nesting.
+// When we see a new section:
+// - Same level as current: close current section, start new one
+// - Deeper level than current: it's a subsection of current
+// - Shallower level than current: close sections until we're at the right level
+func (p *Parser) pushSection(doc *ast.NodeDocument, section *ast.NodeSection) {
+	// Close any open sections at or above this level
+	p.closeSectionsToLevel(doc, section.Level)
+
+	// Add this section to the appropriate parent
+	if len(p.sectionStack) == 0 {
+		// No current section - add to doc.Blocks
+		doc.Blocks = append(doc.Blocks, section)
+	} else {
+		// Add as child of the current (parent) section
+		parent := p.sectionStack[len(p.sectionStack)-1]
+		parent.Children = append(parent.Children, section)
+	}
+
+	// This section becomes the current section
+	p.sectionStack = append(p.sectionStack, section)
+	p.currentSection = section
+}
+
+// closeSectionsToLevel closes all sections at or above the given level.
+// When we encounter a new section at level L, we need to close all sections
+// at level >= L (they're siblings or parents, not ancestors).
+func (p *Parser) closeSectionsToLevel(doc *ast.NodeDocument, level int) {
+	for len(p.sectionStack) > 0 && p.sectionStack[len(p.sectionStack)-1].Level >= level {
+		// Pop the section from stack
+		closed := p.sectionStack[len(p.sectionStack)-1]
+		p.sectionStack = p.sectionStack[:len(p.sectionStack)-1]
+
+		// If this was the current section, update currentSection
+		if closed == p.currentSection {
+			if len(p.sectionStack) > 0 {
+				p.currentSection = p.sectionStack[len(p.sectionStack)-1]
+			} else {
+				p.currentSection = nil
+			}
+		}
+	}
 }

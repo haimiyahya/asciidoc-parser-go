@@ -93,6 +93,8 @@ type NodeSection struct {
 	ID string
 	// Attributes are section-level attributes.
 	Attributes map[string]string
+	// Children are blocks that belong to this section.
+	Children []Node
 	// Pos is the location in the source.
 	Pos Position
 }

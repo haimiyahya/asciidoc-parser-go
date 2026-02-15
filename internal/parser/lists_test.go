@@ -282,8 +282,20 @@ Another paragraph.
 	require.NoError(t, err)
 	require.NotNil(t, doc)
 
-	// Count blocks (title is section, lists are grouped)
-	assert.GreaterOrEqual(t, len(doc.Blocks), 6)
+	// With section handling, blocks after a section belong to that section
+	// doc.Blocks should contain: paragraph (before section), section
+	assert.Len(t, doc.Blocks, 2)
+
+	// First block should be a paragraph
+	_, ok0 := doc.Blocks[0].(*ast.NodeParagraph)
+	require.True(t, ok0, "First block should be a paragraph")
+
+	// Second block should be a section
+	section, ok1 := doc.Blocks[1].(*ast.NodeSection)
+	require.True(t, ok1, "Second block should be a section")
+
+	// Section should have 4 children: paragraph, list, paragraph, list
+	assert.Len(t, section.Children, 4)
 }
 
 func TestParseNestedOrderedList(t *testing.T) {
@@ -426,4 +438,154 @@ func TestParseNestedListWithBlankLine(t *testing.T) {
 	require.True(t, ok2)
 	assert.NotNil(t, item1.NestedList)
 	assert.Len(t, item1.NestedList.Items, 2)
+}
+
+func TestSectionWithParagraphs(t *testing.T) {
+	source := `== Section Title
+
+This is paragraph one.
+
+This is paragraph two.
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have 1 section
+	assert.Len(t, doc.Blocks, 1)
+
+	section, ok := doc.Blocks[0].(*ast.NodeSection)
+	require.True(t, ok, "First block should be a section")
+	assert.Equal(t, "Section Title", section.Title)
+
+	// Section should have 2 paragraph children
+	assert.Len(t, section.Children, 2)
+
+	para1, ok1 := section.Children[0].(*ast.NodeParagraph)
+	require.True(t, ok1, "First child should be a paragraph")
+	assert.Equal(t, "This is paragraph one.", para1.Text)
+
+	para2, ok2 := section.Children[1].(*ast.NodeParagraph)
+	require.True(t, ok2, "Second child should be a paragraph")
+	assert.Equal(t, "This is paragraph two.", para2.Text)
+}
+
+func TestSectionWithList(t *testing.T) {
+	source := `== Section Title
+
+- List item 1
+- List item 2
+- List item 3
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have 1 section
+	assert.Len(t, doc.Blocks, 1)
+
+	section, ok := doc.Blocks[0].(*ast.NodeSection)
+	require.True(t, ok, "First block should be a section")
+
+	// Section should have 1 list child
+	assert.Len(t, section.Children, 1)
+
+	list, ok1 := section.Children[0].(*ast.NodeList)
+	require.True(t, ok1, "First child should be a list")
+	assert.Len(t, list.Items, 3)
+}
+
+func TestMultipleSections(t *testing.T) {
+	source := `== Section One
+
+Content for section one.
+
+== Section Two
+
+Content for section two.
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have 2 sections
+	assert.Len(t, doc.Blocks, 2)
+
+	section1, ok1 := doc.Blocks[0].(*ast.NodeSection)
+	require.True(t, ok1, "First block should be a section")
+	assert.Equal(t, "Section One", section1.Title)
+	assert.Len(t, section1.Children, 1)
+
+	section2, ok2 := doc.Blocks[1].(*ast.NodeSection)
+	require.True(t, ok2, "Second block should be a section")
+	assert.Equal(t, "Section Two", section2.Title)
+	assert.Len(t, section2.Children, 1)
+}
+
+func TestNestedSections(t *testing.T) {
+	source := `== Level 1 Section
+
+Content for level 1.
+
+=== Level 2 Subsection
+
+Content for level 2.
+
+==== Level 3 Subsection
+
+Content for level 3.
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have 1 top-level section (level 1)
+	assert.Len(t, doc.Blocks, 1)
+
+	level1Section, ok1 := doc.Blocks[0].(*ast.NodeSection)
+	require.True(t, ok1, "First block should be a level 1 section")
+	assert.Equal(t, 1, level1Section.Level)
+
+	// Level 1 section should have: paragraph, level 2 section
+	assert.Len(t, level1Section.Children, 2)
+
+	// First child is a paragraph
+	_, okPara := level1Section.Children[0].(*ast.NodeParagraph)
+	require.True(t, okPara, "First child of level 1 should be a paragraph")
+
+	// Second child is level 2 section
+	level2Section, ok2 := level1Section.Children[1].(*ast.NodeSection)
+	require.True(t, ok2, "Second child should be a level 2 section")
+	assert.Equal(t, 2, level2Section.Level)
+
+	// Level 2 section should have: paragraph, level 3 section
+	assert.Len(t, level2Section.Children, 2)
+
+	// First child is a paragraph
+	_, okPara2 := level2Section.Children[0].(*ast.NodeParagraph)
+	require.True(t, okPara2, "First child of level 2 should be a paragraph")
+
+	// Second child is level 3 section
+	level3Section, ok3 := level2Section.Children[1].(*ast.NodeSection)
+	require.True(t, ok3, "Second child should be a level 3 section")
+	assert.Equal(t, 3, level3Section.Level)
+
+	// Level 3 section should have 1 paragraph child
+	assert.Len(t, level3Section.Children, 1)
 }

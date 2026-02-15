@@ -52,7 +52,7 @@ func main() {
 
 	// Define flags - compatible with Asciidoctor CLI
 	flag.StringVarP(&outputFile, "out-file", "o", "", "Output file (default: based on input file; use - for STDOUT)")
-	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5, pdf] (default: html5)")
+	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5, pdf, docbook] (default: html5)")
 	flag.StringVarP(&docType, "doctype", "d", "article", "Document type: [article, book, manpage, inline] (default: article)")
 	flag.StringSliceVarP(&attributeDefs, "attribute", "a", nil, "Define a document attribute: name, name!, or name=value (may be specified multiple times)")
 	flag.StringVarP(&baseDir, "base-dir", "B", "", "Base directory containing the document and resources (default: directory of input file)")
@@ -238,8 +238,20 @@ func main() {
 		}
 		output = buf.Bytes()
 		outputExt = ".pdf"
+	case "docbook", "db":
+		docbookConverter := converter.NewDocBookConverter()
+		if docType != "" {
+			docbookConverter.WithDoctype(docType)
+		}
+		var buf bytes.Buffer
+		if err := docbookConverter.Convert(doc, &buf); err != nil {
+			printError("failed to convert document: %v", err)
+			os.Exit(1)
+		}
+		output = buf.Bytes()
+		outputExt = ".xml"
 	default:
-		printError("unsupported backend '%s' (supported: html5, pdf)", backend)
+		printError("unsupported backend '%s' (supported: html5, pdf, docbook)", backend)
 		os.Exit(1)
 	}
 
@@ -291,11 +303,11 @@ func main() {
 
 // printHelp prints the help message
 func printHelp() {
-	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5/PDF Converter
+	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5/PDF/DocBook Converter
 Version %s
 
 Usage: asciidoctor [OPTIONS] FILE
-Convert the AsciiDoc input FILE to HTML5 or PDF output.
+Convert the AsciiDoc input FILE to HTML5, PDF, or DocBook output.
 Unless specified otherwise, output is written to a file whose name is derived
 from the input file. Application log messages are printed to STDERR.
 
@@ -304,7 +316,7 @@ Arguments:
                           Use '-' to read from STDIN.
 
 Options:
-  -b, --backend BACKEND           Set backend output format: [html5, pdf] (default: html5)
+  -b, --backend BACKEND           Set backend output format: [html5, pdf, docbook] (default: html5)
   -d, --doctype DOCTYPE           Document type: [article, book, manpage, inline] (default: article)
   -e, --embedded                  Suppress enclosing document structure (same as -s)
   -o, --out-file FILE             Output file (default: based on input file; use - for STDOUT)
@@ -330,6 +342,9 @@ Examples:
 
   # Convert file to PDF
   asciidoctor -b pdf document.adoc
+
+  # Convert file to DocBook
+  asciidoctor -b docbook document.adoc
 
   # Convert with custom output file
   asciidoctor -o output.html document.adoc

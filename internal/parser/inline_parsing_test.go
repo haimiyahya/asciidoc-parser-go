@@ -256,3 +256,52 @@ func TestInlineImageWithFullPath(t *testing.T) {
 	output := buf.String()
 	assert.Contains(t, output, `<img src="https://example.com/pic.png" alt="Alt text">`, "HTML should contain img with full URL")
 }
+
+func TestBareURLWithPunctuation(t *testing.T) {
+	// Test that bare URLs don't include trailing punctuation
+	source := `Visit https://example.com.`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	// Verify HTML output
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	// Should include full URL in href, but period is separate text
+	assert.Contains(t, output, `href="https://example.com">https://example.com</a>.`, "HTML should contain link with period after")
+}
+
+func TestBareURLWithMultiplePunctuation(t *testing.T) {
+	// Test various punctuation marks - they should not be part of URL
+	testCases := []string{
+		`Check https://site.com, then`,
+		`Visit https://site.com!`,
+		`Go to https://site.com?`,
+		`See https://site.com)`,
+		`Open https://site.com]`,
+	}
+
+	for _, source := range testCases {
+		p, err := NewParserFromString(source)
+		require.NoError(t, err)
+
+		doc, err := p.Parse()
+		require.NoError(t, err)
+
+		htmlConverter := converter.NewHTML5Converter()
+		var buf bytes.Buffer
+		err = htmlConverter.Convert(doc, &buf)
+		require.NoError(t, err)
+
+		output := buf.String()
+		// URL should be clean without punctuation
+		assert.Contains(t, output, `href="https://site.com">`, "URL should be clean")
+	}
+}

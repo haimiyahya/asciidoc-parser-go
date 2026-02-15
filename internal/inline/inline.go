@@ -291,9 +291,17 @@ func (p *Parser) tryLink() (*Node, int) {
 	// Simple heuristic: starts with http:// or https://
 	if strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://") {
 		// Find the end of the URL (stop at space or punctuation)
+		// Note: periods are valid in URLs (domain names), but trailing periods should be excluded
 		end := len(remaining)
 		for i, c := range remaining {
-			if c == ' ' || c == '\t' || c == '\n' {
+			if c == ' ' || c == '\t' || c == '\n' ||
+				c == ',' || c == '!' || c == '?' ||
+				c == ')' || c == ']' || c == ';' {
+				end = i
+				break
+			}
+			// Handle trailing period: stop at period only if followed by space/end
+			if c == '.' && (i+1 >= len(remaining) || remaining[i+1] == ' ') {
 				end = i
 				break
 			}

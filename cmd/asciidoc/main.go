@@ -52,7 +52,7 @@ func main() {
 
 	// Define flags - compatible with Asciidoctor CLI
 	flag.StringVarP(&outputFile, "out-file", "o", "", "Output file (default: based on input file; use - for STDOUT)")
-	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5, pdf, docbook] (default: html5)")
+	flag.StringVarP(&backend, "backend", "b", "html5", "Set backend output format: [html5, pdf, docbook, manpage] (default: html5)")
 	flag.StringVarP(&docType, "doctype", "d", "article", "Document type: [article, book, manpage, inline] (default: article)")
 	flag.StringSliceVarP(&attributeDefs, "attribute", "a", nil, "Define a document attribute: name, name!, or name=value (may be specified multiple times)")
 	flag.StringVarP(&baseDir, "base-dir", "B", "", "Base directory containing the document and resources (default: directory of input file)")
@@ -250,8 +250,39 @@ func main() {
 		}
 		output = buf.Bytes()
 		outputExt = ".xml"
+	case "manpage", "man":
+		// Extract manual name from input filename
+		manualName := ""
+		if inputPath != "" && inputPath != "-" {
+			manualName = strings.ToUpper(filepath.Base(inputPath))
+			manualName = strings.TrimSuffix(manualName, ".adoc")
+			manualName = strings.TrimSuffix(manualName, ".asciidoc")
+		}
+
+		// Extract manual section from attributes or default to 1
+		manualSection := "1"
+		if sec, ok := doc.Attributes["mansection"]; ok {
+			manualSection = sec
+		} else if sec, ok := doc.Attributes["man-manual-section"]; ok {
+			manualSection = sec
+		}
+
+		manConverter := converter.NewManPageConverter()
+		if manualName != "" {
+			manConverter.WithManualName(manualName)
+		}
+		if manualSection != "" {
+			manConverter.WithSection(manualSection)
+		}
+		var buf bytes.Buffer
+		if err := manConverter.Convert(doc, &buf); err != nil {
+			printError("failed to convert document: %v", err)
+			os.Exit(1)
+		}
+		output = buf.Bytes()
+		outputExt = "." + manualSection
 	default:
-		printError("unsupported backend '%s' (supported: html5, pdf, docbook)", backend)
+		printError("unsupported backend '%s' (supported: html5, pdf, docbook, manpage)", backend)
 		os.Exit(1)
 	}
 
@@ -303,11 +334,11 @@ func main() {
 
 // printHelp prints the help message
 func printHelp() {
-	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5/PDF/DocBook Converter
+	fmt.Printf(`asciidoc-parser-go - AsciiDoc to HTML5/PDF/DocBook/Man Page Converter
 Version %s
 
 Usage: asciidoctor [OPTIONS] FILE
-Convert the AsciiDoc input FILE to HTML5, PDF, or DocBook output.
+Convert the AsciiDoc input FILE to HTML5, PDF, DocBook, or Man Page output.
 Unless specified otherwise, output is written to a file whose name is derived
 from the input file. Application log messages are printed to STDERR.
 
@@ -316,7 +347,7 @@ Arguments:
                           Use '-' to read from STDIN.
 
 Options:
-  -b, --backend BACKEND           Set backend output format: [html5, pdf, docbook] (default: html5)
+  -b, --backend BACKEND           Set backend output format: [html5, pdf, docbook, manpage] (default: html5)
   -d, --doctype DOCTYPE           Document type: [article, book, manpage, inline] (default: article)
   -e, --embedded                  Suppress enclosing document structure (same as -s)
   -o, --out-file FILE             Output file (default: based on input file; use - for STDOUT)
@@ -345,6 +376,9 @@ Examples:
 
   # Convert file to DocBook
   asciidoctor -b docbook document.adoc
+
+  # Convert file to Man Page
+  asciidoctor -b manpage mycommand.adoc
 
   # Convert with custom output file
   asciidoctor -o output.html document.adoc

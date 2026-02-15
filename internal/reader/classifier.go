@@ -830,10 +830,11 @@ func (lc *LineClassifier) checkListItem(line string, indent int) *ListInfo {
 		Level: 1,
 	}
 
-	// Determine level from indentation (1 space = 1 level, typically)
-	// Asciidoctor: 1 space per nesting level for ordered, 1+ for unordered
+	// Determine level from indentation (2 spaces = 1 nesting level for unordered)
+	// Ordered lists use marker count (., .., ...) instead of indentation
 	if indent > 0 {
-		info.Level = indent
+		// Normalize indentation to nesting level (2 spaces per level)
+		info.Level = indent/2 + 1
 	}
 
 	// Unordered lists: -, *, o (with space after)

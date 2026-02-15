@@ -107,7 +107,6 @@ type NodeParagraph struct {
 	// InlineNodes []Node
 	// Pos is the location in the source.
 	Pos Position
-	Pos Position
 }
 
 // NodeList is a list (ordered, unordered, labeled, checklist).
@@ -136,6 +135,8 @@ type NodeListItem struct {
 	Definition string
 	// Term is the term text for labeled lists (item.Term).
 	Term string
+	// NestedList contains a nested list within this list item.
+	NestedList *NodeList
 	// InlineNodes contains inline markup nodes found within the list item (future).
 	// InlineNodes []Node // TODO: Implement inline parsing
 	// Pos is the location in the source.

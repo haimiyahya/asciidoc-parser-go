@@ -151,31 +151,7 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 
 // convertParagraph converts a paragraph to HTML.
 func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) {
-	// Open paragraph tag
-	c.writeOpenTag("p", w)
-
-	// Write text content (mixed with inline nodes)
-	lastEnd := 0
-	for _, node := range para.InlineNodes {
-		end := node.Position().Line
-		// Write any text before this inline node
-		if end > lastEnd {
-			text := para.Text[lastEnd:end]
-			c.writeRawString(c.escape(text), w)
-		}
-		lastEnd = end
-
-		// Render the inline node
-		c.convertNode(node, w)
-	}
-
-	// Write any remaining text after last inline node
-	if lastEnd < len(para.Text) {
-		text := para.Text[lastEnd:]
-		c.writeRawString(c.escape(text), w)
-	}
-
-	c.writeCloseTag("p", w)
+	c.writeElement("p", c.escape(para.Text), w)
 }
 
 // writeRawString writes raw text without indentation or newlines.

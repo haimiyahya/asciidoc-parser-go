@@ -172,13 +172,37 @@ func TestParseNestedList(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, doc)
 
-	// Should create at least 2 blocks (parent list + nested list)
-	assert.GreaterOrEqual(t, len(doc.Blocks), 2)
+	// Should create 1 parent list block with nested list attached to first item
+	assert.Len(t, doc.Blocks, 1)
 
 	// First block is the parent list
 	list, ok := doc.Blocks[0].(*ast.NodeList)
-	require.True(t, ok)
-	assert.Len(t, list.Items, 2)
+	require.True(t, ok, "First block should be a NodeList")
+	assert.Len(t, list.Items, 2, "Parent list should have 2 items")
+
+	// First parent item should have a nested list
+	parentItem1, ok1 := list.Items[0].(*ast.NodeListItem)
+	require.True(t, ok1, "First item should be a NodeListItem")
+	assert.Equal(t, "Parent item 1", parentItem1.Text)
+	assert.NotNil(t, parentItem1.NestedList, "First item should have a NestedList")
+
+	// Verify nested list structure
+	nestedList := parentItem1.NestedList
+	assert.Len(t, nestedList.Items, 2, "Nested list should have 2 items")
+
+	nestedItem1, ok2 := nestedList.Items[0].(*ast.NodeListItem)
+	require.True(t, ok2, "Nested item should be a NodeListItem")
+	assert.Equal(t, "Nested item 1", nestedItem1.Text)
+
+	nestedItem2, ok3 := nestedList.Items[1].(*ast.NodeListItem)
+	require.True(t, ok3, "Nested item should be a NodeListItem")
+	assert.Equal(t, "Nested item 2", nestedItem2.Text)
+
+	// Second parent item should not have a nested list
+	parentItem2, ok4 := list.Items[1].(*ast.NodeListItem)
+	require.True(t, ok4, "Second item should be a NodeListItem")
+	assert.Equal(t, "Parent item 2", parentItem2.Text)
+	assert.Nil(t, parentItem2.NestedList, "Second item should not have a NestedList")
 }
 
 func TestParseLabeledList(t *testing.T) {
@@ -260,4 +284,146 @@ Another paragraph.
 
 	// Count blocks (title is section, lists are grouped)
 	assert.GreaterOrEqual(t, len(doc.Blocks), 6)
+}
+
+func TestParseNestedOrderedList(t *testing.T) {
+	source := `. Parent item 1
+  .. Nested item 1
+  .. Nested item 2
+. Parent item 2
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	assert.Len(t, doc.Blocks, 1)
+
+	list, ok := doc.Blocks[0].(*ast.NodeList)
+	require.True(t, ok)
+	assert.Len(t, list.Items, 2)
+
+	parentItem1, ok1 := list.Items[0].(*ast.NodeListItem)
+	require.True(t, ok1)
+	assert.NotNil(t, parentItem1.NestedList)
+	assert.Len(t, parentItem1.NestedList.Items, 2)
+}
+
+func TestParseMixedNestedListTypes(t *testing.T) {
+	source := `- Unordered parent
+  .. Nested ordered item 1
+  .. Nested ordered item 2
+- Another unordered item
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	assert.Len(t, doc.Blocks, 1)
+
+	list, ok := doc.Blocks[0].(*ast.NodeList)
+	require.True(t, ok)
+	assert.Len(t, list.Items, 2)
+
+	parentItem1, ok1 := list.Items[0].(*ast.NodeListItem)
+	require.True(t, ok1)
+	assert.Equal(t, "-", parentItem1.Marker)
+	assert.NotNil(t, parentItem1.NestedList)
+
+	// Nested list should be ordered (using ".." marker)
+	nestedList := parentItem1.NestedList
+	assert.Len(t, nestedList.Items, 2)
+
+	nestedItem1, ok2 := nestedList.Items[0].(*ast.NodeListItem)
+	require.True(t, ok2)
+	assert.Equal(t, "..", nestedItem1.Marker)
+	assert.Equal(t, "Nested ordered item 1", nestedItem1.Text)
+}
+
+func TestParseTripleNestedList(t *testing.T) {
+	t.Skip("TODO: Parser needs to track nested list stack for deep nesting")
+
+	source := `- Level 1 item
+  - Level 2 item
+    - Level 3 item
+      - Level 4 item
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have one parent list
+	assert.Len(t, doc.Blocks, 1)
+
+	list, ok := doc.Blocks[0].(*ast.NodeList)
+	require.True(t, ok)
+	assert.Len(t, list.Items, 1)
+
+	// Level 1 item
+	level1Item, ok1 := list.Items[0].(*ast.NodeListItem)
+	require.True(t, ok1)
+	assert.Equal(t, "Level 1 item", level1Item.Text)
+	assert.NotNil(t, level1Item.NestedList)
+
+	// Level 2 list (nested in level 1 item)
+	level2List := level1Item.NestedList
+	assert.Len(t, level2List.Items, 1)
+
+	level2Item, ok2 := level2List.Items[0].(*ast.NodeListItem)
+	require.True(t, ok2)
+	assert.Equal(t, "Level 2 item", level2Item.Text)
+	assert.NotNil(t, level2Item.NestedList)
+
+	// Level 3 list (nested in level 2 item)
+	level3List := level2Item.NestedList
+	assert.Len(t, level3List.Items, 1)
+
+	level3Item, ok3 := level3List.Items[0].(*ast.NodeListItem)
+	require.True(t, ok3)
+	assert.Equal(t, "Level 3 item", level3Item.Text)
+	assert.NotNil(t, level3Item.NestedList)
+
+	// Level 4 list (nested in level 3 item)
+	level4List := level3Item.NestedList
+	assert.Len(t, level4List.Items, 1)
+}
+
+func TestParseNestedListWithBlankLine(t *testing.T) {
+	source := `- Parent 1
+  - Child 1
+  - Child 2
+
+- Parent 2
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have 2 separate lists (blank line terminates the first)
+	assert.Len(t, doc.Blocks, 2)
+
+	// First list has nested children
+	list1, ok1 := doc.Blocks[0].(*ast.NodeList)
+	require.True(t, ok1)
+	assert.Len(t, list1.Items, 1)
+
+	item1, ok2 := list1.Items[0].(*ast.NodeListItem)
+	require.True(t, ok2)
+	assert.NotNil(t, item1.NestedList)
+	assert.Len(t, item1.NestedList.Items, 2)
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
-	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
 )
 
 // Parser parses AsciiDoc source into an AST.
@@ -352,14 +351,9 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 	// Join lines with spaces
 	content := strings.Join(lines, " ")
 
-	// Parse inline markup within the paragraph
-	inlineParser := inline.NewParser(content)
-	inlineNodes := inlineParser.Parse()
-
 	return &ast.NodeParagraph{
-		Text:       content,
-		InlineNodes,
-		Pos:        ast.Position{Line: lineno},
+		Text: content,
+		Pos:  ast.Position{Line: lineno},
 	}
 }
 
@@ -590,40 +584,40 @@ func (p *Parser) addNestedList(classification *reader.Classification, lineno int
 		return
 	}
 
-	// Check if we already have a nested list pending (in doc.Blocks but not properly structured)
-	// For now, check if the last block is a nested list we should extend
-	lastBlockIdx := len(doc.Blocks) - 1
-	if lastBlockIdx >= 0 {
-		if lastList, ok := doc.Blocks[lastBlockIdx].(*ast.NodeList); ok {
-			// Check if this is a nested list (higher level than parent)
-			if len(lastList.Items) > 0 && lastList.Items[0].Position().Line > p.currentList.Position().Line {
-				// This appears to be a nested list following our parent
-				// Add the new item to this nested list
-				listItem := p.createListItem(info, lineno)
-				if listItem != nil {
-					lastList.Items = append(lastList.Items, listItem)
-				}
-				return
-			}
-		}
-	}
+	lastItemIdx := len(p.currentList.Items) - 1
+	lastItem := p.currentList.Items[lastItemIdx]
 
-	// Create a new nested list
-	listItem := p.createListItem(info, lineno)
-	if listItem == nil {
+	// Check if last item already has a nested list of the same type
+	// If so, add to that nested list instead of creating a new one
+	item, ok := lastItem.(*ast.NodeListItem)
+	if !ok {
 		return
 	}
 
+	if item.NestedList != nil {
+		// Add new item to existing nested list
+		listItem := p.createListItem(info, lineno)
+		if listItem != nil {
+			item.NestedList.Items = append(item.NestedList.Items, listItem)
+		}
+		return
+	}
+
+	// Create a new nested list
 	nestedList := &ast.NodeList{
 		Kind:  ast.TypeList,
-		Items: []ast.Node{listItem},
+		Items: []ast.Node{},
 		Pos:   ast.Position{Line: lineno},
 	}
 
-	// For now, add the nested list as a separate block after the parent list
-	// The parent list will be closed later when we see a non-nested, same-level item
-	// TODO: Implement proper nesting structure where nested lists are children of parent list items
-	doc.Blocks = append(doc.Blocks, nestedList)
+	// Add the new list item to the nested list
+	listItem := p.createListItem(info, lineno)
+	if listItem != nil {
+		nestedList.Items = append(nestedList.Items, listItem)
+	}
+
+	// Attach the nested list to the parent list item
+	item.NestedList = nestedList
 }
 
 // Advance is a helper that consumes the next line.

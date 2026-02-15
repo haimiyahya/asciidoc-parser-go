@@ -177,11 +177,28 @@ This document outlines the phased implementation plan for building a native Go i
 - Media objects (images, video, audio)
 - Proper XML namespaces and DocBook 5.1.1 compliance
 
+## Phase 11: Man Page Backend ✅
+
+**Status**: Complete
+
+**Objectives**:
+- Convert AsciiDoc to troff/nroff Man Page format
+- Support Unix manual page conventions
+- Enable command documentation
+
+**Implementation**:
+- `internal/converter/manpage.go`: Man Page converter
+- Maps sections to standard man page sections (NAME, SYNOPSIS, etc.)
+- Supports inline formatting (\fB for bold, \fI for italic)
+- Supports lists with tagged paragraphs for options
+- Supports literal blocks with .nf/.fi
+- Auto-detects manual name and section from input
+
 ## Future Enhancements (Post-MVP)
 
 ### Additional Backends
 - DocBook 5.1.1 ✅
-- Man page via groff/troff
+- Man page via groff/troff ✅
 - EPUB via asciidoc-epub3
 
 ### PDF Enhancements

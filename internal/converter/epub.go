@@ -652,33 +652,125 @@ func (c *EPUBConverter) convertMacro(macro *ast.MacroNode, buf *bytes.Buffer) {
 
 // convertTable converts a table to XHTML.
 func (c *EPUBConverter) convertTable(table *ast.Table, buf *bytes.Buffer) {
-	buf.WriteString("<table>\n")
+	// Build table classes
+	classes := []string{"table"}
+	frame := table.GetFrame()
+	grid := table.GetGrid()
 
-	if len(table.Header) > 0 {
+	if frame != ast.FrameAll {
+		classes = append(classes, "frame-"+string(frame))
+	}
+	if grid != ast.GridAll {
+		classes = append(classes, "grid-"+string(grid))
+	}
+	if stripes := table.GetStripes(); stripes != "none" {
+		classes = append(classes, "stripes-"+stripes)
+	}
+
+	// Write opening table tag
+	buf.WriteString(fmt.Sprintf("<table class=\"%s\">\n", strings.Join(classes, " ")))
+
+	// Write caption if present
+	if table.Caption != "" {
+		buf.WriteString(fmt.Sprintf("<caption>%s</caption>\n", escapeXML(table.Caption)))
+	}
+
+	// Write header if present
+	if table.HasHeader() {
+		headerRow := table.HeaderRow()
 		buf.WriteString("<thead><tr>\n")
-		for _, cell := range table.Header {
-			buf.WriteString("<th>")
-			buf.WriteString(escapeXML(cell))
-			buf.WriteString("</th>\n")
+		for _, cell := range headerRow.Cells {
+			c.writeEPUBTableCell(&cell, "th", buf)
 		}
 		buf.WriteString("</tr></thead>\n")
 	}
 
-	if len(table.Body) > 0 {
+	// Write body rows
+	bodyRows := table.BodyRows()
+	if len(bodyRows) > 0 {
 		buf.WriteString("<tbody>\n")
-		for _, row := range table.Body {
+		for _, row := range bodyRows {
 			buf.WriteString("<tr>\n")
-			for _, cell := range row {
-				buf.WriteString("<td>")
-				buf.WriteString(escapeXML(cell))
-				buf.WriteString("</td>\n")
+			for _, cell := range row.Cells {
+				c.writeEPUBTableCell(&cell, "td", buf)
 			}
 			buf.WriteString("</tr>\n")
 		}
 		buf.WriteString("</tbody>\n")
 	}
 
+	// Write footer if present
+	if table.HasFooter() {
+		footerRow := table.FooterRow()
+		buf.WriteString("<tfoot><tr>\n")
+		for _, cell := range footerRow.Cells {
+			c.writeEPUBTableCell(&cell, "td", buf)
+		}
+		buf.WriteString("</tr></tfoot>\n")
+	}
+
 	buf.WriteString("</table>\n")
+}
+
+// writeEPUBTableCell writes a single table cell in XHTML format.
+func (c *EPUBConverter) writeEPUBTableCell(cell *ast.TableCell, tag string, buf *bytes.Buffer) {
+	buf.WriteString("<" + tag)
+
+	// Add colspan if > 1
+	if cell.ColSpan > 1 {
+		buf.WriteString(fmt.Sprintf(" colspan=\"%d\"", cell.ColSpan))
+	}
+
+	// Add rowspan if > 1
+	if cell.RowSpan > 1 {
+		buf.WriteString(fmt.Sprintf(" rowspan=\"%d\"", cell.RowSpan))
+	}
+
+	// Add alignment
+	if cell.HorizontalAlign != "" {
+		var cssAlign string
+		switch cell.HorizontalAlign {
+		case "left":
+			cssAlign = "left"
+		case "right":
+			cssAlign = "right"
+		case "center":
+			cssAlign = "center"
+		default:
+			cssAlign = "left"
+		}
+		buf.WriteString(fmt.Sprintf(" style=\"text-align:%s\"", cssAlign))
+	}
+
+	buf.WriteString(">")
+
+	// Write cell content
+	if len(cell.InlineNodes) == 0 {
+		buf.WriteString(escapeXML(cell.Text))
+	} else {
+		// Render inline nodes
+		lastEnd := 0
+		for _, node := range cell.InlineNodes {
+			if inlineNode, ok := node.(*inline.Node); ok {
+				startPos := inlineNode.StartPos
+				// Write any text before this inline node
+				if startPos > lastEnd {
+					text := cell.Text[lastEnd:startPos]
+					buf.WriteString(escapeXML(text))
+				}
+				lastEnd = inlineNode.Position
+				// Render the inline node
+				c.convertInlineNode(inlineNode, buf)
+			}
+		}
+		// Write any remaining text
+		if lastEnd < len(cell.Text) {
+			text := cell.Text[lastEnd:]
+			buf.WriteString(escapeXML(text))
+		}
+	}
+
+	buf.WriteString(fmt.Sprintf("</%s>\n", tag))
 }
 
 // sectionID generates an ID for a section.

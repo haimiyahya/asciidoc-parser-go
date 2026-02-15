@@ -168,6 +168,27 @@ pdfConverter.Convert(doc, &buf)
 | `====` | Example block |
 | `____` | Quote block |
 | `////` | Literal block |
+| `|===` | Table block |
+
+### Tables
+
+| Syntax | Description |
+|--------|-------------|
+| `|===` | Table delimiter (start/end) |
+| `| Cell 1 | Cell 2 |` | Table row |
+| `|= Header |` | Header row |
+| `| >right | ^center | <left |` | Cell alignment |
+| `[cols="1,2,3"]` | Column specifications |
+| `[caption="Title"]` | Table caption |
+| `2+` | Colspan |
+| `3*` | Cell repeat |
+
+Tables support:
+- Header rows with `|=`
+- Cell alignment (`<` left, `>` right, `^` center)
+- Column specifications (width, style)
+- Table attributes (frame, grid, stripes, width)
+- Multiple data formats (PSV, CSV, TSV, DSV)
 
 ### Inline Markup
 
@@ -300,7 +321,7 @@ go test ./internal/inline/... -v
 | Block Classifier | ✅ Complete | All AsciiDoc block types |
 | List Parsing | ✅ Complete | Nested, ordered, unordered, labeled |
 | Section Parsing | ✅ Complete | Multi-level headings |
-| Table Parsing | ✅ Complete | Basic tables |
+| Table Parsing | ✅ Complete | Delimited block syntax, attributes, alignment, colspan, rowspan |
 | Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript |
 | Admonitions | ✅ Complete | All 5 types |
 | Block Macros | ✅ Complete | Image, video, audio, include |

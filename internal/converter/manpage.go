@@ -207,6 +207,19 @@ func (c *ManPageConverter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 			// Admonition - use .PP with bold tag
 			admonitionContent := c.formatAdmonition(n)
 			otherSections.WriteString(admonitionContent)
+
+		case *ast.Table:
+			// Table - format as text with alignment
+			tableContent := c.formatTable(n)
+			if currentSection == "DESCRIPTION" {
+				descriptionSection.WriteString(tableContent)
+			} else if currentSection == "OPTIONS" {
+				optionsSection.WriteString(tableContent)
+			} else if currentSection == "EXAMPLES" {
+				examplesSection.WriteString(tableContent)
+			} else {
+				otherSections.WriteString(tableContent)
+			}
 		}
 	}
 
@@ -301,6 +314,8 @@ func (c *ManPageConverter) convertNodeContent(nodes []ast.Node, buf *bytes.Buffe
 			buf.WriteString(c.formatBlock(n))
 		case *ast.AdmonitionNode:
 			buf.WriteString(c.formatAdmonition(n))
+		case *ast.Table:
+			buf.WriteString(c.formatTable(n))
 		}
 	}
 }
@@ -436,6 +451,55 @@ func (c *ManPageConverter) formatList(list *ast.NodeList) string {
 			}
 		}
 	}
+
+	return buf.String()
+}
+
+// formatTable formats a table for man page.
+func (c *ManPageConverter) formatTable(table *ast.Table) string {
+	var buf bytes.Buffer
+
+	// Man pages have limited table support
+	// We'll format tables as text with basic alignment
+
+	buf.WriteString(".RS\n")
+	buf.WriteString(".nf\n") // No fill
+
+	// Write caption if present
+	if table.Caption != "" {
+		buf.WriteString(fmt.Sprintf("%s\n", c.escapeTroff(table.Caption)))
+	}
+
+	// Calculate column widths for alignment
+	maxWidths := make([]int, table.ColumnCount())
+	for _, row := range table.Rows {
+		for i, cell := range row.Cells {
+			text := cell.Text
+			if len(text) > maxWidths[i] {
+				maxWidths[i] = len(text)
+			}
+		}
+	}
+
+	// Write each row
+	for _, row := range table.Rows {
+		var rowText strings.Builder
+		for i, cell := range row.Cells {
+			text := c.escapeTroff(cell.Text)
+			if i < len(row.Cells)-1 {
+				// Pad to alignment width
+				format := fmt.Sprintf("%%-%ds  ", maxWidths[i])
+				rowText.WriteString(fmt.Sprintf(format, text))
+			} else {
+				rowText.WriteString(text)
+			}
+		}
+		buf.WriteString(rowText.String())
+		buf.WriteString("\n")
+	}
+
+	buf.WriteString(".fi\n")
+	buf.WriteString(".RE\n")
 
 	return buf.String()
 }

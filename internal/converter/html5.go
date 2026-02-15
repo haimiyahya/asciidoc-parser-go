@@ -516,31 +516,157 @@ func (c *HTML5Converter) blockClass(delimiter string) string {
 
 // convertTable converts a table to HTML.
 func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
-	c.writeOpenTag("table", w)
+	// Build table classes
+	classes := []string{"table"}
+	frame := table.GetFrame()
+	grid := table.GetGrid()
+
+	if frame != ast.FrameAll {
+		classes = append(classes, "frame-"+string(frame))
+	}
+	if grid != ast.GridAll {
+		classes = append(classes, "grid-"+string(grid))
+	}
+	if stripes := table.GetStripes(); stripes != "none" {
+		classes = append(classes, "stripes-"+stripes)
+	}
+
+	// Write opening table tag with classes and attributes
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, "<table")
+	if len(classes) > 0 {
+		fmt.Fprintf(w, ` class="%s"`, strings.Join(classes, " "))
+	}
+	if table.ID != "" {
+		fmt.Fprintf(w, ` id="%s"`, c.escape(table.ID))
+	}
+	if width := table.GetWidth(); width != "" {
+		fmt.Fprintf(w, ` style="width:%s"`, c.escape(width))
+	}
+	fmt.Fprint(w, ">")
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	// Write caption if present
+	if table.Caption != "" {
+		c.writeElement("caption", c.escape(table.Caption), w)
+	}
 
 	// Write header if present
-	if len(table.Header) > 0 {
+	if table.HasHeader() {
+		headerRow := table.HeaderRow()
 		c.writeOpenTag("thead", w)
-		c.writeOpenTag("tr", w)
-		for _, cell := range table.Header {
-			c.writeElement("th", c.escape(cell), w)
-		}
-		c.writeCloseTag("tr", w)
+		c.writeTableRow(headerRow, "th", w)
 		c.writeCloseTag("thead", w)
 	}
 
-	// Write body
-	if len(table.Body) > 0 {
+	// Write body rows
+	bodyRows := table.BodyRows()
+	if len(bodyRows) > 0 {
 		c.writeOpenTag("tbody", w)
-		for _, row := range table.Body {
-			c.writeOpenTag("tr", w)
-			for _, cell := range row {
-				c.writeElement("td", c.escape(cell), w)
-			}
-			c.writeCloseTag("tr", w)
+		for _, row := range bodyRows {
+			c.writeTableRow(&row, "td", w)
 		}
 		c.writeCloseTag("tbody", w)
 	}
 
+	// Write footer if present
+	if table.HasFooter() {
+		footerRow := table.FooterRow()
+		c.writeOpenTag("tfoot", w)
+		c.writeTableRow(footerRow, "td", w)
+		c.writeCloseTag("tfoot", w)
+	}
+
 	c.writeCloseTag("table", w)
+}
+
+// writeTableRow writes a single table row.
+func (c *HTML5Converter) writeTableRow(row *ast.TableRow, cellTag string, w io.Writer) {
+	if row == nil {
+		return
+	}
+
+	c.writeOpenTag("tr", w)
+
+	for _, cell := range row.Cells {
+		c.writeTableCell(&cell, cellTag, w)
+	}
+
+	c.writeCloseTag("tr", w)
+}
+
+// writeTableCell writes a single table cell.
+func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Writer) {
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+
+	fmt.Fprint(w, "<"+tag)
+
+	// Add colspan if > 1
+	if cell.ColSpan > 1 {
+		fmt.Fprintf(w, ` colspan="%d"`, cell.ColSpan)
+	}
+
+	// Add rowspan if > 1
+	if cell.RowSpan > 1 {
+		fmt.Fprintf(w, ` rowspan="%d"`, cell.RowSpan)
+	}
+
+	// Add alignment
+	align := cell.HorizontalAlign
+	if align == "" && tag == "th" {
+		align = "center" // Default for headers
+	}
+	if align != "" {
+		var cssAlign string
+		switch align {
+		case "left":
+			cssAlign = "left"
+		case "right":
+			cssAlign = "right"
+		case "center":
+			cssAlign = "center"
+		default:
+			cssAlign = "left"
+		}
+		fmt.Fprintf(w, ` style="text-align:%s"`, cssAlign)
+	}
+
+	fmt.Fprint(w, ">")
+
+	// Write cell content
+	if len(cell.InlineNodes) == 0 {
+		c.writeRawString(c.escape(cell.Text), w)
+	} else {
+		// Render inline nodes
+		lastEnd := 0
+		for _, node := range cell.InlineNodes {
+			if inlineNode, ok := node.(*inline.Node); ok {
+				startPos := inlineNode.StartPos
+				// Write any text before this inline node
+				if startPos > lastEnd {
+					text := cell.Text[lastEnd:startPos]
+					c.writeRawString(c.escape(text), w)
+				}
+				lastEnd = inlineNode.Position
+				// Render the inline node
+				c.convertInlineNode(inlineNode, w)
+			}
+		}
+		// Write any remaining text
+		if lastEnd < len(cell.Text) {
+			text := cell.Text[lastEnd:]
+			c.writeRawString(c.escape(text), w)
+		}
+	}
+
+	fmt.Fprintf(w, "</%s>", tag)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
 }

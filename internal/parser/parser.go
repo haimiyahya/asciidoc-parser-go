@@ -681,57 +681,14 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 
 // createTable parses table content into a Table node.
 // Tables use | as column separator.
-// First row after |=== is typically the header.
+// Supports delimited block syntax |===...|===.
 func (p *Parser) createTable(lines []string, lineno int) ast.Node {
 	if len(lines) == 0 {
 		return nil
 	}
 
-	table := &ast.Table{
-		Pos: ast.Position{Line: lineno},
-	}
-
-	// Process each row
-	for i, line := range lines {
-		// Skip empty lines in tables
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-
-		// Split row by | separator
-		cells := p.splitTableRow(line)
-		if i == 0 {
-			// First non-empty row is header
-			table.Header = cells
-		} else {
-			// Body rows
-			table.Body = append(table.Body, cells)
-		}
-	}
-
-	return table
-}
-
-// splitTableRow splits a table row by | separator.
-// Handles | as column separator, preserving cell content.
-func (p *Parser) splitTableRow(row string) []string {
-	// Split by | character
-	cells := strings.Split(row, "|")
-
-	// Trim whitespace from each cell
-	for i, cell := range cells {
-		cells[i] = strings.TrimSpace(cell)
-	}
-
-	// Remove empty first/last cells if caused by leading/trailing |
-	if len(cells) > 0 && cells[0] == "" {
-		cells = cells[1:]
-	}
-	if len(cells) > 0 && cells[len(cells)-1] == "" {
-		cells = cells[:len(cells)-1]
-	}
-
-	return cells
+	tableParser := NewTableParser()
+	return tableParser.ParseTable(lines, lineno)
 }
 
 // closeCurrentList closes the current open list if any.

@@ -195,15 +195,8 @@ type MacroNode struct {
 	Pos Position
 }
 
-// Table is a table.
-type Table struct {
-	// Header is the table header.
-	Header []string
-	// Body is the table body (rows).
-	Body [][]string
-	// Pos is the location in the source.
-	Pos Position
-}
+// Table is defined in ast_table.go with full AsciiDoc table support.
+// The Table type is imported from ast_table.go.
 
 // Node interface methods for each type.
 
@@ -227,9 +220,6 @@ func (n *NodeLiteral) Position() Position { return n.Pos }
 
 func (n *NodeBlock) Type() NodeType   { return TypeBlock }
 func (n *NodeBlock) Position() Position { return n.Pos }
-
-func (n *Table) Type() NodeType   { return TypeTable }
-func (n *Table) Position() Position { return n.Pos }
 
 func (n *AdmonitionNode) Type() NodeType   { return TypeAdmonition }
 func (n *AdmonitionNode) Position() Position { return n.Pos }

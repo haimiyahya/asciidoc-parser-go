@@ -648,46 +648,35 @@ func (c *DocBookConverter) convertTable(table *ast.Table, buf *bytes.Buffer) {
 	buf.WriteString(c.indent)
 	buf.WriteString("<table>\n")
 
+	// Write caption if present
+	if table.Caption != "" {
+		c.incIndent()
+		buf.WriteString(c.indent)
+		buf.WriteString(fmt.Sprintf("<title>%s</title>\n", c.escapeXML(table.Caption)))
+		c.decIndent()
+	}
+
 	// Write header if present
-	if len(table.Header) > 0 {
+	if table.HasHeader() {
+		headerRow := table.HeaderRow()
 		c.incIndent()
 		buf.WriteString(c.indent)
 		buf.WriteString("<thead>\n")
-		c.incIndent()
-		buf.WriteString(c.indent)
-		buf.WriteString("<row>\n")
-		c.incIndent()
-		for _, cell := range table.Header {
-			buf.WriteString(c.indent)
-			buf.WriteString(fmt.Sprintf("<entry>%s</entry>\n", c.escapeXML(cell)))
-		}
-		c.decIndent()
-		buf.WriteString(c.indent)
-		buf.WriteString("</row>\n")
+		c.writeDocBookRow(headerRow, buf)
 		c.decIndent()
 		buf.WriteString(c.indent)
 		buf.WriteString("</thead>\n")
 		c.decIndent()
 	}
 
-	// Write body
-	if len(table.Body) > 0 {
+	// Write body rows
+	bodyRows := table.BodyRows()
+	if len(bodyRows) > 0 {
 		c.incIndent()
 		buf.WriteString(c.indent)
 		buf.WriteString("<tbody>\n")
-		for _, row := range table.Body {
-			c.incIndent()
-			buf.WriteString(c.indent)
-			buf.WriteString("<row>\n")
-			c.incIndent()
-			for _, cell := range row {
-				buf.WriteString(c.indent)
-				buf.WriteString(fmt.Sprintf("<entry>%s</entry>\n", c.escapeXML(cell)))
-			}
-			c.decIndent()
-			buf.WriteString(c.indent)
-			buf.WriteString("</row>\n")
-			c.decIndent()
+		for _, row := range bodyRows {
+			c.writeDocBookRow(&row, buf)
 		}
 		c.decIndent()
 		buf.WriteString(c.indent)
@@ -695,9 +684,96 @@ func (c *DocBookConverter) convertTable(table *ast.Table, buf *bytes.Buffer) {
 		c.decIndent()
 	}
 
+	// Write footer if present
+	if table.HasFooter() {
+		footerRow := table.FooterRow()
+		c.incIndent()
+		buf.WriteString(c.indent)
+		buf.WriteString("<tfoot>\n")
+		c.writeDocBookRow(footerRow, buf)
+		c.decIndent()
+		buf.WriteString(c.indent)
+		buf.WriteString("</tfoot>\n")
+		c.decIndent()
+	}
+
 	buf.WriteString(c.indent)
 	buf.WriteString("</table>\n")
 
+	c.decIndent()
+}
+
+// writeDocBookRow writes a single table row in DocBook format.
+func (c *DocBookConverter) writeDocBookRow(row *ast.TableRow, buf *bytes.Buffer) {
+	if row == nil {
+		return
+	}
+
+	c.incIndent()
+	buf.WriteString(c.indent)
+	buf.WriteString("<row>\n")
+
+	for _, cell := range row.Cells {
+		c.incIndent()
+		buf.WriteString(c.indent)
+
+		// Start entry with attributes
+		buf.WriteString("<entry")
+		if cell.ColSpan > 1 {
+			buf.WriteString(fmt.Sprintf(" colspan=\"%d\"", cell.ColSpan))
+		}
+		if cell.RowSpan > 1 {
+			buf.WriteString(fmt.Sprintf(" rowspan=\"%d\"", cell.RowSpan))
+		}
+		if cell.HorizontalAlign != "" {
+			align := cell.HorizontalAlign
+			// Map alignment to DocBook values
+			dbAlign := "left"
+			switch align {
+			case "left":
+				dbAlign = "left"
+			case "right":
+				dbAlign = "right"
+			case "center":
+				dbAlign = "center"
+			}
+			buf.WriteString(fmt.Sprintf(" align=\"%s\"", dbAlign))
+		}
+		buf.WriteString(">")
+
+		// Write cell content
+		if len(cell.InlineNodes) == 0 {
+			buf.WriteString(c.escapeXML(cell.Text))
+		} else {
+			// Render inline nodes
+			lastEnd := 0
+			for _, node := range cell.InlineNodes {
+				if inlineNode, ok := node.(*inline.Node); ok {
+					startPos := inlineNode.StartPos
+					// Write any text before this inline node
+					if startPos > lastEnd {
+						text := cell.Text[lastEnd:startPos]
+						buf.WriteString(c.escapeXML(text))
+					}
+					lastEnd = inlineNode.Position
+					// Render the inline node
+					c.convertInlineNode(inlineNode, buf)
+				}
+			}
+			// Write any remaining text
+			if lastEnd < len(cell.Text) {
+				text := cell.Text[lastEnd:]
+				buf.WriteString(c.escapeXML(text))
+			}
+		}
+
+		buf.WriteString("</entry>\n")
+		c.decIndent()
+	}
+
+	c.decIndent()
+	buf.WriteString(c.indent)
+	buf.WriteString("</row>\n")
 	c.decIndent()
 }
 

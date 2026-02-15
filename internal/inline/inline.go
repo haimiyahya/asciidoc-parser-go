@@ -79,6 +79,9 @@ type Node struct {
 	// Ref is the cross-reference target ID (for CrossRef nodes).
 	Ref string
 
+	// RefText is the custom reference text (for CrossRef with <<id,text>> syntax).
+	RefText string
+
 	// StartPos is the starting position of this node's markup in source text.
 	StartPos int
 
@@ -532,25 +535,37 @@ func (p *Parser) trySuperscript() (*Node, int) {
 	return nil, p.pos
 }
 
-// tryCrossRef attempts to parse a cross-reference: <<section-id>>.
+// tryCrossRef attempts to parse a cross-reference: <<section-id>> or <<section-id,link text>>.
 func (p *Parser) tryCrossRef() (*Node, int) {
 	remaining := p.text[p.pos:]
 
-	// Check for cross-reference: <<section-id>>
+	// Check for cross-reference: <<section-id>> or <<section-id,link text>>
 	if strings.HasPrefix(remaining, "<<") {
 		// Find the closing >>
 		closeIndex := strings.Index(remaining[2:], ">>")
 		if closeIndex != -1 && closeIndex > 0 {
-			ref := remaining[2 : closeIndex+2]
-			// Trim any whitespace from the reference ID
-			ref = strings.TrimSpace(ref)
-			if ref != "" {
+			refSpec := remaining[2 : closeIndex+2]
+			// Check if there's a comma separating id from link text
+			commaIndex := strings.Index(refSpec, ",")
+			var refID, refText string
+			if commaIndex != -1 {
+				// <<id,text>> syntax
+				refID = strings.TrimSpace(refSpec[:commaIndex])
+				refText = strings.TrimSpace(refSpec[commaIndex+1:])
+			} else {
+				// <<id>> syntax - use id as display text
+				refID = strings.TrimSpace(refSpec)
+				refText = refID
+			}
+
+			if refID != "" {
 				return &Node{
 					Type:     NodeCrossRef,
-					Ref:      ref,
-					Text:     ref, // Use ref as display text
-					StartPos:  p.pos,
-					Position:  p.pos + closeIndex + 4,
+					Ref:      refID,
+					Text:     refText,
+					RefText:  refText,
+					StartPos: p.pos,
+					Position: p.pos + closeIndex + 4,
 				}, p.pos + closeIndex + 4
 			}
 		}

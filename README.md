@@ -184,6 +184,8 @@ pdfConverter.Convert(doc, &buf)
 | `link:text[url]` | <a href="url">text</a> | Macro link |
 | `https://url` | <a href="url">url</a> | Bare URL |
 | `image:path[alt]` | <img src="path" alt="alt"> | Inline image |
+| `<<section-id>>` | <a href="#section-id">section-id</a> | Cross-reference |
+| `<<id,text>>` | <a href="#id">text</a> | Cross-reference with custom text |
 
 ### Admonitions
 
@@ -318,7 +320,6 @@ go test ./internal/inline/... -v
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
-| **Cross-references** | `<<section-id>>` syntax for internal links | High |
 | **Bibliography** | Citation processing for academic use | Low |
 | **Extensions System** | Custom block/inline macros, tree processors | Medium |
 | **More Inline Types** | `[ ]` for roles, etc. | Low |

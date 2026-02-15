@@ -440,7 +440,11 @@ func (c *EPUBConverter) convertInlineNode(node *inline.Node, buf *bytes.Buffer) 
 		buf.WriteString(fmt.Sprintf("<img src=\"%s\" alt=\"%s\"/>", escapeXMLAttr(node.URL), escapeXMLAttr(alt)))
 	case inline.NodeCrossRef:
 		buf.WriteString(fmt.Sprintf("<a href=\"#%s\">", escapeXMLAttr(node.Ref)))
-		c.renderInlineChildren(node, buf)
+		if node.RefText != "" {
+			buf.WriteString(escapeXML(node.RefText))
+		} else {
+			c.renderInlineChildren(node, buf)
+		}
 		buf.WriteString("</a>")
 	}
 }

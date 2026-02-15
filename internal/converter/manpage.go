@@ -382,7 +382,12 @@ func (c *ManPageConverter) formatInlineNode(node *inline.Node) string {
 		}
 		buf.WriteString(fmt.Sprintf("[Image: %s]", c.escapeTroff(alt)))
 	case inline.NodeCrossRef:
-		buf.WriteString(fmt.Sprintf("\\fI%s\\fR", c.escapeTroff(node.Ref)))
+		// Cross-reference: use RefText if available, otherwise use Ref
+		text := node.RefText
+		if text == "" {
+			text = node.Ref
+		}
+		buf.WriteString(fmt.Sprintf("\\fI%s\\fR", c.escapeTroff(text)))
 	}
 
 	return buf.String()

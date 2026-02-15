@@ -248,9 +248,13 @@ func (c *DocBookConverter) convertInlineNode(node *inline.Node, buf *bytes.Buffe
 		}
 		buf.WriteString("</inlinemediaobject>")
 	case inline.NodeCrossRef:
-		// Cross-reference: <<section-id>> becomes <link linkend="section-id">
+		// Cross-reference: <<section-id>> or <<section-id,text>> becomes <link linkend="section-id">
 		buf.WriteString(fmt.Sprintf("<link linkend=\"%s\">", c.escapeXML(node.Ref)))
-		c.renderInlineChildren(node, buf)
+		if node.RefText != "" {
+			buf.WriteString(c.escapeXML(node.RefText))
+		} else {
+			c.renderInlineChildren(node, buf)
+		}
 		buf.WriteString("</link>")
 	}
 }

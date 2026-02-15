@@ -330,3 +330,73 @@ func TestNodeTypeStringWithCrossRef(t *testing.T) {
 	assert.Equal(t, "CrossRef", NodeCrossRef.String())
 }
 
+func TestParseCrossRefWithCustomText(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected struct {
+			Ref     string
+			RefText string
+		}
+	}{
+		{
+			name: "cross-reference with custom text",
+			source: "<<section-id,See Section>>",
+			expected: struct {
+				Ref     string
+				RefText string
+			}{
+				Ref:     "section-id",
+				RefText: "See Section",
+			},
+		},
+		{
+			name: "cross-reference with custom text and spaces",
+			source: "<<intro,Introduction Chapter>>",
+			expected: struct {
+				Ref     string
+				RefText string
+			}{
+				Ref:     "intro",
+				RefText: "Introduction Chapter",
+			},
+		},
+		{
+			name: "cross-reference with custom text and spaces around comma",
+			source: "<<intro , Introduction Chapter>>",
+			expected: struct {
+				Ref     string
+				RefText string
+			}{
+				Ref:     "intro",
+				RefText: "Introduction Chapter",
+			},
+		},
+		{
+			name: "cross-reference with underscores in ref and custom text",
+			source: "<<_section_id,Custom Text>>",
+			expected: struct {
+				Ref     string
+				RefText string
+			}{
+				Ref:     "_section_id",
+				RefText: "Custom Text",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser := NewParser(tt.source)
+			nodes := parser.Parse()
+
+			require.Greater(t, len(nodes), 0, "should have at least one node")
+			actualNode := nodes[0]
+			assert.Equal(t, NodeCrossRef, actualNode.Type)
+			assert.Equal(t, tt.expected.Ref, actualNode.Ref)
+			assert.Equal(t, tt.expected.RefText, actualNode.RefText)
+			assert.Equal(t, tt.expected.RefText, actualNode.Text)
+		})
+	}
+}
+

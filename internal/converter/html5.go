@@ -262,9 +262,13 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		}
 		fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
 	case inline.NodeCrossRef:
-		// Cross-reference: <<section-id>> becomes <a href="#section-id">
+		// Cross-reference: <<section-id>> or <<section-id,text>> becomes <a href="#section-id">
 		fmt.Fprintf(w, `<a href="#%s">`, c.escape(node.Ref))
-		c.renderInlineChildren(node, w)
+		if node.RefText != "" {
+			c.writeRawString(c.escape(node.RefText), w)
+		} else {
+			c.renderInlineChildren(node, w)
+		}
 		c.writeRawString("</a>", w)
 	}
 }

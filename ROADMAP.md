@@ -225,6 +225,12 @@ This document outlines the phased implementation plan for building a native Go i
 - Custom headers and footers ✅
 - PDF metadata (author, title, keywords) ✅
 
+### Cross-References ✅
+- `<<section-id>>` syntax ✅
+- `<<section-id,custom text>>` syntax ✅
+- Auto-generated section IDs ✅
+- Support in all backends (HTML5, PDF, DocBook, EPUB, Man Page) ✅
+
 ### Extension Points
 - Custom block macros
 - Custom inline macros (xref, btn, etc.)

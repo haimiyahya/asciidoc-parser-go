@@ -18,14 +18,25 @@ type HTML5Converter struct {
 
 	// pretty enables pretty-printing with indentation.
 	pretty bool
+
+	// suppressHeaderFooter omits the HTML5 document shell (DOCTYPE, html, body tags).
+	suppressHeaderFooter bool
 }
 
 // NewHTML5Converter creates a new HTML5 converter.
 func NewHTML5Converter() *HTML5Converter {
 	return &HTML5Converter{
-		indent: "",
-		pretty: true,
+		indent:               "",
+		pretty:               true,
+		suppressHeaderFooter: false,
 	}
+}
+
+// WithoutHeaderFooter configures the converter to omit the HTML5 document shell.
+// When enabled, only the document content is output, not the DOCTYPE, html, or body tags.
+func (c *HTML5Converter) WithoutHeaderFooter() *HTML5Converter {
+	c.suppressHeaderFooter = true
+	return c
 }
 
 // escape escapes HTML special characters.
@@ -92,13 +103,15 @@ func (c *HTML5Converter) writeCloseTag(tag string, w io.Writer) {
 
 // Convert converts document to HTML5.
 func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
-	// Start HTML5 document
-	fmt.Fprint(w, "<!DOCTYPE html>")
-	if c.pretty {
-		fmt.Fprintln(w)
+	if !c.suppressHeaderFooter {
+		// Start HTML5 document
+		fmt.Fprint(w, "<!DOCTYPE html>")
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		c.writeOpenTag("html", w)
+		c.writeOpenTag("body", w)
 	}
-	c.writeOpenTag("html", w)
-	c.writeOpenTag("body", w)
 
 	// Convert document header if present
 	if doc.Header != nil {
@@ -110,9 +123,11 @@ func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 		c.convertNode(block, w)
 	}
 
-	// Close HTML
-	c.writeCloseTag("body", w)
-	c.writeCloseTag("html", w)
+	if !c.suppressHeaderFooter {
+		// Close HTML
+		c.writeCloseTag("body", w)
+		c.writeCloseTag("html", w)
+	}
 
 	return nil
 }

@@ -218,13 +218,6 @@ CAUTION: Watch out!
 IMPORTANT: Pay attention.
 ```
 
-### Tables
-
-```
-| Col 1 | Col 2 |
-| Cell 1 | Cell 2 |
-```
-
 ## CLI Options
 
 ```

@@ -210,7 +210,7 @@ go test ./internal/inline/... -v
 | List Parsing | ✅ Complete | Nested, ordered, unordered, labeled |
 | Section Parsing | ✅ Complete | Multi-level headings |
 | Table Parsing | ✅ Complete | Basic tables |
-| Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images |
+| Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript |
 | Admonitions | ✅ Complete | All 5 types |
 | Block Macros | ✅ Complete | Image, video, audio |
 | Delimited Blocks | ✅ Complete | Example, quote, literal, etc. |
@@ -219,6 +219,20 @@ go test ./internal/inline/... -v
 | Attribute Processor | 🚧 In Progress | Basic attribute handling |
 | Include Processor | 🚧 In Progress | Basic include directive |
 | CLI | 📝 Planned | Phase 8 |
+
+### Missing/Incomplete Features
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| **Full Attribute System** | Key-value pairs like `toc:[]`, `role-based attributes`, document attributes | High | Asciidoctor has extensive attribute system |
+| **Preprocessor** | Include directive (`include::[]`), macro expansion | Medium | Allows reusing content across files |
+| **Conditionals** | `ifdef::endif`, attribute-based conditionals | Low | Conditional content inclusion |
+| **Callouts** | Reusable content blocks | Low | Define content once, reference multiple times |
+| **Extensions System** | Custom block/inline macros | Low | Like `example-block::[]` custom blocks |
+| **More Inline Types** | Additional inline markup | Low | `++` monospace alternative, `[ ]` for roles, etc. |
+| **More Delimited Block Types** | All types (pass::[ ], sidebar::[ ], etc.) | Medium | Complete support for all AsciiDoc delimited block types |
+| **Cross-references** | `<<section-id>>` syntax | Medium | Internal links to other sections |
+| **Bibliography** | Citation processing | Low | Academic citation support |
 
 ## Contributing
 

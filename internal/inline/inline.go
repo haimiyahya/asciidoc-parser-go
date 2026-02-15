@@ -72,8 +72,10 @@ type Node struct {
 	// Alt is the alt text (for Image nodes).
 	Alt string
 
+	// StartPos is the starting position of this node's markup in source text.
+	StartPos int
 
-	// Position is the starting position of this node in source text.
+	// Position is the ending position of this node's markup in source text.
 	Position int
 
 	// Children are child inline nodes (for complex inline structures).
@@ -159,6 +161,18 @@ func (p *Parser) Parse() []*Node {
 			continue
 		}
 
+		if node, newPos := p.trySubscript(); node != nil {
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		if node, newPos := p.trySuperscript(); node != nil {
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
 		// If no inline construct matched, look ahead to find where next inline construct starts
 		// Consume text up to that point as a single text node
 		nextInlinePos := len(p.text) // Default to consuming all remaining text
@@ -175,7 +189,9 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "`") ||
 				strings.HasPrefix(remaining, "++") ||
 				strings.HasPrefix(remaining, "http://") ||
-				strings.HasPrefix(remaining, "https://") {
+				strings.HasPrefix(remaining, "https://") ||
+				strings.HasPrefix(remaining, "~") ||
+				strings.HasPrefix(remaining, "^") {
 				nextInlinePos = i
 				break
 			}
@@ -212,6 +228,7 @@ func (p *Parser) tryImage() (*Node, int) {
 				URL:  url,
 				Alt:  "",
 				Text: "",
+				StartPos: p.pos,
 				Position: p.pos + len(url) + 6,
 			}, p.pos + len(url) + 6
 		}
@@ -228,6 +245,7 @@ func (p *Parser) tryImage() (*Node, int) {
 				URL:  url,
 				Alt:  "",
 				Text: "",
+				StartPos: p.pos,
 				Position: p.pos + closeBracket + 1,
 			}, p.pos + closeBracket + 1
 		}
@@ -245,6 +263,7 @@ func (p *Parser) tryImage() (*Node, int) {
 			URL:  url,
 			Alt:  alt,
 			Text: alt, // Use alt as display text
+			StartPos: p.pos,
 			Position: p.pos + closeBracket + 1,
 		}, p.pos + closeBracket + 1
 	}
@@ -283,6 +302,7 @@ func (p *Parser) tryLink() (*Node, int) {
 			Type: NodeLink,
 			Text: text,
 			URL:  url,
+			StartPos: p.pos,
 			Position: p.pos + closeBracket + 1,
 		}, p.pos + closeBracket + 1
 	}
@@ -311,6 +331,7 @@ func (p *Parser) tryLink() (*Node, int) {
 			Type: NodeLink,
 			Text: url,
 			URL:  url,
+			StartPos: p.pos,
 			Position: p.pos + end,
 		}, p.pos + end
 	}
@@ -327,10 +348,14 @@ func (p *Parser) tryBold() (*Node, int) {
 		closeIndex := strings.Index(remaining[2:], "**")
 		if closeIndex != -1 && closeIndex > 0 {
 			text := remaining[2 : closeIndex+2]
+			// Recursively parse inner content for nested inline markup
+			children := NewParser(text).Parse()
 			return &Node{
-				Type: NodeBold,
-				Text: text,
-				Position: p.pos + closeIndex + 2,
+				Type:     NodeBold,
+				Text:     text,
+				Children:  children,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 4,
 			}, p.pos + closeIndex + 4
 		}
 	}
@@ -347,9 +372,10 @@ func (p *Parser) tryBold() (*Node, int) {
 			text := remaining[1 : closeIndex+1]
 			if p.isWord(text) {
 				return &Node{
-					Type: NodeBold,
-					Text: text,
-					Position: p.pos + closeIndex + 1,
+					Type:     NodeBold,
+					Text:     text,
+					StartPos:  p.pos,
+					Position:  p.pos + closeIndex + 2,
 				}, p.pos + closeIndex + 2
 			}
 		}
@@ -367,10 +393,14 @@ func (p *Parser) tryItalic() (*Node, int) {
 		closeIndex := strings.Index(remaining[2:], "__")
 		if closeIndex != -1 && closeIndex > 0 {
 			text := remaining[2 : closeIndex+2]
+			// Recursively parse inner content for nested inline markup
+			children := NewParser(text).Parse()
 			return &Node{
-				Type: NodeItalic,
-				Text: text,
-					Position: p.pos + closeIndex + 2,
+				Type:     NodeItalic,
+				Text:     text,
+				Children:  children,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 4,
 			}, p.pos + closeIndex + 4
 		}
 	}
@@ -386,8 +416,10 @@ func (p *Parser) tryItalic() (*Node, int) {
 			text := remaining[1 : closeIndex+1]
 			if p.isWord(text) {
 				return &Node{
-					Type: NodeItalic,
-					Text: text,
+					Type:     NodeItalic,
+					Text:     text,
+					StartPos:  p.pos,
+					Position:  p.pos + closeIndex + 2,
 				}, p.pos + closeIndex + 2
 			}
 		}
@@ -405,10 +437,14 @@ func (p *Parser) tryMonospace() (*Node, int) {
 		closeIndex := strings.Index(remaining[1:], "`")
 		if closeIndex != -1 {
 			text := remaining[1 : closeIndex+1]
+			// Recursively parse inner content for nested inline markup
+			children := NewParser(text).Parse()
 			return &Node{
-				Type: NodeMonospace,
-				Text: text,
-					Position: p.pos + closeIndex + 2,
+				Type:     NodeMonospace,
+				Text:     text,
+				Children:  children,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
 		}
 	}
@@ -419,9 +455,61 @@ func (p *Parser) tryMonospace() (*Node, int) {
 		if closeIndex != -1 && closeIndex > 0 {
 			text := remaining[2 : closeIndex+2]
 			return &Node{
-				Type: NodeMonospace,
-				Text: text,
+				Type:     NodeMonospace,
+				Text:     text,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 4,
 			}, p.pos + closeIndex + 4
+		}
+	}
+
+	return nil, p.pos
+}
+
+// trySubscript attempts to parse subscript text: ~text~.
+func (p *Parser) trySubscript() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for tilde subscript: ~text~
+	if strings.HasPrefix(remaining, "~") && len(remaining) > 1 {
+		// Must be followed by a non-space character
+		if remaining[1] == ' ' {
+			return nil, p.pos
+		}
+		closeIndex := strings.Index(remaining[1:], "~")
+		if closeIndex != -1 && closeIndex > 0 {
+			text := remaining[1 : closeIndex+1]
+			return &Node{
+				Type:     NodeSubscript,
+				Text:     text,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 2,
+			}, p.pos + closeIndex + 2
+		}
+	}
+
+	return nil, p.pos
+}
+
+// trySuperscript attempts to parse superscript text: ^text^.
+func (p *Parser) trySuperscript() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for caret superscript: ^text^
+	if strings.HasPrefix(remaining, "^") && len(remaining) > 1 {
+		// Must be followed by a non-space character
+		if remaining[1] == ' ' {
+			return nil, p.pos
+		}
+		closeIndex := strings.Index(remaining[1:], "^")
+		if closeIndex != -1 && closeIndex > 0 {
+			text := remaining[1 : closeIndex+1]
+			return &Node{
+				Type:     NodeSuperscript,
+				Text:     text,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 2,
+			}, p.pos + closeIndex + 2
 		}
 	}
 

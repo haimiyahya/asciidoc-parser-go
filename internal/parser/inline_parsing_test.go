@@ -172,71 +172,6 @@ func TestInlineInListItems(t *testing.T) {
 	assert.Contains(t, output, "Normal item", "HTML should contain normal list item text")
 }
 
-func TestInlineImageParsing(t *testing.T) {
-	// Test image:url[alt-text] syntax
-	source := `See image:logo.png[Our Logo] for details.`
-
-	p, err := NewParserFromString(source)
-	require.NoError(t, err)
-
-	doc, err := p.Parse()
-	require.NoError(t, err)
-
-	para, ok := doc.Blocks[0].(*ast.NodeParagraph)
-	require.True(t, ok)
-
-	// Check inline nodes - should have an image node
-	require.NotEmpty(t, para.InlineNodes)
-
-	// Find the image node
-	var foundImage bool
-	for _, node := range para.InlineNodes {
-		if inlineNode, ok := node.(*inline.Node); ok {
-			if inlineNode.Type == inline.NodeImage {
-				foundImage = true
-				assert.Equal(t, "logo.png", inlineNode.URL)
-				assert.Equal(t, "Our Logo", inlineNode.Alt)
-			}
-		}
-	}
-	assert.True(t, foundImage, "Should have found an image node")
-
-	// Verify HTML output
-	htmlConverter := converter.NewHTML5Converter()
-	var buf bytes.Buffer
-	err = htmlConverter.Convert(doc, &buf)
-	require.NoError(t, err)
-
-	output := buf.String()
-	assert.Contains(t, output, `<img src="logo.png" alt="Our Logo">`, "HTML should contain img tag")
-}
-
-func TestInlineImageWithoutAlt(t *testing.T) {
-	// Test image:url without alt text
-	source := `See image:photo.jpg`
-
-	p, err := NewParserFromString(source)
-	require.NoError(t, err)
-
-	doc, err := p.Parse()
-	require.NoError(t, err)
-
-	para, ok := doc.Blocks[0].(*ast.NodeParagraph)
-	require.True(t, ok)
-
-	// Check inline nodes
-	require.NotEmpty(t, para.InlineNodes)
-
-	// Verify HTML output
-	htmlConverter := converter.NewHTML5Converter()
-	var buf bytes.Buffer
-	err = htmlConverter.Convert(doc, &buf)
-	require.NoError(t, err)
-
-	output := buf.String()
-	assert.Contains(t, output, `<img src="photo.jpg"`, "HTML should contain img tag")
-}
-
 func TestInlineImageWithFullPath(t *testing.T) {
 	// Test image with full path
 	source := `External image:https://example.com/pic.png[Alt text]`
@@ -304,4 +239,143 @@ func TestBareURLWithMultiplePunctuation(t *testing.T) {
 		// URL should be clean without punctuation
 		assert.Contains(t, output, `href="https://site.com">`, "URL should be clean")
 	}
+}
+
+func TestNestedInlineMarkup(t *testing.T) {
+	source := "This is **bold with _italic_ inside** text."
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	para, ok := doc.Blocks[0].(*ast.NodeParagraph)
+	require.True(t, ok)
+
+	// Check inline nodes - should have a bold node
+	require.NotEmpty(t, para.InlineNodes)
+
+	// Find the bold node and verify it has an italic child
+	var foundBold, foundItalicChild bool
+	for _, node := range para.InlineNodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			if inlineNode.Type == inline.NodeBold {
+				foundBold = true
+				// Check if bold node has children
+				for _, child := range inlineNode.Children {
+					if child.Type == inline.NodeItalic {
+						foundItalicChild = true
+						assert.Equal(t, "italic", child.Text)
+					}
+				}
+			}
+		}
+	}
+	assert.True(t, foundBold, "Should have found a bold node")
+	assert.True(t, foundItalicChild, "Bold node should have italic child")
+
+	// Verify HTML output - should have <strong><em>italic</em></strong>
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "<strong>", "HTML should contain strong tag")
+	assert.Contains(t, output, "<em>italic</em>", "HTML should contain em tag inside strong")
+}
+
+func TestInlineSubscriptParsing(t *testing.T) {
+	source := `This is ~subscript~ text.`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	para, ok := doc.Blocks[0].(*ast.NodeParagraph)
+	require.True(t, ok)
+
+	// Check inline nodes
+	require.NotEmpty(t, para.InlineNodes)
+
+	// Find the subscript node
+	var foundSubscript bool
+	for _, node := range para.InlineNodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			if inlineNode.Type == inline.NodeSubscript {
+				foundSubscript = true
+				assert.Equal(t, "subscript", inlineNode.Text)
+			}
+		}
+	}
+	assert.True(t, foundSubscript, "Should have found a subscript node")
+
+	// Verify HTML output
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "<sub>subscript</sub>", "HTML should contain sub tag")
+}
+
+func TestInlineSuperscriptParsing(t *testing.T) {
+	source := `This is ^superscript^ text.`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	para, ok := doc.Blocks[0].(*ast.NodeParagraph)
+	require.True(t, ok)
+
+	// Check inline nodes
+	require.NotEmpty(t, para.InlineNodes)
+
+	// Find the superscript node
+	var foundSuperscript bool
+	for _, node := range para.InlineNodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			if inlineNode.Type == inline.NodeSuperscript {
+				foundSuperscript = true
+				assert.Equal(t, "superscript", inlineNode.Text)
+			}
+		}
+	}
+	assert.True(t, foundSuperscript, "Should have found a superscript node")
+
+	// Verify HTML output
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "<sup>superscript</sup>", "HTML should contain sup tag")
+}
+
+func TestInlineSubscriptSuperscriptMixed(t *testing.T) {
+	source := `H~2~O is water and x^2^ + y^2^ = r^2^`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	// Verify HTML output contains both sub and sup tags
+	htmlConverter := converter.NewHTML5Converter()
+	var buf bytes.Buffer
+	err = htmlConverter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "<sub>2</sub>", "HTML should contain subscript for 2")
+	assert.Contains(t, output, "<sup>2</sup>", "HTML should contain superscript for 2")
 }

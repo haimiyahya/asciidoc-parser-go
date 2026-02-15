@@ -165,13 +165,13 @@ func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) 
 	lastEnd := 0
 	for _, node := range para.InlineNodes {
 		if inlineNode, ok := node.(*inline.Node); ok {
-			end := inlineNode.Position
+			startPos := inlineNode.StartPos
 			// Write any text before this inline node
-			if end > lastEnd {
-				text := para.Text[lastEnd:end]
+			if startPos > lastEnd {
+				text := para.Text[lastEnd:startPos]
 				c.writeRawString(c.escape(text), w)
 			}
-			lastEnd = end
+			lastEnd = inlineNode.Position
 
 			// Render the inline node
 			c.convertInlineNode(inlineNode, w)
@@ -194,23 +194,51 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		c.writeRawString(c.escape(node.Text), w)
 	case inline.NodeBold:
 		c.writeRawString("<strong>", w)
-		c.writeRawString(c.escape(node.Text), w)
+		if len(node.Children) > 0 {
+			c.renderInlineChildren(node, w)
+		} else {
+			c.writeRawString(c.escape(node.Text), w)
+		}
 		c.writeRawString("</strong>", w)
 	case inline.NodeItalic:
 		c.writeRawString("<em>", w)
-		c.writeRawString(c.escape(node.Text), w)
+		if len(node.Children) > 0 {
+			c.renderInlineChildren(node, w)
+		} else {
+			c.writeRawString(c.escape(node.Text), w)
+		}
 		c.writeRawString("</em>", w)
 	case inline.NodeMonospace:
 		c.writeRawString("<code>", w)
-		c.writeRawString(c.escape(node.Text), w)
+		if len(node.Children) > 0 {
+			c.renderInlineChildren(node, w)
+		} else {
+			c.writeRawString(c.escape(node.Text), w)
+		}
 		c.writeRawString("</code>", w)
+	case inline.NodeSubscript:
+		c.writeRawString("<sub>", w)
+		if len(node.Children) > 0 {
+			c.renderInlineChildren(node, w)
+		} else {
+			c.writeRawString(c.escape(node.Text), w)
+		}
+		c.writeRawString("</sub>", w)
+	case inline.NodeSuperscript:
+		c.writeRawString("<sup>", w)
+		if len(node.Children) > 0 {
+			c.renderInlineChildren(node, w)
+		} else {
+			c.writeRawString(c.escape(node.Text), w)
+		}
+		c.writeRawString("</sup>", w)
 	case inline.NodeLink:
 		if node.URL != "" {
 			fmt.Fprintf(w, `<a href="%s">`, c.escape(node.URL))
 		} else {
 			c.writeRawString("<a>", w)
 		}
-		c.writeRawString(c.escape(node.Text), w)
+		c.renderInlineChildren(node, w)
 		c.writeRawString("</a>", w)
 	case inline.NodeImage:
 		alt := node.Alt
@@ -218,6 +246,33 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			alt = node.Text
 		}
 		fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
+	}
+}
+
+// renderInlineChildren renders child inline nodes within a parent inline node.
+func (c *HTML5Converter) renderInlineChildren(node *inline.Node, w io.Writer) {
+	// If there are children, render them; otherwise fall back to rendering text
+	if len(node.Children) > 0 {
+		lastEnd := 0
+		for _, child := range node.Children {
+			end := child.Position
+			// Write any text before this child node (only if child is after lastEnd)
+			if end > lastEnd {
+				text := node.Text[lastEnd:end]
+				c.writeRawString(c.escape(text), w)
+			}
+			lastEnd = end
+			// Render the child node
+			c.convertInlineNode(child, w)
+		}
+		// Write any remaining text after last child
+		if lastEnd > 0 && lastEnd < len(node.Text) {
+			text := node.Text[lastEnd:]
+			c.writeRawString(c.escape(text), w)
+		}
+	} else {
+		// No children, render the text directly
+		c.writeRawString(c.escape(node.Text), w)
 	}
 }
 
@@ -316,13 +371,13 @@ func (c *HTML5Converter) renderInlineText(text string, inlineNodes []interface{}
 	lastEnd := 0
 	for _, node := range inlineNodes {
 		if inlineNode, ok := node.(*inline.Node); ok {
-			end := inlineNode.Position
+			startPos := inlineNode.StartPos
 			// Write any text before this inline node
-			if end > lastEnd {
-				plainText := text[lastEnd:end]
+			if startPos > lastEnd {
+				plainText := text[lastEnd:startPos]
 				c.writeRawString(c.escape(plainText), w)
 			}
-			lastEnd = end
+			lastEnd = inlineNode.Position
 
 			// Render the inline node
 			c.convertInlineNode(inlineNode, w)

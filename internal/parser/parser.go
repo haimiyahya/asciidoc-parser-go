@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
 )
 
@@ -356,8 +357,22 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 	// Join lines with spaces
 	content := strings.Join(lines, " ")
 
+	// Parse inline markup within paragraph
+	inlineParser := inline.NewParser(content)
+	inlineNodes := inlineParser.Parse()
+
+	// Convert inline.Node slice to []interface{} for storage
+	// Filter out NodeText nodes since they're already in the Text field
+	nodes := make([]interface{}, 0, len(inlineNodes))
+	for _, node := range inlineNodes {
+		if node.Type != inline.NodeText {
+			nodes = append(nodes, node)
+		}
+	}
+
 	return &ast.NodeParagraph{
-		Text: content,
+		Text:        content,
+		InlineNodes: nodes,
 		Pos:  ast.Position{Line: lineno},
 	}
 }
@@ -396,14 +411,28 @@ func (p *Parser) createListItem(info *reader.ListInfo, lineno int) ast.Node {
 		text = info.Term
 	}
 
+	// Parse inline markup within list item text
+	inlineParser := inline.NewParser(text)
+	inlineNodes := inlineParser.Parse()
+
+	// Convert inline.Node slice to []interface{} for storage
+	// Filter out NodeText nodes since they're already in the Text field
+	nodes := make([]interface{}, 0, len(inlineNodes))
+	for _, node := range inlineNodes {
+		if node.Type != inline.NodeText {
+			nodes = append(nodes, node)
+		}
+	}
+
 	return &ast.NodeListItem{
-		Kind:       ast.TypeListItem,
-		Marker:      info.Marker,
-		Level:       info.Level,
-		Ordinal:     info.Ordinal,
+		Kind:        ast.TypeListItem,
+		Marker:       info.Marker,
+		Level:        info.Level,
+		Ordinal:      info.Ordinal,
 		Text:         text,
 		Term:          info.Term,
 		Definition:    info.Text, // For labeled lists, Text contains the definition
+		InlineNodes:   nodes,
 		Pos:          ast.Position{Line: lineno},
 	}
 }

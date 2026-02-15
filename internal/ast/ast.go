@@ -106,7 +106,7 @@ type NodeParagraph struct {
 	// Text is the paragraph text content.
 	Text string
 	// InlineNodes contains inline markup nodes found within the paragraph.
-	// InlineNodes []Node
+	InlineNodes []interface{}
 	// Pos is the location in the source.
 	Pos Position
 }
@@ -139,8 +139,8 @@ type NodeListItem struct {
 	Term string
 	// NestedList contains a nested list within this list item.
 	NestedList *NodeList
-	// InlineNodes contains inline markup nodes found within the list item (future).
-	// InlineNodes []Node // TODO: Implement inline parsing
+	// InlineNodes contains inline markup nodes found within the list item.
+	InlineNodes []interface{}
 	// Pos is the location in the source.
 	Pos Position
 }

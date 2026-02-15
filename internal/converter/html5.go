@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
 )
 
 // HTML5Converter converts an AsciiDoc AST to HTML5.
@@ -151,15 +152,78 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 
 // convertParagraph converts a paragraph to HTML.
 func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) {
-	c.writeElement("p", c.escape(para.Text), w)
+	// If there are no inline nodes, use simple rendering
+	if len(para.InlineNodes) == 0 {
+		c.writeElement("p", c.escape(para.Text), w)
+		return
+	}
+
+	// Complex paragraph with inline nodes - use open/close tags
+	c.writeOpenTag("p", w)
+
+	// Write text content mixed with inline nodes
+	lastEnd := 0
+	for _, node := range para.InlineNodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			end := inlineNode.Position
+			// Write any text before this inline node
+			if end > lastEnd {
+				text := para.Text[lastEnd:end]
+				c.writeRawString(c.escape(text), w)
+			}
+			lastEnd = end
+
+			// Render the inline node
+			c.convertInlineNode(inlineNode, w)
+		}
+	}
+
+	// Write any remaining text after last inline node
+	if lastEnd < len(para.Text) {
+		text := para.Text[lastEnd:]
+		c.writeRawString(c.escape(text), w)
+	}
+
+	c.writeCloseTag("p", w)
+}
+
+// convertInlineNode converts an inline.Node to HTML.
+func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
+	switch node.Type {
+	case inline.NodeText:
+		c.writeRawString(c.escape(node.Text), w)
+	case inline.NodeBold:
+		c.writeRawString("<strong>", w)
+		c.writeRawString(c.escape(node.Text), w)
+		c.writeRawString("</strong>", w)
+	case inline.NodeItalic:
+		c.writeRawString("<em>", w)
+		c.writeRawString(c.escape(node.Text), w)
+		c.writeRawString("</em>", w)
+	case inline.NodeMonospace:
+		c.writeRawString("<code>", w)
+		c.writeRawString(c.escape(node.Text), w)
+		c.writeRawString("</code>", w)
+	case inline.NodeLink:
+		if node.URL != "" {
+			fmt.Fprintf(w, `<a href="%s">`, c.escape(node.URL))
+		} else {
+			c.writeRawString("<a>", w)
+		}
+		c.writeRawString(c.escape(node.Text), w)
+		c.writeRawString("</a>", w)
+	case inline.NodeImage:
+		alt := node.Alt
+		if alt == "" {
+			alt = node.Text
+		}
+		fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
+	}
 }
 
 // writeRawString writes raw text without indentation or newlines.
 func (c *HTML5Converter) writeRawString(s string, w io.Writer) {
 	fmt.Fprint(w, s)
-	if c.pretty {
-		fmt.Fprintln(w)
-	}
 }
 
 // convertSection converts a section to HTML.
@@ -230,12 +294,45 @@ func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 	} else if item.NestedList != nil {
 		// Has nested list - open li, render text, nested list, close li
 		c.writeOpenTag("li", w)
-		c.writeElement("span", c.escape(item.Text), w)
+		c.renderInlineText(item.Text, item.InlineNodes, w)
 		c.convertNode(item.NestedList, w)
 		c.writeCloseTag("li", w)
 	} else {
 		// Regular list item without nested list
-		c.writeElement("li", c.escape(item.Text), w)
+		if len(item.InlineNodes) == 0 {
+			// Simple case - no inline nodes, use writeElement for compact output
+			c.writeElement("li", c.escape(item.Text), w)
+		} else {
+			// Complex case - has inline nodes
+			c.writeOpenTag("li", w)
+			c.renderInlineText(item.Text, item.InlineNodes, w)
+			c.writeCloseTag("li", w)
+		}
+	}
+}
+
+// renderInlineText renders text with inline nodes.
+func (c *HTML5Converter) renderInlineText(text string, inlineNodes []interface{}, w io.Writer) {
+	lastEnd := 0
+	for _, node := range inlineNodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			end := inlineNode.Position
+			// Write any text before this inline node
+			if end > lastEnd {
+				plainText := text[lastEnd:end]
+				c.writeRawString(c.escape(plainText), w)
+			}
+			lastEnd = end
+
+			// Render the inline node
+			c.convertInlineNode(inlineNode, w)
+		}
+	}
+
+	// Write any remaining text after last inline node
+	if lastEnd < len(text) {
+		plainText := text[lastEnd:]
+		c.writeRawString(c.escape(plainText), w)
 	}
 }
 

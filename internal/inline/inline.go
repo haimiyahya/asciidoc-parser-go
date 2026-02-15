@@ -72,6 +72,10 @@ type Node struct {
 	// Alt is the alt text (for Image nodes).
 	Alt string
 
+
+	// Position is the starting position of this node in source text.
+	Position int
+
 	// Children are child inline nodes (for complex inline structures).
 	Children []*Node
 }
@@ -210,6 +214,7 @@ func (p *Parser) tryLink() (*Node, int) {
 			Type: NodeLink,
 			Text: text,
 			URL:  url,
+			Position: p.pos + closeBracket + 1,
 		}, p.pos + closeBracket + 1
 	}
 
@@ -229,6 +234,7 @@ func (p *Parser) tryLink() (*Node, int) {
 			Type: NodeLink,
 			Text: url,
 			URL:  url,
+			Position: p.pos + end,
 		}, p.pos + end
 	}
 
@@ -247,6 +253,7 @@ func (p *Parser) tryBold() (*Node, int) {
 			return &Node{
 				Type: NodeBold,
 				Text: text,
+				Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 4
 		}
 	}
@@ -265,6 +272,7 @@ func (p *Parser) tryBold() (*Node, int) {
 				return &Node{
 					Type: NodeBold,
 					Text: text,
+					Position: p.pos + closeIndex + 1,
 				}, p.pos + closeIndex + 2
 			}
 		}
@@ -285,6 +293,7 @@ func (p *Parser) tryItalic() (*Node, int) {
 			return &Node{
 				Type: NodeItalic,
 				Text: text,
+					Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 4
 		}
 	}
@@ -322,6 +331,7 @@ func (p *Parser) tryMonospace() (*Node, int) {
 			return &Node{
 				Type: NodeMonospace,
 				Text: text,
+					Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
 		}
 	}

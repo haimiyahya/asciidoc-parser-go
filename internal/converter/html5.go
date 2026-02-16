@@ -142,6 +142,10 @@ func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 
 // convertHeader converts a document header to HTML.
 func (c *HTML5Converter) convertHeader(header *ast.DocumentHeader, w io.Writer) {
+	// In embedded mode, don't output document title (Asciidoctor compatibility)
+	if c.suppressHeaderFooter {
+		return
+	}
 	if header.Title != "" {
 		c.writeElement("h1", c.escape(header.Title), w)
 	}
@@ -185,30 +189,21 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 
 // convertParagraph converts a paragraph to HTML.
 func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) {
-	// Wrap paragraph in semantic div (Asciidoctor compatibility)
-	c.writeOpenTagWithClass("div", "paragraph", w)
+	// Always add newlines for Asciidoctor compatibility
+	fmt.Fprintf(w, `<div class="paragraph">
+`)
 
 	// If there are no inline nodes, use simple rendering
 	if len(para.InlineNodes) == 0 {
-		// Write inline without extra newlines (Asciidoctor compatibility)
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, "<p>")
-		fmt.Fprint(w, c.escape(para.Text))
-		fmt.Fprint(w, "</p>")
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		c.writeCloseTag("div", w)
+		fmt.Fprintf(w, `<p>%s</p>
+`, c.escape(para.Text))
+		fmt.Fprintf(w, `</div>
+`)
 		return
 	}
 
-	// Complex paragraph with inline nodes - write inline without extra newlines
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	fmt.Fprint(w, "<p>")
+	// Complex paragraph with inline nodes
+	fmt.Fprintf(w, `<p>`)
 
 	// Write text content mixed with inline nodes
 	lastEnd := 0
@@ -233,12 +228,10 @@ func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) 
 		c.writeRawString(c.escape(text), w)
 	}
 
-	fmt.Fprint(w, "</p>")
-	if c.pretty {
-		fmt.Fprintln(w)
-	}
-
-	c.writeCloseTag("div", w)
+	fmt.Fprintf(w, `</p>
+`)
+	fmt.Fprintf(w, `</div>
+`)
 }
 
 // convertInlineNode converts an inline.Node to HTML.
@@ -530,30 +523,26 @@ func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 	// Determine section class based on level (.sect1, .sect2, etc.)
 	sectionClass := fmt.Sprintf("sect%d", section.Level)
 
-	// Wrap section in semantic div (Asciidoctor compatibility)
-	c.writeOpenTagWithClass("div", sectionClass, w)
+	// Always add newlines for Asciidoctor compatibility
+	fmt.Fprintf(w, `<div class="%s">
+`, sectionClass)
 
 	// Determine heading tag based on level
 	tag := c.headingTag(section.Level)
 
 	// Write opening heading tag with id attribute if section has an ID
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
 	if section.ID != "" {
-		fmt.Fprintf(w, `<%s id="%s">`, tag, c.escape(section.ID))
+		fmt.Fprintf(w, `<%s id="%s">%s</%s>
+`, tag, c.escape(section.ID), c.escape(section.Title), tag)
 	} else {
-		fmt.Fprintf(w, "<%s>", tag)
-	}
-	fmt.Fprint(w, c.escape(section.Title))
-	fmt.Fprintf(w, "</%s>", tag)
-	if c.pretty {
-		fmt.Fprintln(w)
+		fmt.Fprintf(w, `<%s>%s</%s>
+`, tag, c.escape(section.Title), tag)
 	}
 
 	// Wrap section content in sectionbody div (only for level 1 sections, Asciidoctor compatibility)
 	if section.Level == 1 {
-		c.writeOpenTagWithClass("div", "sectionbody", w)
+		fmt.Fprintf(w, `<div class="sectionbody">
+`)
 	}
 
 	// Convert section children (paragraphs, lists, subsections, etc.)
@@ -562,10 +551,12 @@ func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 	}
 
 	if section.Level == 1 {
-		c.writeCloseTag("div", w) // Close sectionbody
+		fmt.Fprintf(w, `</div>
+`) // Close sectionbody
 	}
 
-	c.writeCloseTag("div", w) // Close section wrapper (sectN)
+	fmt.Fprintf(w, `</div>
+`) // Close section wrapper (sectN)
 }
 
 // headingTag returns appropriate HTML tag for a section level.
@@ -689,14 +680,17 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 		wrapperClass = "dlist"
 	}
 
-	// Wrap list in semantic div
-	c.writeOpenTagWithClass("div", wrapperClass, w)
+	// Always add newlines for Asciidoctor compatibility
+	fmt.Fprintf(w, `<div class="%s">
+`, wrapperClass)
 
 	// For ordered lists, add class attribute
 	if tag == "ol" {
-		c.writeOpenTagWithClass(tag, "arabic", w)
+		fmt.Fprintf(w, `<ol class="arabic">
+`)
 	} else {
-		c.writeOpenTag(tag, w)
+		fmt.Fprintf(w, `<%s>
+`, tag)
 	}
 
 	// Convert all list items
@@ -704,8 +698,10 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 		c.convertNode(item, w)
 	}
 
-	c.writeCloseTag(tag, w)
-	c.writeCloseTag("div", w) // Close wrapper div
+	fmt.Fprintf(w, `</%s>
+`, tag)
+	fmt.Fprintf(w, `</div>
+`)
 }
 
 // listTag returns appropriate HTML tag for a list.
@@ -728,127 +724,48 @@ func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 	// Determine tag based on list type
 	if item.Marker == "::" {
 		// Labeled list: dt and dd (Asciidoctor compatibility)
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
 		fmt.Fprint(w, `<dt class="hdlist1">`)
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
 		fmt.Fprint(w, c.escape(item.Term))
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, `</dt>`)
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-
+		fmt.Fprint(w, `</dt>
+`)
 		// Write dd with p-wrapped content
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, `<dd>`)
-		if c.pretty {
-			fmt.Fprintln(w)
-			c.indent += "  "
-		}
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
+		fmt.Fprint(w, `<dd>
+`)
 		fmt.Fprint(w, `<p>`)
-		if c.pretty {
-			fmt.Fprintln(w)
-			c.indent += "  "
-		}
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
 		fmt.Fprint(w, c.escape(item.Definition))
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		c.indent = strings.TrimSuffix(c.indent, "  ")
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, `</p>`)
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		c.indent = strings.TrimSuffix(c.indent, "  ")
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, `</dd>`)
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
+		fmt.Fprint(w, `</p>
+`)
+		fmt.Fprint(w, `</dd>
+`)
 	} else if item.NestedList != nil {
 		// Has nested list - open li, render text in p, nested list, close li
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, "<li>")
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, "<p>")
+		fmt.Fprint(w, `<li>
+`)
+		fmt.Fprint(w, `<p>`)
 		if len(item.InlineNodes) == 0 {
 			c.writeRawString(c.escape(item.Text), w)
 		} else {
 			c.renderInlineText(item.Text, item.InlineNodes, w)
 		}
-		fmt.Fprint(w, "</p>")
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
+		fmt.Fprint(w, `</p>
+`)
 		c.convertNode(item.NestedList, w)
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, "</li>")
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
+		fmt.Fprint(w, `</li>
+`)
 	} else {
 		// Regular list item without nested list - wrap content in p tag (Asciidoctor compatibility)
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, "<li>")
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, "<p>")
+		fmt.Fprint(w, `<li>
+`)
+		fmt.Fprint(w, `<p>`)
 		if len(item.InlineNodes) == 0 {
 			c.writeRawString(c.escape(item.Text), w)
 		} else {
 			c.renderInlineText(item.Text, item.InlineNodes, w)
 		}
-		fmt.Fprint(w, "</p>")
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, "</li>")
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
+		fmt.Fprint(w, `</p>
+`)
+		fmt.Fprint(w, `</li>
+`)
 	}
 }
 
@@ -879,19 +796,16 @@ func (c *HTML5Converter) renderInlineText(text string, inlineNodes []interface{}
 
 // convertLiteral converts a literal block to HTML.
 func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
-	// Wrap in literalblock div with content div (Asciidoctor compatibility)
-	c.writeOpenTagWithClass("div", "literalblock", w)
-	c.writeOpenTagWithClass("div", "content", w)
+	// Always add newlines for Asciidoctor compatibility
+	fmt.Fprintf(w, `<div class="literalblock">\n`)
+	fmt.Fprintf(w, `<div class="content">\n`)
 
 	if len(literal.Callouts) == 0 {
 		// No callouts, simple rendering
-		c.writeOpenTag("pre", w)
-		content := c.escape(strings.Join(literal.Lines, "\n"))
-		c.writeRawString(content, w)
-		c.writeCloseTag("pre", w)
+		fmt.Fprintf(w, `<pre>%s</pre>\n`, c.escape(strings.Join(literal.Lines, "\n")))
 	} else {
 		// Render with callouts
-		c.writeOpenTag("pre", w)
+		fmt.Fprintf(w, `<pre>`)
 
 		// Render each line with callout markers
 		for lineIdx, line := range literal.Lines {
@@ -905,7 +819,7 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 
 			// Sort callouts by column position
 			// For now, just append them at the end
-			c.writeRawString(c.escape(line), w)
+			fmt.Fprint(w, c.escape(line))
 
 			// Add callout markers at end of line
 			for _, co := range lineCallouts {
@@ -913,18 +827,18 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 			}
 
 			if lineIdx < len(literal.Lines)-1 {
-				c.writeRawString("\n", w)
+				fmt.Fprint(w, "\n")
 			}
 		}
 
-		c.writeCloseTag("pre", w)
+		fmt.Fprintf(w, `</pre>\n`)
 
 		// Render callout descriptions
 		c.renderCalloutList(literal, w)
 	}
 
-	c.writeCloseTag("div", w) // Close content div
-	c.writeCloseTag("div", w) // Close literalblock div
+	fmt.Fprintf(w, `</div>\n`)
+	fmt.Fprintf(w, `</div>\n`)
 }
 
 // renderCalloutList renders callout descriptions as an HTML list.
@@ -980,27 +894,66 @@ func (c *HTML5Converter) convertBlock(block *ast.NodeBlock, w io.Writer) {
 		class = "listingblock" // Default
 	}
 
-	// Wrap in semantic div with content div
-	c.writeOpenTagWithClass("div", class, w)
-	c.writeOpenTagWithClass("div", "content", w)
-
 	// Write content
 	content := strings.Join(block.Lines, "\n")
-	if content != "" {
-		// For literal/verbatim blocks, preserve formatting with pre
-		if block.Delimiter == "/" || block.Delimiter == "-" {
-			// Literal/verbatim blocks - use pre tag
-			c.writeOpenTag("pre", w)
-			c.writeRawString(c.escape(content), w)
-			c.writeCloseTag("pre", w)
-		} else {
-			// Other blocks - escape content
-			c.writeRawString(c.escape(content), w)
-		}
-	}
 
-	c.writeCloseTag("div", w) // Close content div
-	c.writeCloseTag("div", w) // Close block div
+	if block.Delimiter == "____" {
+		// Quote block - special structure
+		fmt.Fprintf(w, `<div class="%s">
+`, class)
+		fmt.Fprintf(w, `<blockquote>
+`)
+		fmt.Fprintf(w, `<div class="paragraph">
+`)
+		fmt.Fprintf(w, `<p>%s</p>
+`, c.escape(content))
+		fmt.Fprintf(w, `</div>
+`)
+		fmt.Fprintf(w, `</blockquote>
+`)
+		fmt.Fprintf(w, `</div>
+`)
+	} else if block.Delimiter == "====" {
+		// Example block - wrap in paragraph div
+		fmt.Fprintf(w, `<div class="%s">
+`, class)
+		fmt.Fprintf(w, `<div class="content">
+`)
+		fmt.Fprintf(w, `<div class="paragraph">
+`)
+		fmt.Fprintf(w, `<p>%s</p>
+`, c.escape(content))
+		fmt.Fprintf(w, `</div>
+`)
+		fmt.Fprintf(w, `</div>
+`)
+		fmt.Fprintf(w, `</div>
+`)
+	} else if block.Delimiter == "/" || block.Delimiter == "-" {
+		// Literal/verbatim blocks
+		fmt.Fprintf(w, `<div class="%s">
+`, class)
+		fmt.Fprintf(w, `<div class="content">
+`)
+		fmt.Fprintf(w, `<pre>%s</pre>
+`, c.escape(content))
+		fmt.Fprintf(w, `</div>
+`)
+		fmt.Fprintf(w, `</div>
+`)
+	} else {
+		// Other blocks - generic structure
+		fmt.Fprintf(w, `<div class="%s">
+`, class)
+		fmt.Fprintf(w, `<div class="content">
+`)
+		fmt.Fprintf(w, `%s
+`, c.escape(content))
+		fmt.Fprintf(w, `</div>
+`)
+		fmt.Fprintf(w, `</div>
+`)
+	}
 }
 
 // convertAdmonition converts an admonition to HTML.
@@ -1009,83 +962,31 @@ func (c *HTML5Converter) convertAdmonition(admonition *ast.AdmonitionNode, w io.
 	kind := strings.ToLower(admonition.Kind)
 	class := "admonitionblock " + kind
 
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	fmt.Fprintf(w, `<div class="%s">`, class)
-	if c.pretty {
-		fmt.Fprintln(w)
-		c.indent += "  "
-	}
-
-	// Write table structure
-	c.writeOpenTag("table", w)
-	c.writeOpenTag("tr", w)
-
-	// Write icon cell
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	fmt.Fprint(w, `<td class="icon">`)
-	if c.pretty {
-		fmt.Fprintln(w)
-		c.indent += "  "
-	}
-
-	// Write title (title case for Asciidoctor compatibility)
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	// Convert to title case: "NOTE" -> "Note", "WARNING" -> "Warning"
-	titleKind := strings.ToLower(admonition.Kind)
-	if len(titleKind) > 0 {
-		titleKind = strings.ToUpper(titleKind[:1]) + titleKind[1:]
-	}
-	fmt.Fprintf(w, `<div class="title">%s</div>`, titleKind)
-	if c.pretty {
-		fmt.Fprintln(w)
-	}
-
-	c.indent = strings.TrimSuffix(c.indent, "  ")
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	fmt.Fprint(w, `</td>`)
-	if c.pretty {
-		fmt.Fprintln(w)
-	}
-
-	// Write content cell
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	fmt.Fprint(w, `<td class="content">`)
-	if c.pretty {
-		fmt.Fprintln(w)
-		c.indent += "  "
-	}
-
-	// Write admonition text
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	fmt.Fprint(w, c.escape(admonition.Text))
-	if c.pretty {
-		fmt.Fprintln(w)
-	}
-
-	c.indent = strings.TrimSuffix(c.indent, "  ")
-	if c.pretty {
-		fmt.Fprint(w, c.indent)
-	}
-	fmt.Fprint(w, `</td>`)
-	if c.pretty {
-		fmt.Fprintln(w)
-	}
-
-	c.writeCloseTag("tr", w)
-	c.writeCloseTag("table", w)
-	c.writeCloseTag("div", w)
+	// Always add newlines for Asciidoctor compatibility (even in embedded mode)
+	fmt.Fprintf(w, `<div class="%s">
+`, class)
+	fmt.Fprintf(w, `<table>
+`)
+	fmt.Fprintf(w, `<tr>
+`)
+	fmt.Fprintf(w, `<td class="icon">
+`)
+	fmt.Fprintf(w, `<div class="title">%s</div>
+`, strings.ToUpper(kind[:1])+kind[1:])
+	fmt.Fprintf(w, `</td>
+`)
+	fmt.Fprintf(w, `<td class="content">
+`)
+	fmt.Fprintf(w, `%s
+`, c.escape(admonition.Text))
+	fmt.Fprintf(w, `</td>
+`)
+	fmt.Fprintf(w, `</tr>
+`)
+	fmt.Fprintf(w, `</table>
+`)
+	fmt.Fprintf(w, `</div>
+`)
 }
 
 // convertMacro converts a block macro to HTML.

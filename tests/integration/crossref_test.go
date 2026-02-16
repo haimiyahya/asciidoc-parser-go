@@ -48,11 +48,12 @@ The end.
 	// Verify cross-references are converted to anchor tags
 	t.Logf("Output:\n%s", output)
 
-	// Cross-reference should produce <a href="#section-id">
+	// Cross-reference should produce <a href="#section-id"> for simple titles
+	// (Asciidoctor only adds underscore prefix for multi-word titles)
 	assert.Contains(t, output, `<a href="#details">`)
 	assert.Contains(t, output, `<a href="#introduction">`)
 
-	// Sections should have id attributes
+	// Sections should have id attributes (no underscore prefix for simple titles)
 	assert.Contains(t, output, `id="details"`)
 	assert.Contains(t, output, `id="introduction"`)
 }

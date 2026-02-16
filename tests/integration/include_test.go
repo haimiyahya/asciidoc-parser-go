@@ -99,9 +99,12 @@ Final paragraph.
 
 	output := buf.String()
 
-	// Verify included section is present
-	assert.Contains(t, output, `id="included-section"`)
-	assert.Contains(t, output, "<li>List item 1</li>")
+	// Verify included section is present - Asciidoctor format with underscore prefix
+	assert.Contains(t, output, `id="_included_section"`)
+	// Asciidoctor wraps list items in <p> tags
+	assert.Contains(t, output, "<li>")
+	assert.Contains(t, output, "<p>List item 1</p>")
+	assert.Contains(t, output, "</li>")
 }
 
 // TestIncludeDirectiveWithLines tests include directive with line range filtering.

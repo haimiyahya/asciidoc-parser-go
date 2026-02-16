@@ -675,8 +675,10 @@ func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
 }
 
 // generateSectionID creates a section ID from a section title.
-// This follows Asciidoctor conventions: underscore prefix, lowercase,
-// underscores for spaces, removes special characters, etc.
+// This follows Asciidoctor conventions:
+// - Simple words (no spaces/special chars): no underscore prefix (e.g., "details")
+// - Multi-word or special chars: underscore prefix added (e.g., "_section_one")
+// - Lowercase, underscores for spaces, removes special characters
 func generateSectionID(title string) string {
 	// Convert to lowercase
 	id := strings.ToLower(title)
@@ -693,12 +695,16 @@ func generateSectionID(title string) string {
 	reg = regexp.MustCompile(`_+`)
 	id = reg.ReplaceAllString(id, "_")
 
-	// Add underscore prefix (Asciidoctor compatibility)
-	id = "_" + id
+	// Add underscore prefix ONLY if the ID contains underscores
+	// This matches Asciidoctor behavior: simple words get no prefix,
+	// multi-word titles get underscore prefix
+	if strings.Contains(id, "_") {
+		id = "_" + id
+	}
 
 	// Fallback if ID is empty
-	if id == "_" {
-		id = "__"
+	if id == "" {
+		id = "_"
 	}
 
 	return id

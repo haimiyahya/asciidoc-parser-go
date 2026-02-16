@@ -172,16 +172,16 @@ pdfConverter.Convert(doc, &buf)
 
 ### Tables
 
-| Syntax | Description |
-|--------|-------------|
-| `|===` | Table delimiter (start/end) |
-| `| Cell 1 | Cell 2 |` | Table row |
-| `|= Header |` | Header row |
-| `| >right | ^center | <left |` | Cell alignment |
-| `[cols="1,2,3"]` | Column specifications |
-| `[caption="Title"]` | Table caption |
-| `2+` | Colspan |
-| `3*` | Cell repeat |
+```
+|===                                    Table delimiter (start/end)
+| Cell 1 | Cell 2 |                     Table row
+|= Header |                              Header row
+| >right | ^center | <left |             Cell alignment
+[cols="1,2,3"]                          Column specifications
+[caption="Title"]                        Table caption
+2+                                      Colspan
+3*                                      Cell repeat
+```
 
 Tables support:
 - Header rows with `|=`

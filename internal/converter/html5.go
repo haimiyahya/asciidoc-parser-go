@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/extension"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
 )
 
@@ -24,6 +25,9 @@ type HTML5Converter struct {
 
 	// document is the document being converted (for bibliography lookup)
 	document *ast.NodeDocument
+
+	// extensionRegistry holds custom macro processors
+	extensionRegistry *extension.Registry
 }
 
 // NewHTML5Converter creates a new HTML5 converter.
@@ -41,6 +45,12 @@ func NewHTML5Converter() *HTML5Converter {
 func (c *HTML5Converter) WithoutHeaderFooter() *HTML5Converter {
 	c.suppressHeaderFooter = true
 	c.pretty = false // Disable pretty-printing for Asciidoctor compatibility
+	return c
+}
+
+// WithExtensionRegistry sets an extension registry for custom macros.
+func (c *HTML5Converter) WithExtensionRegistry(registry *extension.Registry) *HTML5Converter {
+	c.extensionRegistry = registry
 	return c
 }
 
@@ -414,6 +424,25 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			c.writeRawString(c.escape(node.Text), w)
 		}
 		// Concealed index terms produce no output
+	case inline.NodeCustomMacro:
+		// Custom inline macro - check extension registry
+		if c.extensionRegistry != nil {
+			if processor, ok := c.extensionRegistry.GetInlineMacro(node.MacroName); ok {
+				html, err := processor.Process(node.MacroTarget, node.MacroAttrs)
+				if err == nil {
+					c.writeRawString(html, w)
+				} else {
+					// On error, output the raw macro text
+					c.writeRawString(c.escape(node.Text), w)
+				}
+			} else {
+				// Unknown macro - output as-is
+				c.writeRawString(c.escape(node.Text), w)
+			}
+		} else {
+			// No registry - output as-is
+			c.writeRawString(c.escape(node.Text), w)
+		}
 	}
 }
 

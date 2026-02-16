@@ -2,12 +2,14 @@
 package parser
 
 import (
+	"fmt"
 	"io"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/extension"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/processor"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
@@ -51,6 +53,9 @@ type Parser struct {
 
 	// Current document being parsed (for attribute access)
 	currentDocument *ast.NodeDocument
+
+	// Extension registry for custom macros and processors
+	extensionRegistry *extension.Registry
 }
 
 // conditionalState represents the state of a conditional directive.
@@ -111,6 +116,13 @@ func WithIncludeProcessor(ip *processor.IncludeProcessor) ParserOption {
 func WithBaseDir(dir string) ParserOption {
 	return func(p *Parser) {
 		p.reader.SetDir(dir)
+	}
+}
+
+// WithExtensionRegistry sets an extension registry for custom macros and processors.
+func WithExtensionRegistry(registry *extension.Registry) ParserOption {
+	return func(p *Parser) {
+		p.extensionRegistry = registry
 	}
 }
 
@@ -526,6 +538,17 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 	// Close any remaining open list
 	p.closeCurrentList(doc)
 
+	// Run tree processors if an extension registry is configured
+	if p.extensionRegistry != nil {
+		if err := p.runTreeProcessors(doc); err != nil {
+			return nil, err
+		}
+		// Run block processors
+		if err := p.runBlockProcessors(doc); err != nil {
+			return nil, err
+		}
+	}
+
 	return doc, nil
 }
 
@@ -913,6 +936,39 @@ func (p *Parser) createMacro(macro *reader.MacroInfo, lineno int) ast.Node {
 		return nil
 	}
 
+	// Check if a custom block macro processor is registered
+	if p.extensionRegistry != nil {
+		if processor, ok := p.extensionRegistry.GetBlockMacro(macro.Target); ok {
+			// Convert attributes map to a format ParseMacroAttributes can handle
+			attrString := ""
+			if rawAttrs, ok := macro.Attributes["raw"]; ok {
+				attrString = "[" + rawAttrs + "]"
+			}
+			attrs := extension.ParseMacroAttributes(attrString)
+			attrMap := make(map[string]string)
+			for k, v := range attrs.Named {
+				attrMap[k] = v
+			}
+			for i, v := range attrs.Positional {
+				attrMap[fmt.Sprintf("pos%d", i)] = v
+			}
+			// Copy all existing attributes
+			for k, v := range macro.Attributes {
+				attrMap[k] = v
+			}
+
+			// Call the custom processor
+			// Note: macro.Path is the target/path after :: (e.g., "file.txt" in include::file.txt[])
+			result, err := processor.Process(macro.Path, attrMap, []string{}, ast.Position{Line: lineno})
+			if err != nil {
+				// On error, fall back to standard macro node
+			} else if result != nil {
+				return result
+			}
+		}
+	}
+
+	// Default: create standard macro node
 	return &ast.MacroNode{
 		Kind:       ast.TypeMacro,
 		Target:      macro.Target,
@@ -1476,4 +1532,72 @@ func (p *Parser) extractAttrName(s string) string {
 	}
 
 	return ""
+}
+
+// runTreeProcessors executes all registered tree processors.
+func (p *Parser) runTreeProcessors(doc *ast.NodeDocument) error {
+	processors := p.extensionRegistry.GetTreeProcessors()
+
+	// Sort by priority (lower first)
+	sort.Slice(processors, func(i, j int) bool {
+		return processors[i].Priority() < processors[j].Priority()
+	})
+
+	// Execute each processor
+	for _, processor := range processors {
+		if err := processor.Process(doc); err != nil {
+			return fmt.Errorf("tree processor %T failed: %w", processor, err)
+		}
+	}
+
+	return nil
+}
+
+// runBlockProcessors executes all registered block processors on document blocks.
+func (p *Parser) runBlockProcessors(doc *ast.NodeDocument) error {
+	processors := p.extensionRegistry.GetBlockProcessors()
+
+	// Sort by priority (lower first)
+	sort.Slice(processors, func(i, j int) bool {
+		return processors[i].Priority() < processors[j].Priority()
+	})
+
+	// Process all blocks recursively
+	p.processBlocksForExtensions(doc.Blocks, processors)
+
+	return nil
+}
+
+// processBlocksForExtensions recursively processes blocks with block processors.
+func (p *Parser) processBlocksForExtensions(blocks []ast.Node, processors []extension.BlockProcessor) {
+	for i, block := range blocks {
+		switch n := block.(type) {
+		case *ast.NodeBlock:
+			// Try each processor on this block
+			for _, processor := range processors {
+				if processor.Match(n) {
+					result, err := processor.Process(n)
+					if err == nil && result != nil {
+						blocks[i] = result
+					}
+				}
+			}
+			// NodeBlock doesn't have nested blocks, so skip recursion
+
+		case *ast.NodeSection:
+			// Process blocks within section (Children field)
+			for j, child := range n.Children {
+				if childBlock, ok := child.(*ast.NodeBlock); ok {
+					for _, processor := range processors {
+						if processor.Match(childBlock) {
+							result, err := processor.Process(childBlock)
+							if err == nil && result != nil {
+								n.Children[j] = result
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

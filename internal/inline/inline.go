@@ -53,6 +53,9 @@ const (
 
 	// NodeIndexTerm is an index term entry.
 	NodeIndexTerm
+
+	// NodeCustomMacro is a custom inline macro (registered via extension system).
+	NodeCustomMacro
 )
 
 // String returns the string representation of NodeType.
@@ -71,6 +74,7 @@ func (nt NodeType) String() string {
 		NodeBtn:        "Btn",
 		NodeMenu:       "Menu",
 		NodeIndexTerm:  "IndexTerm",
+		NodeCustomMacro: "CustomMacro",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -118,6 +122,11 @@ type Node struct {
 	IndexTermSecondary string // Secondary index term (optional)
 	IndexTermTertiary  string // Tertiary index term (optional)
 	IndexTermConcealed  bool   // True for concealed index terms (((...))) - hidden from text
+
+	// Custom macro fields (for NodeCustomMacro)
+	MacroName  string            // Macro name (e.g., "badge", "version")
+	MacroTarget string            // Macro target (text between : and [)
+	MacroAttrs  map[string]string // Macro attributes from square brackets
 }
 
 // String returns a string representation of node.
@@ -158,6 +167,9 @@ func (n *Node) String() string {
 		}
 		// Flow index term: ((primary))
 		return fmt.Sprintf("(%s)", n.IndexTermPrimary)
+	case NodeCustomMacro:
+		// Format: macroname:target[attr1,val1]
+		return fmt.Sprintf("%s:%s", n.MacroName, n.MacroTarget)
 	default:
 		return n.Text
 	}

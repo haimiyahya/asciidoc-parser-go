@@ -14,5 +14,8 @@
 # Compiled binary
 asciidoc
 
+# Compatibility test actual outputs
+tests/compatibility/actual/
+
 # Dependency directories (remove the comment below to include it)
 # vendor/

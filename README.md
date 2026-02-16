@@ -393,6 +393,47 @@ go test ./internal/parser/...
 go test ./internal/inline/... -v
 ```
 
+### Asciidoctor Compatibility Testing
+
+This project includes a compatibility testing framework that compares the parser's output against reference Asciidoctor HTML to ensure compatibility:
+
+```bash
+# Run compatibility tests
+go test ./tests/compatibility/...
+
+# Check if Asciidoctor is available (for generating expected output)
+go test ./tests/compatibility/... -run TestCompatibility_AsciidoctorAvailable -v
+```
+
+The compatibility framework supports:
+- **Golden file testing**: Pre-captured expected HTML files for regression testing
+- **Asciidoctor integration**: When `asciidoctor` is installed, generates expected HTML on-the-fly
+- **Detailed diff reporting**: Shows exact differences between expected and actual output
+- **27 built-in test cases**: Covering basic syntax, lists, inline markup, admonitions, blocks, tables, index terms, bibliography, UI macros, and roles
+
+#### Using Asciidoctor for Expected Output
+
+For the most accurate compatibility testing, install Asciidoctor:
+
+```bash
+# Install Ruby (if not already installed)
+# On macOS: brew install ruby
+# On Ubuntu/Debian: apt install ruby
+
+# Install Asciidoctor
+gem install asciidoctor
+```
+
+When Asciidoctor is available in your PATH, the compatibility tests will automatically use it to generate expected HTML output.
+
+#### Regenerating Golden Files
+
+To update golden files (e.g., after implementing a new feature):
+
+```bash
+GENERATE_GOLDEN=1 go test ./tests/compatibility/... -run TestCompatibility_GenerateGoldenFiles -v
+```
+
 ### Project Status
 
 | Component | Status | Notes |
@@ -417,6 +458,7 @@ go test ./internal/inline/... -v
 | Conditional Processing | ✅ Complete | ifdef, ifndef, ifeval |
 | Bibliography | ✅ Complete | Citation processing with [[[label]]] syntax |
 | Index Terms | ✅ Complete | (((term))) indexing with flow and concealed terms |
+| Compatibility Testing | ✅ Complete | Asciidoctor compatibility validation with 27 test cases |
 | CLI | ✅ Complete | Full Asciidoctor-compatible options |
 
 ### Missing/Incomplete Features (Post-MVP)

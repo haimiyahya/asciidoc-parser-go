@@ -24,7 +24,7 @@ const (
 	// NodeItalic is italic text (__italic__ or _italic_ on single words).
 	NodeItalic
 
-	// NodeMonospace is monospace text (`text` or ++text++).
+	// NodeMonospace is monospace text (`text` with backticks).
 	NodeMonospace
 
 	// NodeSubscript is subscript text (~text~).
@@ -264,6 +264,14 @@ func (p *Parser) Parse() []*Node {
 		}
 
 		if node, newPos := p.tryItalic(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		if node, newPos := p.trySpan(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
 			nodes = append(nodes, node)
@@ -634,16 +642,28 @@ func (p *Parser) tryMonospace() (*Node, int) {
 		}
 	}
 
-	// Check for pluses monospace: ++text++
+	// Note: ++text++ is NOT monospace in Asciidoctor by default
+	// It's a span that just groups text. Only backticks produce monospace.
+
+	return nil, p.pos
+}
+
+// trySpan attempts to parse a span: ++text++.
+// This just removes the delimiters and outputs the text as-is.
+func (p *Parser) trySpan() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for double plus span: ++text++
 	if strings.HasPrefix(remaining, "++") {
 		closeIndex := strings.Index(remaining[2:], "++")
 		if closeIndex != -1 && closeIndex > 0 {
 			text := remaining[2 : closeIndex+2]
+			// Return as text node (no special formatting)
 			return &Node{
-				Type:     NodeMonospace,
+				Type:     NodeText,
 				Text:     text,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 4,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 4,
 			}, p.pos + closeIndex + 4
 		}
 	}

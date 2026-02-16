@@ -4,6 +4,7 @@ package parser
 import (
 	"io"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
@@ -587,16 +588,30 @@ func getOffset(offset map[int]int, pos, maxPos int) int {
 	return 0
 }
 
-// stripRoleSyntaxWithOffset removes [.role] patterns from text and returns
+// stripInlineMarkupWithOffset removes inline markup delimiters from text and returns
 // both the cleaned text and a map of position offsets.
-func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
-	re := regexp.MustCompile(`\[\.([^\]]+)\]`)
+// Handles: [.role] role syntax and ++text++ span delimiters
+func stripInlineMarkupWithOffset(text string) (string, map[int]int) {
+	// Pattern to match both [.role] and ++text++
+	// This is a simplified approach - we process them sequentially
 
-	// Find all matches and their positions
-	matches := re.FindAllStringIndex(text, -1)
+	// First, handle ++text++ spans
+	spanRe := regexp.MustCompile(`\+\+[^+]+\+\+`)
+	spanMatches := spanRe.FindAllStringIndex(text, -1)
+
+	// Then handle [.role] syntax
+	roleRe := regexp.MustCompile(`\[\.([^\]]+)\]`)
+	roleMatches := roleRe.FindAllStringIndex(text, -1)
+
+	// Combine all matches and sort by position
+	allMatches := append(spanMatches, roleMatches...)
+	// Sort matches by start position
+	sort.Slice(allMatches, func(i, j int) bool {
+		return allMatches[i][0] < allMatches[j][0]
+	})
 
 	// If no matches, return original text with no offsets
-	if len(matches) == 0 {
+	if len(allMatches) == 0 {
 		return text, make(map[int]int)
 	}
 
@@ -607,19 +622,28 @@ func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
 	lastEnd := 0
 	var cleaned strings.Builder
 
-	for _, match := range matches {
+	for _, match := range allMatches {
 		start, end := match[0], match[1]
 
 		// Copy text before this match
 		cleaned.WriteString(text[lastEnd:start])
 
-		// Update offsets for positions within the removed section
-		for i := start; i < end; i++ {
-			offset[i] = totalRemoved + (i - start) // All positions in match map to same point
+		// For ++text++ spans, we need to keep the inner text
+		if strings.HasPrefix(text[start:], "++") {
+			// Extract inner text (remove the ++ delimiters)
+			innerText := text[start+2 : end-2]
+			cleaned.WriteString(innerText)
+			// The delimiters are 4 characters total (++ at start, ++ at end)
+			totalRemoved += 4
+		} else {
+			// For [.role], remove the entire thing
+			totalRemoved += (end - start)
 		}
 
-		// Update total removed
-		totalRemoved += (end - start)
+		// Update offsets for positions within the removed section
+		for i := start; i < end; i++ {
+			offset[i] = totalRemoved - (end - i) // Offset to account for removed chars
+		}
 		lastEnd = end
 	}
 
@@ -634,11 +658,20 @@ func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
 	}
 
 	// For positions before the first match, offset is 0
-	for i := 0; i < matches[0][0]; i++ {
-		offset[i] = 0
+	if len(allMatches) > 0 {
+		for i := 0; i < allMatches[0][0]; i++ {
+			offset[i] = 0
+		}
 	}
 
 	return cleaned.String(), offset
+}
+
+// stripRoleSyntaxWithOffset removes [.role] patterns from text and returns
+// both the cleaned text and a map of position offsets.
+// Deprecated: Use stripInlineMarkupWithOffset instead.
+func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
+	return stripInlineMarkupWithOffset(text)
 }
 
 // generateSectionID creates a section ID from a section title.

@@ -18,8 +18,11 @@ A native Go implementation of an [AsciiDoc](https://asciidoc.org/) parser and pr
   - Man Page (troff/nroff) converter
   - EPUB converter
 - **CLI Tool** - Full-featured command-line interface compatible with Asciidoctor options
+- **LSP Server** - Language Server Protocol for editor integration (VS Code, Vim, Emacs, etc.)
 
 ## Installation
+
+### CLI Tool
 
 ```bash
 go install github.com/haimiyahya/asciidoc-parser-go/cmd/asciidoc@latest
@@ -31,6 +34,19 @@ Or build from source:
 git clone https://github.com/haimiyahya/asciidoc-parser-go
 cd asciidoc-parser-go
 go build ./cmd/asciidoc
+```
+
+### LSP Server
+
+```bash
+go install github.com/haimiyahya/asciidoc-parser-go/cmd/asciidoc-lsp@latest
+```
+
+Or build from source:
+
+```bash
+cd asciidoc-parser-go
+go build ./cmd/asciidoc-lsp
 ```
 
 ## Quick Start
@@ -149,6 +165,54 @@ pdfConverter.WithPDFTitle("My Document")
 pdfConverter.WithPDFAuthor("John Doe")
 
 pdfConverter.Convert(doc, &buf)
+```
+
+### Using the LSP Server
+
+The Language Server Protocol (LSP) server provides editor integration features like:
+
+- **Diagnostics** - Real-time error checking as you type
+- **Document Symbols** - Outline view of sections
+- **Completions** - Context-aware suggestions for AsciiDoc syntax
+- **Hover** - Information about AsciiDoc constructs
+- **Go-to-Definition** - Navigate to section references
+- **Document Highlights** - Highlight all occurrences of a word
+
+**VS Code Configuration:**
+
+```json
+{
+  "asciidoc.languageServerPath": "/path/to/asciidoc-lsp",
+  "asciidoc.trace.server": "verbose",
+  "files.associations": {
+    "*.adoc": "asciidoc",
+    "*.asciidoc": "asciidoc"
+  }
+}
+```
+
+**Vim/Neovim (with coc.nvim):**
+
+```vim
+" coc-settings.json
+{
+  "languageserver": {
+    "asciidoc": {
+      "command": "/path/to/asciidoc-lsp",
+      "filetypes": ["asciidoc"],
+      "rootPatterns": [".git"]
+    }
+  }
+}
+```
+
+**Emacs (lsp-mode):**
+
+```elisp
+(lsp-register-client
+  (make-lsp-client :new-connection (lsp-stdio-connection "/path/to/asciidoc-lsp")
+                   :major-modes '(asciidoc-mode)
+                   :server-id 'asciidoc-lsp))
 ```
 
 ## Supported Syntax
@@ -339,6 +403,7 @@ internal/
 ├── blocks/           # Block-level AST node types
 ├── converter/        # Output converters (HTML5, PDF, DocBook, ManPage, EPUB)
 ├── inline/           # Inline markup parser
+├── lsp/              # Language Server Protocol implementation
 ├── parser/           # Main parser orchestrator
 ├── processor/        # Attribute, include, conditional processors
 └── reader/           # Line-oriented reader with classifier
@@ -375,6 +440,7 @@ Source Text
 - [x] Phase 10: DocBook Backend
 - [x] Phase 11: Man Page Backend
 - [x] Phase 12: EPUB Backend
+- [x] Phase 13: LSP Server
 
 See [ROADMAP.md](ROADMAP.md) for details.
 
@@ -460,13 +526,13 @@ GENERATE_GOLDEN=1 go test ./tests/compatibility/... -run TestCompatibility_Gener
 | Index Terms | ✅ Complete | (((term))) indexing with flow and concealed terms |
 | Compatibility Testing | ✅ Complete | Asciidoctor compatibility validation with 27 test cases |
 | CLI | ✅ Complete | Full Asciidoctor-compatible options |
+| LSP Server | ✅ Complete | Diagnostics, symbols, completion, hover, go-to-definition |
 
 ### Missing/Incomplete Features (Post-MVP)
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
 | **Extensions System** | Custom block/inline macros, tree processors | Medium |
-| **LSP Support** | Language Server Protocol for editor integration | Medium |
 
 ## Contributing
 

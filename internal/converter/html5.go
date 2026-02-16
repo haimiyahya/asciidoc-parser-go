@@ -216,7 +216,12 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 	case inline.NodeText:
 		c.writeRawString(c.escape(node.Text), w)
 	case inline.NodeBold:
-		c.writeRawString("<strong>", w)
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<strong class="`+class+`">`, w)
+		} else {
+			c.writeRawString("<strong>", w)
+		}
 		if len(node.Children) > 0 {
 			c.renderInlineChildren(node, w)
 		} else {
@@ -224,7 +229,12 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		}
 		c.writeRawString("</strong>", w)
 	case inline.NodeItalic:
-		c.writeRawString("<em>", w)
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<em class="`+class+`">`, w)
+		} else {
+			c.writeRawString("<em>", w)
+		}
 		if len(node.Children) > 0 {
 			c.renderInlineChildren(node, w)
 		} else {
@@ -232,7 +242,12 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		}
 		c.writeRawString("</em>", w)
 	case inline.NodeMonospace:
-		c.writeRawString("<code>", w)
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<code class="`+class+`">`, w)
+		} else {
+			c.writeRawString("<code>", w)
+		}
 		if len(node.Children) > 0 {
 			c.renderInlineChildren(node, w)
 		} else {
@@ -240,7 +255,12 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		}
 		c.writeRawString("</code>", w)
 	case inline.NodeSubscript:
-		c.writeRawString("<sub>", w)
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<sub class="`+class+`">`, w)
+		} else {
+			c.writeRawString("<sub>", w)
+		}
 		if len(node.Children) > 0 {
 			c.renderInlineChildren(node, w)
 		} else {
@@ -248,7 +268,12 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		}
 		c.writeRawString("</sub>", w)
 	case inline.NodeSuperscript:
-		c.writeRawString("<sup>", w)
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<sup class="`+class+`">`, w)
+		} else {
+			c.writeRawString("<sup>", w)
+		}
 		if len(node.Children) > 0 {
 			c.renderInlineChildren(node, w)
 		} else {
@@ -257,7 +282,12 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		c.writeRawString("</sup>", w)
 	case inline.NodeLink:
 		if node.URL != "" {
-			fmt.Fprintf(w, `<a href="%s">`, c.escape(node.URL))
+			class := c.getClassAttr(node.Roles)
+			if class != "" {
+				fmt.Fprintf(w, `<a href="%s" class="%s">`, c.escape(node.URL), class)
+			} else {
+				fmt.Fprintf(w, `<a href="%s">`, c.escape(node.URL))
+			}
 		} else {
 			c.writeRawString("<a>", w)
 		}
@@ -268,16 +298,104 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		if alt == "" {
 			alt = node.Text
 		}
-		fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			fmt.Fprintf(w, `<img src="%s" alt="%s" class="%s">`, c.escape(node.URL), c.escape(alt), class)
+		} else {
+			fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
+		}
 	case inline.NodeCrossRef:
 		// Cross-reference: <<section-id>> or <<section-id,text>> becomes <a href="#section-id">
-		fmt.Fprintf(w, `<a href="#%s">`, c.escape(node.Ref))
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			fmt.Fprintf(w, `<a href="#%s" class="%s">`, c.escape(node.Ref), class)
+		} else {
+			fmt.Fprintf(w, `<a href="#%s">`, c.escape(node.Ref))
+		}
 		if node.RefText != "" {
 			c.writeRawString(c.escape(node.RefText), w)
 		} else {
 			c.renderInlineChildren(node, w)
 		}
 		c.writeRawString("</a>", w)
+	case inline.NodeKbd:
+		// Keyboard macro: kbd:[Ctrl+C] -> <kbd><span class="key">Ctrl</span>+<span class="key">C</span></kbd>
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<kbd class="`+class+`">`, w)
+		} else {
+			c.writeRawString("<kbd>", w)
+		}
+		c.renderKbdKeys(node.Text, w)
+		c.writeRawString("</kbd>", w)
+	case inline.NodeBtn:
+		// Button macro: btn:[OK] -> <b class="btn">OK</b>
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<b class="btn `+class+`">`, w)
+		} else {
+			c.writeRawString(`<b class="btn">`, w)
+		}
+		c.writeRawString(c.escape(node.Text), w)
+		c.writeRawString("</b>", w)
+	case inline.NodeMenu:
+		// Menu macro: menu:[File > Save] -> <span class="menu"><span class="menuitem">File</span> &#10140; <span class="menuitem">Save</span></span>
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<span class="menu `+class+`">`, w)
+		} else {
+			c.writeRawString(`<span class="menu">`, w)
+		}
+		c.renderMenuPath(node.Text, w)
+		c.writeRawString("</span>", w)
+	}
+}
+
+// getClassAttr returns a space-separated list of roles for HTML class attribute.
+func (c *HTML5Converter) getClassAttr(roles []string) string {
+	if len(roles) == 0 {
+		return ""
+	}
+	// Join roles with spaces for HTML class attribute
+	return strings.Join(roles, " ")
+}
+
+// renderKbdKeys renders keyboard key combinations with proper formatting.
+// Splits on "+" and wraps each key in a span.key element.
+func (c *HTML5Converter) renderKbdKeys(keys string, w io.Writer) {
+	keyParts := strings.Split(keys, "+")
+	for i, key := range keyParts {
+		trimmedKey := strings.TrimSpace(key)
+		if trimmedKey != "" {
+			c.writeRawString(`<span class="key">`, w)
+			c.writeRawString(c.escape(trimmedKey), w)
+			c.writeRawString(`</span>`, w)
+			if i < len(keyParts)-1 {
+				c.writeRawString("+", w)
+			}
+		}
+	}
+}
+
+// renderMenuPath renders a menu path with proper formatting.
+// Splits on " > " or "," and wraps each menu item in a span.menuitem element.
+func (c *HTML5Converter) renderMenuPath(path string, w io.Writer) {
+	// Try to split on " > " first
+	items := strings.Split(path, " > ")
+	if len(items) == 1 {
+		// Try comma separator
+		items = strings.Split(path, ",")
+	}
+	for i, item := range items {
+		trimmedItem := strings.TrimSpace(item)
+		if trimmedItem != "" {
+			c.writeRawString(`<span class="menuitem">`, w)
+			c.writeRawString(c.escape(trimmedItem), w)
+			c.writeRawString(`</span>`, w)
+			if i < len(items)-1 {
+				c.writeRawString(` &#10140; `, w) // Unicode right arrow
+			}
+		}
 	}
 }
 

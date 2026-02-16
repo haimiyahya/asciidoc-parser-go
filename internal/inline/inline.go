@@ -41,13 +41,22 @@ const (
 
 	// NodeCrossRef is a cross-reference (<<section-id>>).
 	NodeCrossRef
+
+	// NodeKbd is a keyboard key combination (kbd:[Ctrl+C]).
+	NodeKbd
+
+	// NodeBtn is a button label (btn:[OK]).
+	NodeBtn
+
+	// NodeMenu is a menu path (menu:[File > Save]).
+	NodeMenu
 )
 
 // String returns the string representation of NodeType.
 func (nt NodeType) String() string {
 	names := map[NodeType]string{
-		NodeText:      "Text",
-		NodeBold:      "Bold",
+		NodeText:       "Text",
+		NodeBold:       "Bold",
 		NodeItalic:     "Italic",
 		NodeMonospace:  "Monospace",
 		NodeSubscript:  "Subscript",
@@ -55,6 +64,9 @@ func (nt NodeType) String() string {
 		NodeLink:       "Link",
 		NodeImage:      "Image",
 		NodeCrossRef:   "CrossRef",
+		NodeKbd:        "Kbd",
+		NodeBtn:        "Btn",
+		NodeMenu:       "Menu",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -81,6 +93,9 @@ type Node struct {
 
 	// RefText is the custom reference text (for CrossRef with <<id,text>> syntax).
 	RefText string
+
+	// Roles are CSS role classes applied to this node (from [.role] syntax).
+	Roles []string
 
 	// StartPos is the starting position of this node's markup in source text.
 	StartPos int
@@ -140,54 +155,119 @@ func NewParser(text string) *Parser {
 // Parse parses the inline markup into a slice of nodes.
 func (p *Parser) Parse() []*Node {
 	var nodes []*Node
+	var pendingRoles []string
+	skipRole := false // Skip role parsing if we just emitted unattached roles
 
 	for p.pos < len(p.text) {
+		// Check for role syntax: [.role] or [.role1.role2]
+		// Only try to parse role if we didn't just emit unattached roles
+		if !skipRole && len(pendingRoles) == 0 {
+			if roles, endPos := p.tryRole(); roles != nil {
+				pendingRoles = roles
+				p.pos = endPos
+				continue
+			}
+		}
+		skipRole = false // Reset the skip flag
+
 		// Try to match inline constructs
+		if node, newPos := p.tryKbd(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		if node, newPos := p.tryBtn(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		if node, newPos := p.tryMenu(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
 		if node, newPos := p.tryCrossRef(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
 
 		if node, newPos := p.tryImage(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
 
 		if node, newPos := p.tryLink(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
 
 		if node, newPos := p.tryBold(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
 
 		if node, newPos := p.tryItalic(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
 
 		if node, newPos := p.tryMonospace(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
 
 		if node, newPos := p.trySubscript(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
 
 		if node, newPos := p.trySuperscript(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
+			continue
+		}
+
+		// If we have pending roles but no inline element matched, emit the role as plain text
+		if len(pendingRoles) > 0 {
+			// Roles were not consumed - emit as text and consume at least one character
+			// Emit the role markup as plain text
+			roleText := p.text[p.pos:min(p.pos+1, len(p.text))]
+			nodes = append(nodes, &Node{Type: NodeText, Text: roleText})
+			p.pos = min(p.pos+1, len(p.text))
+			pendingRoles = nil
+			skipRole = true // Skip role parsing in next iteration to avoid infinite loop
 			continue
 		}
 
@@ -198,9 +278,13 @@ func (p *Parser) Parse() []*Node {
 		// Look for next inline construct marker
 		for i := p.pos; i < len(p.text); i++ {
 			remaining := p.text[i:]
-			if strings.HasPrefix(remaining, "<<") ||
+			if strings.HasPrefix(remaining, "[.") ||
+				strings.HasPrefix(remaining, "<<") ||
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
+				strings.HasPrefix(remaining, "kbd:") ||
+				strings.HasPrefix(remaining, "btn:") ||
+				strings.HasPrefix(remaining, "menu:") ||
 				strings.HasPrefix(remaining, "**") ||
 				strings.HasPrefix(remaining, "*") ||
 				strings.HasPrefix(remaining, "__") ||
@@ -219,10 +303,24 @@ func (p *Parser) Parse() []*Node {
 		if p.pos < nextInlinePos {
 			nodes = append(nodes, &Node{Type: NodeText, Text: p.text[p.pos:nextInlinePos]})
 			p.pos = nextInlinePos
+		} else {
+			// No more inline constructs found, consume remaining text and exit
+			if p.pos < len(p.text) {
+				nodes = append(nodes, &Node{Type: NodeText, Text: p.text[p.pos:]})
+				p.pos = len(p.text)
+			}
 		}
 	}
 
 	return nodes
+}
+
+// min returns the minimum of two integers.
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // tryImage attempts to parse an inline image at current position.
@@ -581,4 +679,140 @@ func (p *Parser) isWord(s string) bool {
 		return false
 	}
 	return !strings.Contains(s, " ")
+}
+
+// tryRole attempts to parse a role attribute: [.role] or [.role1.role2].
+// Returns the list of role names and the new position, or nil if not a role.
+func (p *Parser) tryRole() ([]string, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for role syntax: [.role] or [.role1.role2]
+	if strings.HasPrefix(remaining, "[.") {
+		// Find the closing ]
+		closeIndex := strings.Index(remaining, "]")
+		if closeIndex == -1 {
+			return nil, p.pos
+		}
+
+		// Extract the role specification (without [. and ])
+		roleSpec := remaining[2:closeIndex]
+		if roleSpec == "" {
+			return nil, p.pos
+		}
+
+		// Split by dots to get individual roles
+		roles := strings.Split(roleSpec, ".")
+
+		// Filter out empty strings
+		var validRoles []string
+		for _, role := range roles {
+			if role != "" {
+				validRoles = append(validRoles, role)
+			}
+		}
+
+		if len(validRoles) == 0 {
+			return nil, p.pos
+		}
+
+		return validRoles, p.pos + closeIndex + 1
+	}
+
+	return nil, p.pos
+}
+
+// applyRoles applies pending roles to a node.
+func (p *Parser) applyRoles(node *Node, roles []string) {
+	if len(roles) > 0 {
+		node.Roles = append(node.Roles, roles...)
+	}
+}
+
+// tryKbd attempts to parse a keyboard macro: kbd:[keys] or kbd:[keys+keys].
+// Supports key combinations like Ctrl+C, Alt+Shift+Del.
+func (p *Parser) tryKbd() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for kbd macro: kbd:[keys]
+	if strings.HasPrefix(remaining, "kbd:[") {
+		// Find the closing ]
+		closeIndex := strings.Index(remaining[4:], "]")
+		if closeIndex == -1 {
+			return nil, p.pos
+		}
+
+		// Extract the keys
+		keys := remaining[5 : closeIndex+4]
+		if keys == "" {
+			return nil, p.pos
+		}
+
+		return &Node{
+			Type:     NodeKbd,
+			Text:     keys,
+			StartPos: p.pos,
+			Position: p.pos + closeIndex + 5,
+		}, p.pos + closeIndex + 5
+	}
+
+	return nil, p.pos
+}
+
+// tryBtn attempts to parse a button macro: btn:[label].
+func (p *Parser) tryBtn() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for btn macro: btn:[label]
+	if strings.HasPrefix(remaining, "btn:[") {
+		// Find the closing ]
+		closeIndex := strings.Index(remaining[4:], "]")
+		if closeIndex == -1 {
+			return nil, p.pos
+		}
+
+		// Extract the label
+		label := remaining[5 : closeIndex+4]
+		if label == "" {
+			return nil, p.pos
+		}
+
+		return &Node{
+			Type:     NodeBtn,
+			Text:     label,
+			StartPos: p.pos,
+			Position: p.pos + closeIndex + 5,
+		}, p.pos + closeIndex + 5
+	}
+
+	return nil, p.pos
+}
+
+// tryMenu attempts to parse a menu macro: menu:[File > Save] or menu:[File,Save].
+// Supports menu paths with > or , as separator.
+func (p *Parser) tryMenu() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for menu macro: menu:[path]
+	if strings.HasPrefix(remaining, "menu:[") {
+		// Find the closing ]
+		closeIndex := strings.Index(remaining[5:], "]")
+		if closeIndex == -1 {
+			return nil, p.pos
+		}
+
+		// Extract the menu path
+		path := remaining[6 : closeIndex+5]
+		if path == "" {
+			return nil, p.pos
+		}
+
+		return &Node{
+			Type:     NodeMenu,
+			Text:     path,
+			StartPos: p.pos,
+			Position: p.pos + closeIndex + 6,
+		}, p.pos + closeIndex + 6
+	}
+
+	return nil, p.pos
 }

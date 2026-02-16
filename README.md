@@ -207,6 +207,30 @@ Tables support:
 | `image:path[alt]` | <img src="path" alt="alt"> | Inline image |
 | `<<section-id>>` | <a href="#section-id">section-id</a> | Cross-reference |
 | `<<id,text>>` | <a href="#id">text</a> | Cross-reference with custom text |
+| `[.role]**text**` | <span class="role">text</span> | Role/CSS class |
+| `kbd:[Ctrl+C]` | <kbd><span class="key">Ctrl</span>+<span class="key">C</span></kbd> | Keyboard shortcut |
+| `btn:[OK]` | <b class="btn">OK</b> | Button label |
+| `menu:[File > Save]` | <span class="menu">...</span> | Menu path |
+
+### Roles
+
+Roles allow you to add CSS classes to inline elements:
+
+```
+[.red]**This text is red**
+[.role1.role2]__This has two classes__
+[.highlight]`code with highlight`
+```
+
+### UI Macros
+
+UI macros help document user interface elements:
+
+```
+Press kbd:[Ctrl+C] to copy.
+Click btn:[Submit] to continue.
+Go to menu:[File > Save As].
+```
 
 ### Admonitions
 
@@ -334,7 +358,7 @@ go test ./internal/inline/... -v
 | List Parsing | ✅ Complete | Nested, ordered, unordered, labeled |
 | Section Parsing | ✅ Complete | Multi-level headings |
 | Table Parsing | ✅ Complete | Delimited block syntax, attributes, alignment, colspan, rowspan |
-| Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript |
+| Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript, roles, kbd, btn, menu |
 | Admonitions | ✅ Complete | All 5 types |
 | Block Macros | ✅ Complete | Image, video, audio, include |
 | Delimited Blocks | ✅ Complete | Example, quote, literal, styled blocks (pass::[], sidebar::[], verse::[]) |
@@ -355,7 +379,6 @@ go test ./internal/inline/... -v
 |---------|-------------|----------|
 | **Bibliography** | Citation processing for academic use | Low |
 | **Extensions System** | Custom block/inline macros, tree processors | Medium |
-| **More Inline Types** | `[ ]` for roles, etc. | Low |
 | **Index Terms** | `(((term)))` indexing | Low |
 | **LSP Support** | Language Server Protocol for editor integration | Medium |
 

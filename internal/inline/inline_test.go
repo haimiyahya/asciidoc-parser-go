@@ -21,6 +21,9 @@ func TestNodeTypeString(t *testing.T) {
 		{NodeSuperscript, "Superscript"},
 		{NodeLink, "Link"},
 		{NodeImage, "Image"},
+		{NodeKbd, "Kbd"},
+		{NodeBtn, "Btn"},
+		{NodeMenu, "Menu"},
 	}
 
 	for _, tt := range tests {
@@ -398,5 +401,378 @@ func TestParseCrossRefWithCustomText(t *testing.T) {
 			assert.Equal(t, tt.expected.RefText, actualNode.Text)
 		})
 	}
+}
+
+func TestParseKbd(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected struct {
+			Type NodeType
+			Text string
+		}
+	}{
+		{
+			name: "single key",
+			source: "kbd:[Ctrl]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeKbd,
+				Text: "Ctrl",
+			},
+		},
+		{
+			name: "key combination",
+			source: "kbd:[Ctrl+C]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeKbd,
+				Text: "Ctrl+C",
+			},
+		},
+		{
+			name: "three key combination",
+			source: "kbd:[Ctrl+Shift+Del]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeKbd,
+				Text: "Ctrl+Shift+Del",
+			},
+		},
+		{
+			name: "kbd with surrounding text",
+			source: "Press kbd:[Enter] to continue",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeKbd,
+				Text: "Enter",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser := NewParser(tt.source)
+			nodes := parser.Parse()
+
+			// Find the kbd node
+			var kbdNode *Node
+			for _, node := range nodes {
+				if node.Type == NodeKbd {
+					kbdNode = node
+					break
+				}
+			}
+
+			require.NotNil(t, kbdNode, "should have a kbd node")
+			assert.Equal(t, tt.expected.Type, kbdNode.Type)
+			assert.Equal(t, tt.expected.Text, kbdNode.Text)
+		})
+	}
+}
+
+func TestParseBtn(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected struct {
+			Type NodeType
+			Text string
+		}
+	}{
+		{
+			name: "simple button",
+			source: "btn:[OK]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeBtn,
+				Text: "OK",
+			},
+		},
+		{
+			name: "button with spaces",
+			source: "btn:[Cancel]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeBtn,
+				Text: "Cancel",
+			},
+		},
+		{
+			name: "button with surrounding text",
+			source: "Click btn:[Submit] to continue",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeBtn,
+				Text: "Submit",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser := NewParser(tt.source)
+			nodes := parser.Parse()
+
+			// Find the btn node
+			var btnNode *Node
+			for _, node := range nodes {
+				if node.Type == NodeBtn {
+					btnNode = node
+					break
+				}
+			}
+
+			require.NotNil(t, btnNode, "should have a btn node")
+			assert.Equal(t, tt.expected.Type, btnNode.Type)
+			assert.Equal(t, tt.expected.Text, btnNode.Text)
+		})
+	}
+}
+
+func TestParseMenu(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected struct {
+			Type NodeType
+			Text string
+		}
+	}{
+		{
+			name: "simple menu path",
+			source: "menu:[File > Save]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeMenu,
+				Text: "File > Save",
+			},
+		},
+		{
+			name: "nested menu path",
+			source: "menu:[File > New > Document]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeMenu,
+				Text: "File > New > Document",
+			},
+		},
+		{
+			name: "menu with comma separator",
+			source: "menu:[File,Save]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeMenu,
+				Text: "File,Save",
+			},
+		},
+		{
+			name: "menu with surrounding text",
+			source: "Go to menu:[Edit > Find]",
+			expected: struct {
+				Type NodeType
+				Text string
+			}{
+				Type: NodeMenu,
+				Text: "Edit > Find",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser := NewParser(tt.source)
+			nodes := parser.Parse()
+
+			// Find the menu node
+			var menuNode *Node
+			for _, node := range nodes {
+				if node.Type == NodeMenu {
+					menuNode = node
+					break
+				}
+			}
+
+			require.NotNil(t, menuNode, "should have a menu node")
+			assert.Equal(t, tt.expected.Type, menuNode.Type)
+			assert.Equal(t, tt.expected.Text, menuNode.Text)
+		})
+	}
+}
+
+func TestParseRole(t *testing.T) {
+	tests := []struct {
+		name     string
+		source   string
+		expected struct {
+			Type  NodeType
+			Roles []string
+		}
+	}{
+		{
+			name: "single role on bold text",
+			source: "[.red]**bold text**",
+			expected: struct {
+				Type  NodeType
+				Roles []string
+			}{
+				Type:  NodeBold,
+				Roles: []string{"red"},
+			},
+		},
+		{
+			name: "multiple roles on text",
+			source: "[.role1.role2]**text**",
+			expected: struct {
+				Type  NodeType
+				Roles []string
+			}{
+				Type:  NodeBold,
+				Roles: []string{"role1", "role2"},
+			},
+		},
+		{
+			name: "role on italic text",
+			source: "[.emphasis]__italic__",
+			expected: struct {
+				Type  NodeType
+				Roles []string
+			}{
+				Type:  NodeItalic,
+				Roles: []string{"emphasis"},
+			},
+		},
+		{
+			name: "role on link",
+			source: "[.external]link:text[url]",
+			expected: struct {
+				Type  NodeType
+				Roles []string
+			}{
+				Type:  NodeLink,
+				Roles: []string{"external"},
+			},
+		},
+		{
+			name: "role on kbd",
+			source: "[.key-combo]kbd:[Ctrl+C]",
+			expected: struct {
+				Type  NodeType
+				Roles []string
+			}{
+				Type:  NodeKbd,
+				Roles: []string{"key-combo"},
+			},
+		},
+		{
+			name: "role on btn",
+			source: "[.primary]btn:[OK]",
+			expected: struct {
+				Type  NodeType
+				Roles []string
+			}{
+				Type:  NodeBtn,
+				Roles: []string{"primary"},
+			},
+		},
+		{
+			name: "role on menu",
+			source: "[.nav]menu:[File > Save]",
+			expected: struct {
+				Type  NodeType
+				Roles []string
+			}{
+				Type:  NodeMenu,
+				Roles: []string{"nav"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser := NewParser(tt.source)
+			nodes := parser.Parse()
+
+			require.Greater(t, len(nodes), 0, "should have at least one node")
+			actualNode := nodes[0]
+			assert.Equal(t, tt.expected.Type, actualNode.Type)
+			assert.Equal(t, tt.expected.Roles, actualNode.Roles)
+		})
+	}
+}
+
+func TestParseRoleNoMatch(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+	}{
+		{
+			name:   "unclosed role bracket",
+			source: "[.role**text**",
+		},
+		{
+			name:   "empty role",
+			source: "[.]*text*",
+		},
+		{
+			name:   "role without element",
+			source: "[.role] plain text",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parser := NewParser(tt.source)
+			nodes := parser.Parse()
+
+			// The role should not be parsed, or the plain text should be returned
+			// In our implementation, roles without a following inline element are treated as text
+			assert.NotEmpty(t, nodes, "should have nodes")
+		})
+	}
+}
+
+func TestParseUIMacrosMixed(t *testing.T) {
+	source := "Press kbd:[Ctrl+C] to copy, then click btn:[Paste] or go to menu:[Edit > Paste]"
+	parser := NewParser(source)
+	nodes := parser.Parse()
+
+	// Should have: text, kbd, text, btn, text, menu
+	var kbdCount, btnCount, menuCount int
+	for _, node := range nodes {
+		if node.Type == NodeKbd {
+			kbdCount++
+		}
+		if node.Type == NodeBtn {
+			btnCount++
+		}
+		if node.Type == NodeMenu {
+			menuCount++
+		}
+	}
+
+	assert.Equal(t, 1, kbdCount, "should have 1 kbd node")
+	assert.Equal(t, 1, btnCount, "should have 1 btn node")
+	assert.Equal(t, 1, menuCount, "should have 1 menu node")
 }
 

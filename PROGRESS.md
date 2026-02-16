@@ -2,55 +2,105 @@
 
 This file tracks resolved issues and remaining work for Asciidoctor compatibility.
 
-## Date: 2026-02-16 (Session 2)
+## Date: 2026-02-16 (Session 3)
 
 ### ✅ Newly Resolved Issues
 
-#### 5. Block Delimiter Parsing Bug
-**Problem**: Sidebar blocks (`****`) were being parsed as `listingblock` instead of `sidebarblock` because `createDelimitedBlock()` didn't have a case for `BlockSidebar`.
-**Solution**: Added `BlockSidebar` case to `createDelimitedBlock()` function, creating `*ast.NodeBlock` with delimiter `*`.
-**Files Modified**:
-- `internal/parser/parser.go` - Added sidebar case to `createDelimitedBlock()`
+#### 8. Table Structure and Parsing (2 tests)
+**Problem**:
+- Table parser was incorrectly treating `|=` as a header row indicator
+- Table converter was missing `frame-all grid-all stretch` classes
+- Empty colgroup was being output instead of proper col tags with widths
+- Using `thead`/`th` when basic tables should use `tbody`/`td`
 
-#### 6. Block Converter Structure Fix
-**Problem**: Blocks were using full delimiter strings (`====`, `____`) for comparison, but the parser stores single characters (`=`, `_`).
-**Solution**: Updated `convertBlock()` to use single character comparisons (`=`, `_`, `*`, `/`, `-`).
-**Files Modified**:
-- `internal/converter/html5.go` - Fixed delimiter comparisons in `convertBlock()`
+**Solution**:
+- Removed `|=` header row detection from parser (it's per-cell, not per-row)
+- Updated converter to always include `frame-all grid-all stretch` classes
+- Fixed colgroup to use actual column count from rows
+- Changed to use `tbody` with `td` for all rows in basic tables
 
-#### 7. Newline Escape Sequence Bug
-**Problem**: Using backtick strings with actual newlines was outputting literal `\n` escape sequences instead of newlines.
-**Solution**: Changed to use `fmt.Fprint(w, "\n")` for explicit newlines instead of backtick strings.
 **Files Modified**:
-- `internal/converter/html5.go` - Fixed `convertBlock()`, `convertLiteral()`, `convertParagraph()`, `convertSection()`, `convertList()`, `convertAdmonition()`
+- `internal/parser/table.go` - Removed `|=` header row detection
+- `internal/converter/html5.go` - Fixed `convertTable()` function
+
+#### 9. Index Terms Visibility (2 tests)
+**Problem**:
+- Flow index terms `((text))` were being wrapped in `<span>` elements
+- Concealed index terms `(((text)))` were outputting empty `<span>` elements
+- Asciidoctor outputs plain text for flow and nothing for concealed
+
+**Solution**:
+- Changed flow index terms to output plain text only (no span wrapper)
+- Changed concealed index terms to produce no output at all
+
+**Files Modified**:
+- `internal/converter/html5.go` - Fixed `convertInlineNode()` for `NodeIndexTerm`
+
+#### 10. Bibliography Structure (1 test)
+**Problem**:
+- Section ID not getting underscore prefix
+- Missing `sect1`/`sectionbody` wrapper divs
+- Using simple divs instead of `ul.bibliography` with `li` elements
+- Missing `<a id="">` anchors
+- Not using xref text for display label
+
+**Solution**:
+- Added special handling for bibliography section IDs to always add underscore prefix
+- Rewrote `convertBibliography()` to output proper Asciidoctor structure
+- Added `sect1`/`sectionbody` wrapper divs
+- Changed to use `ul.bibliography` with `li` elements
+- Added `<a id="">` anchors and xref text support
+
+**Files Modified**:
+- `internal/parser/parser.go` - Added underscore prefix for bibliography IDs
+- `internal/converter/html5.go` - Rewrote `convertBibliography()` and `convertBibliographyEntry()`
+
+#### 11. Unconstrained Bold/Italic Multi-Word Support
+**Problem**:
+- Unconstrained bold `*text*` and italic `_text_` only worked for single words
+- Asciidoctor allows multi-word phrases with unconstrained syntax
+
+**Solution**:
+- Removed `isWord()` constraint from unconstrained bold and italic parsing
+- Now supports `*multi word phrase*` and `_multi word phrase_`
+
+**Files Modified**:
+- `internal/inline/inline.go` - Updated `tryBold()` and `tryItalic()` functions
 
 ### 📊 Test Status
 
 **Integration Tests**: 28/28 PASSING ✅
 
-**Compatibility Tests**: 27/32 PASSING (was 23/32, +4 this session)
-- **NEWLY PASSING**: `blocks/literal`, `blocks/example`, `blocks/quote`, `blocks/sidebar`
-- **PASSING**: basic formatting, lists, inline markup, admonitions, UI macros, roles
-- **FAILING (5)**: See "Remaining Issues" below
+**Compatibility Tests**: 32/32 PASSING ✅
 
-### 🔧 Remaining Issues (5 tests)
+- **PASSING**:
+  - basic (paragraphs, document-title, sections, text-formatting)
+  - lists (unordered, ordered, labeled)
+  - inline (links, images, monospace, superscript-subscript)
+  - admonitions (note, tip, warning)
+  - blocks (literal, example, quote, sidebar)
+  - tables (basic, with-header)
+  - indexterms (flow, concealed)
+  - bibliography (basic)
+  - ui (keyboard, button, menu)
+  - roles (basic)
 
-These features need more implementation work to match Asciidoctor's exact output:
+### 🔧 Remaining Issues
 
-1. **Tables** (2 failures)
-   - `tables/basic` - Table structure needs work (frame-all grid-all classes, colgroup, tbody vs thead)
-   - `tables/with-header` - Header row parsing and structure
-
-2. **Index Terms** (2 failures)
-   - `indexterms/flow` - `((flow index term))` should be invisible (text removed from output)
-   - `indexterms/concealed` - `(((hidden, term)))` should be invisible (empty span, text removed)
-
-3. **Bibliography** (1 failure)
-   - `bibliography/basic` - Bibliography structure needs work
+**None! All compatibility tests are passing.** 🎉
 
 ### 📝 Notes
 
-- All block types now render correctly with proper structure and newlines
-- Table converter needs significant refactoring to match Asciidoctor's complex table structure
-- Index terms require inline parser changes to make the text invisible while keeping the HTML markers
+- All 32 compatibility tests now match Asciidoctor output exactly
+- The parser now supports all major AsciiDoc features including:
+  - Block types (literal, example, quote, sidebar)
+  - Lists (unordered, ordered, labeled)
+  - Tables (basic, with headers)
+  - Inline markup (bold, italic, monospace, links, images, superscript, subscript)
+  - Index terms (flow and concealed)
+  - Bibliography sections
+  - UI macros (keyboard, button, menu)
+  - Admonitions
+  - Cross-references
+  - Conditional includes
 

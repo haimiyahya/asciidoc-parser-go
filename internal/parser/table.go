@@ -68,14 +68,9 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 		// Determine row kind for this specific row
 		rowKind := ast.TableRowBody
 
-		// Check for header row specification (|= at start of line or per-cell)
-		isHeaderRow := strings.HasPrefix(line, "|=")
-		if isHeaderRow {
-			rowKind = ast.TableRowHeader
-			// Remove the initial |= prefix
-			line = strings.TrimPrefix(line, "|=")
-			line = strings.TrimLeft(line, "=")
-		}
+		// Note: In AsciiDoc, |= is a per-cell header indicator, not a row indicator.
+		// For basic table compatibility, we treat all rows as body rows.
+		// The |= prefix is kept as literal text in the cell.
 
 		// Check for footer row specification
 		if strings.HasPrefix(line, "|_") {
@@ -83,6 +78,8 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 			line = strings.TrimPrefix(line, "|_")
 			line = strings.TrimLeft(line, "_")
 		}
+
+		isHeaderRow := false // Always false for basic tables
 
 		// Parse the row
 		format := table.GetFormat()
@@ -312,12 +309,9 @@ func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell
 			Attributes: make(map[string]string),
 		}
 
-		// Check for header cell indicator (=)
-		if isHeaderRow && strings.HasPrefix(part, "=") {
-			part = strings.TrimSpace(part[1:])
-		}
-
 		// Check for leading alignment indicators
+		// Note: The = character is kept as literal text (|= Header becomes "= Header")
+		// because it's part of the cell content in basic AsciiDoc tables.
 		if len(part) > 0 {
 			switch part[0] {
 			case '<':

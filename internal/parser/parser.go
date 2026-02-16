@@ -766,6 +766,10 @@ func (p *Parser) createSection(info *reader.SectionInfo, lineno int) ast.Node {
 
 	// If this is a bibliography section, create a BibliographyNode instead
 	if isBibliography {
+		// Ensure bibliography section ID has underscore prefix (Asciidoctor compatibility)
+		if sectionID != "" && !strings.HasPrefix(sectionID, "_") {
+			sectionID = "_" + sectionID
+		}
 		p.currentBibliography = &ast.BibliographyNode{
 			Title:      info.Title,
 			ID:         sectionID,

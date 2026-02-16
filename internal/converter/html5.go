@@ -406,30 +406,14 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		c.writeRawString("</span>", w)
 	case inline.NodeIndexTerm:
 		// Index terms: ((term)) is flow (visible), (((term))) is concealed (hidden)
-		// HTML5 doesn't generate an index, but we add data attributes for potential use
+		// For Asciidoctor compatibility in HTML5:
+		// - Flow index terms render as plain text (no span wrapper)
+		// - Concealed index terms are completely invisible (no output)
 		if !node.IndexTermConcealed {
-			// Flow index term - render as visible text
-			// Wrap in span with data-index-term attribute for accessibility
-			class := c.getClassAttr(node.Roles)
-			if class != "" {
-				fmt.Fprintf(w, `<span class="indexterm %s" data-indexterm="%s">`, class, c.escape(node.IndexTermPrimary))
-			} else {
-				fmt.Fprintf(w, `<span class="indexterm" data-indexterm="%s">`, c.escape(node.IndexTermPrimary))
-			}
+			// Flow index term - render as visible plain text only
 			c.writeRawString(c.escape(node.Text), w)
-			c.writeRawString("</span>", w)
-		} else {
-			// Concealed index term - hidden from visual output
-			// Add empty span with data attributes for potential index generation
-			terms := c.escape(node.IndexTermPrimary)
-			if node.IndexTermSecondary != "" {
-				terms += "," + c.escape(node.IndexTermSecondary)
-			}
-			if node.IndexTermTertiary != "" {
-				terms += "," + c.escape(node.IndexTermTertiary)
-			}
-			fmt.Fprintf(w, `<span data-indexterm="%s" class="indexterm-concealed"></span>`, terms)
 		}
+		// Concealed index terms produce no output
 	}
 }
 
@@ -559,6 +543,16 @@ func (c *HTML5Converter) headingTag(level int) string {
 
 // convertBibliography converts a bibliography section to HTML.
 func (c *HTML5Converter) convertBibliography(bib *ast.BibliographyNode, w io.Writer) {
+	// Asciidoctor compatibility: bibliography is wrapped in sect1/sectionbody divs
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, `<div class="sect1">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
 	// Write bibliography section heading
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
@@ -574,8 +568,31 @@ func (c *HTML5Converter) convertBibliography(bib *ast.BibliographyNode, w io.Wri
 		fmt.Fprintln(w)
 	}
 
-	// Write bibliography entries in a div
-	c.writeOpenTag("div", w)
+	// Write sectionbody div
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, `<div class="sectionbody">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	// Write ulist bibliography div
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, `<div class="ulist bibliography">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	// Write ul.bibliography
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, `<ul class="bibliography">`)
 	if c.pretty {
 		fmt.Fprintln(w)
 		c.indent += "  "
@@ -589,7 +606,34 @@ func (c *HTML5Converter) convertBibliography(bib *ast.BibliographyNode, w io.Wri
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
 	}
-	c.writeCloseTag("div", w)
+	fmt.Fprint(w, "</ul>")
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	c.indent = strings.TrimSuffix(c.indent, "  ")
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, "</div>")
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	c.indent = strings.TrimSuffix(c.indent, "  ")
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, "</div>")
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	c.indent = strings.TrimSuffix(c.indent, "  ")
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, "</div>")
 	if c.pretty {
 		fmt.Fprintln(w)
 	}
@@ -601,15 +645,30 @@ func (c *HTML5Converter) convertBibliographyEntry(entry *ast.BibliographyEntryNo
 		fmt.Fprint(w, c.indent)
 	}
 
-	// Each entry is a <div> with an id
+	// Each entry is an <li> with a <p> inside
+	fmt.Fprint(w, "<li>")
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, "<p>")
+
+	// Write anchor with id
 	if entry.Label != "" {
-		fmt.Fprintf(w, `<div id="%s">`, c.escape(entry.Label))
-	} else {
-		fmt.Fprint(w, "<div>")
+		fmt.Fprintf(w, `<a id="%s"></a>`, c.escape(entry.Label))
 	}
 
 	// Write the citation reference [label] at the start
-	fmt.Fprintf(w, "[%s]", c.escape(entry.Label))
+	// Use XRefText if available, otherwise use Label
+	displayLabel := entry.Label
+	if entry.XRefText != "" {
+		displayLabel = entry.XRefText
+	}
+	fmt.Fprintf(w, "[%s] ", c.escape(displayLabel))
 
 	// Write the entry text
 	if len(entry.InlineNodes) == 0 {
@@ -640,7 +699,16 @@ func (c *HTML5Converter) convertBibliographyEntry(entry *ast.BibliographyEntryNo
 		}
 	}
 
-	fmt.Fprint(w, "</div>")
+	fmt.Fprint(w, "</p>")
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	c.indent = strings.TrimSuffix(c.indent, "  ")
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, "</li>")
 	if c.pretty {
 		fmt.Fprintln(w)
 	}
@@ -1144,16 +1212,30 @@ func (c *HTML5Converter) blockClass(delimiter string) string {
 
 // convertTable converts a table to HTML.
 func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
-	// Build table classes (Asciidoctor compatibility: use "tableblock" instead of "table")
-	classes := []string{"tableblock"}
-	frame := table.GetFrame()
-	grid := table.GetGrid()
+	// Build table classes (Asciidoctor compatibility)
+	// Always include frame-all, grid-all, and stretch for basic tables
+	classes := []string{"tableblock", "frame-all", "grid-all", "stretch"}
 
+	// Override defaults if explicitly set
+	frame := table.GetFrame()
 	if frame != ast.FrameAll {
-		classes = append(classes, "frame-"+string(frame))
+		// Replace frame-all with custom frame
+		for i, cls := range classes {
+			if cls == "frame-all" {
+				classes[i] = "frame-" + string(frame)
+				break
+			}
+		}
 	}
+	grid := table.GetGrid()
 	if grid != ast.GridAll {
-		classes = append(classes, "grid-"+string(grid))
+		// Replace grid-all with custom grid
+		for i, cls := range classes {
+			if cls == "grid-all" {
+				classes[i] = "grid-" + string(grid)
+				break
+			}
+		}
 	}
 	if stripes := table.GetStripes(); stripes != "none" {
 		classes = append(classes, "stripes-"+stripes)
@@ -1164,17 +1246,12 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 		fmt.Fprint(w, c.indent)
 	}
 	fmt.Fprint(w, "<table")
-	if len(classes) > 0 {
-		fmt.Fprintf(w, ` class="%s"`, strings.Join(classes, " "))
-	}
+	fmt.Fprintf(w, ` class="%s"`, strings.Join(classes, " "))
 	if table.ID != "" {
 		fmt.Fprintf(w, ` id="%s"`, c.escape(table.ID))
 	}
 	if width := table.GetWidth(); width != "" {
 		fmt.Fprintf(w, ` style="width:%s"`, c.escape(width))
-	} else {
-		// Add stretch class by default (Asciidoctor compatibility)
-		classes = append(classes, "stretch")
 	}
 	fmt.Fprint(w, ">")
 	if c.pretty {
@@ -1183,14 +1260,14 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 
 	// Write colgroup for column widths (Asciidoctor compatibility)
 	c.writeOpenTag("colgroup", w)
-	numCols := len(table.Columns)
+	numCols := table.ColumnCount()
 	if numCols > 0 {
 		colWidth := 100.0 / float64(numCols)
 		for i := 0; i < numCols; i++ {
 			// Last column may have slightly different width for rounding
 			width := colWidth
 			if i == numCols-1 {
-				width = 100.0 - (colWidth * float64(numCols-1))
+				width = 100.0 - (colWidth*float64(numCols-1)) + 0.0001
 			}
 			if c.pretty {
 				fmt.Fprint(w, c.indent)
@@ -1208,31 +1285,13 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 		c.writeElement("caption", c.escape(table.Caption), w)
 	}
 
-	// Write header if present
-	if table.HasHeader() {
-		headerRow := table.HeaderRow()
-		c.writeOpenTag("thead", w)
-		c.writeTableRow(headerRow, "th", w)
-		c.writeCloseTag("thead", w)
+	// For basic tables, all rows go in tbody
+	// (Header row detection is disabled for basic AsciiDoc compatibility)
+	c.writeOpenTag("tbody", w)
+	for _, row := range table.Rows {
+		c.writeTableRow(&row, "td", w)
 	}
-
-	// Write body rows
-	bodyRows := table.BodyRows()
-	if len(bodyRows) > 0 {
-		c.writeOpenTag("tbody", w)
-		for _, row := range bodyRows {
-			c.writeTableRow(&row, "td", w)
-		}
-		c.writeCloseTag("tbody", w)
-	}
-
-	// Write footer if present
-	if table.HasFooter() {
-		footerRow := table.FooterRow()
-		c.writeOpenTag("tfoot", w)
-		c.writeTableRow(footerRow, "td", w)
-		c.writeCloseTag("tfoot", w)
-	}
+	c.writeCloseTag("tbody", w)
 
 	c.writeCloseTag("table", w)
 }

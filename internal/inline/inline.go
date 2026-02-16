@@ -553,7 +553,7 @@ func (p *Parser) tryBold() (*Node, int) {
 		}
 	}
 
-	// Check for unconstrained bold: *bold* (single word only)
+	// Check for unconstrained bold: *bold* (single word or phrase)
 	if strings.HasPrefix(remaining, "*") && len(remaining) > 1 {
 		// Must be followed by a non-space character
 		if remaining[1] == ' ' {
@@ -561,16 +561,14 @@ func (p *Parser) tryBold() (*Node, int) {
 		}
 		closeIndex := strings.Index(remaining[1:], "*")
 		if closeIndex != -1 && closeIndex > 0 {
-			// Check if constrained by word boundaries
+			// Asciidoctor compatibility: allow multi-word unconstrained bold
 			text := remaining[1 : closeIndex+1]
-			if p.isWord(text) {
-				return &Node{
-					Type:     NodeBold,
-					Text:     text,
-					StartPos:  p.pos,
-					Position:  p.pos + closeIndex + 2,
-				}, p.pos + closeIndex + 2
-			}
+			return &Node{
+				Type:     NodeBold,
+				Text:     text,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 2,
+			}, p.pos + closeIndex + 2
 		}
 	}
 
@@ -598,7 +596,7 @@ func (p *Parser) tryItalic() (*Node, int) {
 		}
 	}
 
-	// Check for unconstrained italic: _italic_ (single word only)
+	// Check for unconstrained italic: _italic_ (single word or phrase)
 	if strings.HasPrefix(remaining, "_") && len(remaining) > 1 {
 		// Must be followed by a non-space character
 		if remaining[1] == ' ' {
@@ -606,15 +604,14 @@ func (p *Parser) tryItalic() (*Node, int) {
 		}
 		closeIndex := strings.Index(remaining[1:], "_")
 		if closeIndex != -1 && closeIndex > 0 {
+			// Asciidoctor compatibility: allow multi-word unconstrained italic
 			text := remaining[1 : closeIndex+1]
-			if p.isWord(text) {
-				return &Node{
-					Type:     NodeItalic,
-					Text:     text,
-					StartPos:  p.pos,
-					Position:  p.pos + closeIndex + 2,
-				}, p.pos + closeIndex + 2
-			}
+			return &Node{
+				Type:     NodeItalic,
+				Text:     text,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 2,
+			}, p.pos + closeIndex + 2
 		}
 	}
 

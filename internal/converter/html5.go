@@ -368,6 +368,32 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		}
 		c.renderMenuPath(node.Text, w)
 		c.writeRawString("</span>", w)
+	case inline.NodeIndexTerm:
+		// Index terms: ((term)) is flow (visible), (((term))) is concealed (hidden)
+		// HTML5 doesn't generate an index, but we add data attributes for potential use
+		if !node.IndexTermConcealed {
+			// Flow index term - render as visible text
+			// Wrap in span with data-index-term attribute for accessibility
+			class := c.getClassAttr(node.Roles)
+			if class != "" {
+				fmt.Fprintf(w, `<span class="indexterm %s" data-indexterm="%s">`, class, c.escape(node.IndexTermPrimary))
+			} else {
+				fmt.Fprintf(w, `<span class="indexterm" data-indexterm="%s">`, c.escape(node.IndexTermPrimary))
+			}
+			c.writeRawString(c.escape(node.Text), w)
+			c.writeRawString("</span>", w)
+		} else {
+			// Concealed index term - hidden from visual output
+			// Add empty span with data attributes for potential index generation
+			terms := c.escape(node.IndexTermPrimary)
+			if node.IndexTermSecondary != "" {
+				terms += "," + c.escape(node.IndexTermSecondary)
+			}
+			if node.IndexTermTertiary != "" {
+				terms += "," + c.escape(node.IndexTermTertiary)
+			}
+			fmt.Fprintf(w, `<span data-indexterm="%s" class="indexterm-concealed"></span>`, terms)
+		}
 	}
 }
 

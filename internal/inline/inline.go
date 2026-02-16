@@ -50,6 +50,9 @@ const (
 
 	// NodeMenu is a menu path (menu:[File > Save]).
 	NodeMenu
+
+	// NodeIndexTerm is an index term entry.
+	NodeIndexTerm
 )
 
 // String returns the string representation of NodeType.
@@ -67,6 +70,7 @@ func (nt NodeType) String() string {
 		NodeKbd:        "Kbd",
 		NodeBtn:        "Btn",
 		NodeMenu:       "Menu",
+		NodeIndexTerm:  "IndexTerm",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -105,6 +109,12 @@ type Node struct {
 
 	// Children are child inline nodes (for complex inline structures).
 	Children []*Node
+
+	// Index term fields (for NodeIndexTerm)
+	IndexTermPrimary   string // Primary index term
+	IndexTermSecondary string // Secondary index term (optional)
+	IndexTermTertiary  string // Tertiary index term (optional)
+	IndexTermConcealed  bool   // True for concealed index terms (((...))) - hidden from text
 }
 
 // String returns a string representation of node.
@@ -131,6 +141,20 @@ func (n *Node) String() string {
 		return fmt.Sprintf("image:%s[%s]", n.URL, n.Alt)
 	case NodeCrossRef:
 		return fmt.Sprintf("<<%s>>", n.Ref)
+	case NodeIndexTerm:
+		if n.IndexTermConcealed {
+			// Concealed index term: (((primary, secondary, tertiary)))
+			terms := n.IndexTermPrimary
+			if n.IndexTermSecondary != "" {
+				terms += ", " + n.IndexTermSecondary
+			}
+			if n.IndexTermTertiary != "" {
+				terms += ", " + n.IndexTermTertiary
+			}
+			return fmt.Sprintf("((%s))", terms)
+		}
+		// Flow index term: ((primary))
+		return fmt.Sprintf("(%s)", n.IndexTermPrimary)
 	default:
 		return n.Text
 	}
@@ -171,6 +195,15 @@ func (p *Parser) Parse() []*Node {
 		skipRole = false // Reset the skip flag
 
 		// Try to match inline constructs
+		// Check for index terms first (before other constructs that might use parentheses)
+		if node, newPos := p.tryIndexTerm(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
 		if node, newPos := p.tryKbd(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
@@ -294,7 +327,9 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "http://") ||
 				strings.HasPrefix(remaining, "https://") ||
 				strings.HasPrefix(remaining, "~") ||
-				strings.HasPrefix(remaining, "^") {
+				strings.HasPrefix(remaining, "^") ||
+				strings.HasPrefix(remaining, "(((") || // Concealed index term
+				strings.HasPrefix(remaining, "((") { // Flow index term
 				nextInlinePos = i
 				break
 			}
@@ -815,4 +850,94 @@ func (p *Parser) tryMenu() (*Node, int) {
 	}
 
 	return nil, p.pos
+}
+
+// tryIndexTerm attempts to parse an index term: ((term)) or (((term, secondary, tertiary))).
+// Flow index terms: ((term)) - visible in text
+// Concealed index terms: (((term, secondary, tertiary))) - hidden from text
+func (p *Parser) tryIndexTerm() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for concealed index term: (((term)))
+	if strings.HasPrefix(remaining, "(((") {
+		closeIndex := strings.Index(remaining[3:], ")))")
+		if closeIndex != -1 {
+			// Extract content between ((( and )))
+			content := remaining[3 : closeIndex+3]
+
+			// Parse comma-separated terms, handling quoted segments
+			terms := p.parseIndexTerms(content)
+			if len(terms) > 0 && terms[0] != "" {
+				node := &Node{
+					Type:              NodeIndexTerm,
+					IndexTermPrimary:   terms[0],
+					IndexTermConcealed: true,
+					StartPos:           p.pos,
+					Position:           p.pos + closeIndex + 6,
+				}
+				if len(terms) > 1 {
+					node.IndexTermSecondary = terms[1]
+				}
+				if len(terms) > 2 {
+					node.IndexTermTertiary = terms[2]
+				}
+				return node, p.pos + closeIndex + 6
+			}
+		}
+	}
+
+	// Check for flow index term: ((term))
+	if strings.HasPrefix(remaining, "((") {
+		closeIndex := strings.Index(remaining[2:], "))")
+		if closeIndex != -1 {
+			// Extract content between (( and ))
+			content := remaining[2 : closeIndex+2]
+			content = strings.TrimSpace(content)
+
+			if content != "" {
+				return &Node{
+					Type:              NodeIndexTerm,
+					IndexTermPrimary:   content,
+					IndexTermConcealed: false,
+					Text:               content, // Flow terms show the text
+					StartPos:           p.pos,
+					Position:           p.pos + closeIndex + 4,
+				}, p.pos + closeIndex + 4
+			}
+		}
+	}
+
+	return nil, p.pos
+}
+
+// parseIndexTerms parses comma-separated index terms, handling quoted segments.
+// For example: "knight, \"Arthur, King\"" returns ["knight", "Arthur, King"]
+func (p *Parser) parseIndexTerms(s string) []string {
+	var terms []string
+	var currentTerm strings.Builder
+	inQuotes := false
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+
+		if c == '"' && (i == 0 || s[i-1] != '\\') {
+			inQuotes = !inQuotes
+			continue
+		}
+
+		if c == ',' && !inQuotes {
+			terms = append(terms, strings.TrimSpace(currentTerm.String()))
+			currentTerm.Reset()
+			continue
+		}
+
+		currentTerm.WriteByte(c)
+	}
+
+	// Add the last term
+	if currentTerm.Len() > 0 {
+		terms = append(terms, strings.TrimSpace(currentTerm.String()))
+	}
+
+	return terms
 }

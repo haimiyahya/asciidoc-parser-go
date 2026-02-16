@@ -285,6 +285,26 @@ Syntax:
 - `* [[[label,xreftext]]]` - Entry with custom reference text
 - `<<label>>` - Citation that renders as `[label]` or `[xreftext]`
 
+### Index Terms
+
+Index terms allow you to create searchable indexes for printed output (PDF, DocBook):
+
+```
+This paragraph contains a ((visible term)) that appears in both text and index.
+
+This paragraph has a (((hidden, term))) that only appears in the index.
+
+(((primary, secondary, tertiary))) multi-level terms are supported.
+```
+
+Syntax:
+- `((term))` - Flow index term (visible in text and index)
+- `(((term)))` - Concealed index term (only in index)
+- `(((primary, secondary, tertiary)))` - Multi-level index entry
+- `(((term, "comma, in term")))` - Quoted terms with commas
+
+Note: The HTML5 converter marks index terms with `data-indexterm` attributes but does not generate an index. Use PDF or DocBook converters for full index generation.
+
 ## CLI Options
 
 ```
@@ -396,6 +416,7 @@ go test ./internal/inline/... -v
 | Include Processor | ✅ Complete | Include directive with tag filtering |
 | Conditional Processing | ✅ Complete | ifdef, ifndef, ifeval |
 | Bibliography | ✅ Complete | Citation processing with [[[label]]] syntax |
+| Index Terms | ✅ Complete | (((term))) indexing with flow and concealed terms |
 | CLI | ✅ Complete | Full Asciidoctor-compatible options |
 
 ### Missing/Incomplete Features (Post-MVP)
@@ -403,7 +424,6 @@ go test ./internal/inline/... -v
 | Feature | Description | Priority |
 |---------|-------------|----------|
 | **Extensions System** | Custom block/inline macros, tree processors | Medium |
-| **Index Terms** | `(((term)))` indexing | Low |
 | **LSP Support** | Language Server Protocol for editor integration | Medium |
 
 ## Contributing

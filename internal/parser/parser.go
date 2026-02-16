@@ -545,14 +545,26 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 	// Strip role syntax [.role] from text and adjust inline node positions
 	cleanedContent, offset := stripRoleSyntaxWithOffset(content)
 
-	// Adjust inline node positions based on how much text was removed
-	var adjustedNodes []interface{}
+	// Convert inline.Node slice to []interface{} for storage
+	// Filter out NodeText nodes since they're already in the Text field
+	nodes := make([]interface{}, 0, len(inlineNodes))
 	for _, node := range inlineNodes {
-		// Create a copy of the node with adjusted positions
-		adjustedNode := *node
-		adjustedNode.StartPos -= getOffset(offset, adjustedNode.StartPos, len(content))
-		adjustedNode.Position -= getOffset(offset, adjustedNode.Position, len(content))
-		adjustedNodes = append(adjustedNodes, &adjustedNode)
+		if node.Type != inline.NodeText {
+			nodes = append(nodes, node)
+		}
+	}
+
+	// Adjust inline node positions based on how much text was removed
+	// Process only the filtered nodes (non-Text nodes)
+	var adjustedNodes []interface{}
+	for _, node := range nodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			// Create a copy of the node with adjusted positions
+			adjustedNode := *inlineNode
+			adjustedNode.StartPos -= getOffset(offset, adjustedNode.StartPos, len(content))
+			adjustedNode.Position -= getOffset(offset, adjustedNode.Position, len(content))
+			adjustedNodes = append(adjustedNodes, &adjustedNode)
+		}
 	}
 
 	return &ast.NodeParagraph{
@@ -584,6 +596,11 @@ func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
 	// Find all matches and their positions
 	matches := re.FindAllStringIndex(text, -1)
 
+	// If no matches, return original text with no offsets
+	if len(matches) == 0 {
+		return text, make(map[int]int)
+	}
+
 	// Create offset map: for each position in original text, how much to subtract
 	// to get the position in cleaned text
 	offset := make(map[int]int)
@@ -610,15 +627,16 @@ func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
 	// Copy remaining text
 	cleaned.WriteString(text[lastEnd:])
 
-	// For positions after each match, set the offset
-	for i := 0; i <= len(text); i++ {
+	// For positions after the last match, set the offset to totalRemoved
+	for i := lastEnd; i <= len(text); i++ {
 		if _, exists := offset[i]; !exists {
-			if i > lastEnd && len(matches) > 0 {
-				offset[i] = totalRemoved
-			} else if i < matches[0][0] {
-				offset[i] = 0
-			}
+			offset[i] = totalRemoved
 		}
+	}
+
+	// For positions before the first match, offset is 0
+	for i := 0; i < matches[0][0]; i++ {
+		offset[i] = 0
 	}
 
 	return cleaned.String(), offset

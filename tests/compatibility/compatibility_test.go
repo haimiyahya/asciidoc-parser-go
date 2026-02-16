@@ -273,7 +273,8 @@ func (ct *CompatibilityTester) parseWithGoParser(source string) (string, error) 
 	}
 
 	var buf bytes.Buffer
-	c := converter.NewHTML5Converter()
+	// Use WithoutHeaderFooter to match Asciidoctor's embedded mode output
+	c := converter.NewHTML5Converter().WithoutHeaderFooter()
 	if err := c.Convert(doc, &buf); err != nil {
 		return "", fmt.Errorf("failed to convert: %w", err)
 	}

@@ -37,8 +37,10 @@ func NewHTML5Converter() *HTML5Converter {
 
 // WithoutHeaderFooter configures the converter to omit the HTML5 document shell.
 // When enabled, only the document content is output, not the DOCTYPE, html, or body tags.
+// Also disables pretty-printing to match Asciidoctor's embedded output style.
 func (c *HTML5Converter) WithoutHeaderFooter() *HTML5Converter {
 	c.suppressHeaderFooter = true
+	c.pretty = false // Disable pretty-printing for Asciidoctor compatibility
 	return c
 }
 
@@ -792,8 +794,8 @@ func (c *HTML5Converter) renderInlineText(text string, inlineNodes []interface{}
 
 // convertLiteral converts a literal block to HTML.
 func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
-	// Wrap in listingblock div with content div (Asciidoctor compatibility)
-	c.writeOpenTagWithClass("div", "listingblock", w)
+	// Wrap in literalblock div with content div (Asciidoctor compatibility)
+	c.writeOpenTagWithClass("div", "literalblock", w)
 	c.writeOpenTagWithClass("div", "content", w)
 
 	if len(literal.Callouts) == 0 {
@@ -837,7 +839,7 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 	}
 
 	c.writeCloseTag("div", w) // Close content div
-	c.writeCloseTag("div", w) // Close listingblock div
+	c.writeCloseTag("div", w) // Close literalblock div
 }
 
 // renderCalloutList renders callout descriptions as an HTML list.
@@ -945,11 +947,16 @@ func (c *HTML5Converter) convertAdmonition(admonition *ast.AdmonitionNode, w io.
 		c.indent += "  "
 	}
 
-	// Write title
+	// Write title (title case for Asciidoctor compatibility)
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
 	}
-	fmt.Fprintf(w, `<div class="title">%s</div>`, strings.ToUpper(admonition.Kind[:1])+admonition.Kind[1:])
+	// Convert to title case: "NOTE" -> "Note", "WARNING" -> "Warning"
+	titleKind := strings.ToLower(admonition.Kind)
+	if len(titleKind) > 0 {
+		titleKind = strings.ToUpper(titleKind[:1]) + titleKind[1:]
+	}
+	fmt.Fprintf(w, `<div class="title">%s</div>`, titleKind)
 	if c.pretty {
 		fmt.Fprintln(w)
 	}

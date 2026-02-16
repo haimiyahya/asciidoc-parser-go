@@ -5,7 +5,6 @@ import (
 	"io"
 	"regexp"
 	"strings"
-	"unicode"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
@@ -643,32 +642,30 @@ func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
 }
 
 // generateSectionID creates a section ID from a section title.
-// This follows AsciiDoc conventions: lowercase, hyphens for spaces,
-// removes special characters, etc.
+// This follows Asciidoctor conventions: underscore prefix, lowercase,
+// underscores for spaces, removes special characters, etc.
 func generateSectionID(title string) string {
 	// Convert to lowercase
 	id := strings.ToLower(title)
 
-	// Replace spaces and special chars with hyphens
-	// Keep only alphanumeric, hyphens, and underscores
-	reg := regexp.MustCompile(`[^a-z0-9_\-]+`)
-	id = reg.ReplaceAllString(id, "-")
+	// Replace spaces and special chars with underscores
+	// Keep only alphanumeric and underscores
+	reg := regexp.MustCompile(`[^a-z0-9_]+`)
+	id = reg.ReplaceAllString(id, "_")
 
-	// Trim hyphens from start/end
-	id = strings.Trim(id, "-")
+	// Trim underscores from start/end
+	id = strings.Trim(id, "_")
 
-	// Collapse multiple hyphens
-	reg = regexp.MustCompile(`-+`)
-	id = reg.ReplaceAllString(id, "-")
+	// Collapse multiple underscores
+	reg = regexp.MustCompile(`_+`)
+	id = reg.ReplaceAllString(id, "_")
 
-	// Ensure ID doesn't start with a digit
-	if len(id) > 0 && unicode.IsDigit(rune(id[0])) {
-		id = "_" + id
-	}
+	// Add underscore prefix (Asciidoctor compatibility)
+	id = "_" + id
 
 	// Fallback if ID is empty
-	if id == "" {
-		id = "_"
+	if id == "_" {
+		id = "__"
 	}
 
 	return id

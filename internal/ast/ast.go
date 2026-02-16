@@ -69,6 +69,10 @@ const (
 	TypeAttribute
 	// TypeInline is inline content type (text, formatting, links, etc.).
 	TypeInline
+	// TypeCallout is a callout annotation node type.
+	TypeCallout
+	// TypeCalloutList is a list of callout descriptions.
+	TypeCalloutList
 )
 
 // Position represents a location in the source.
@@ -159,6 +163,10 @@ type NodeLiteral struct {
 	Kind NodeType
 	// Lines are the literal block lines.
 	Lines []string
+	// Callouts are callout annotations found in this block.
+	Callouts []*CalloutNode
+	// LineComment is the custom line comment prefix (e.g., "%", "//", etc.)
+	LineComment string
 	// Pos is the location in the source.
 	Pos Position
 }
@@ -250,6 +258,28 @@ type VerseNode struct {
 	Pos Position
 }
 
+// CalloutNode represents a single callout annotation within a literal block.
+type CalloutNode struct {
+	// Number is the callout number (e.g., 1, 2, 3).
+	Number int
+	// LineIndex is the index of the line in the literal block (0-based).
+	LineIndex int
+	// Column is the column position where the callout appears.
+	Column int
+	// Description is the callout description text (parsed from callout list).
+	Description string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// CalloutListNode represents a list of callout descriptions after a literal block.
+type CalloutListNode struct {
+	// Items are the callout descriptions keyed by number.
+	Items map[int]*CalloutNode
+	// Pos is the location in the source.
+	Pos Position
+}
+
 // Node interface methods for each type.
 
 func (n *NodeDocument) Type() NodeType   { return n.Kind }
@@ -290,3 +320,9 @@ func (n *PassThroughNode) Position() Position { return n.Pos }
 
 func (n *VerseNode) Type() NodeType   { return TypeVerse }
 func (n *VerseNode) Position() Position { return n.Pos }
+
+func (n *CalloutNode) Type() NodeType   { return TypeCallout }
+func (n *CalloutNode) Position() Position { return n.Pos }
+
+func (n *CalloutListNode) Type() NodeType   { return TypeCalloutList }
+func (n *CalloutListNode) Position() Position { return n.Pos }

@@ -218,6 +218,25 @@ CAUTION: Watch out!
 IMPORTANT: Pay attention.
 ```
 
+### Callouts
+
+Callouts allow you to annotate lines in code blocks or literal content:
+
+```
+----
+line of code // <1>
+another line # <2>
+----
+<1> Description for the first callout
+<2> Description for the second callout
+```
+
+Supported line comment prefixes for callouts:
+- `//` for C-style languages (C, C++, Go, Java, JavaScript)
+- `#` for shell, Ruby, Python, Perl
+- `;;` for Clojure
+- `<!--1-->` for XML/HTML
+
 ## CLI Options
 
 ```
@@ -337,7 +356,6 @@ go test ./internal/inline/... -v
 | **Bibliography** | Citation processing for academic use | Low |
 | **Extensions System** | Custom block/inline macros, tree processors | Medium |
 | **More Inline Types** | `[ ]` for roles, etc. | Low |
-| **Callouts** | Reusable content blocks with `<<block-id>>` | Medium |
 | **Index Terms** | `(((term)))` indexing | Low |
 | **LSP Support** | Language Server Protocol for editor integration | Medium |
 

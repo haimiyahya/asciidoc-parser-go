@@ -152,6 +152,11 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 					block := p.createDelimitedBlock(delimitedBlockType, delimitedBlockLines, delimitedBlockLineno)
 					if block != nil {
 						doc.Blocks = append(doc.Blocks, block)
+
+						// Parse callout list after literal/verbatim blocks
+						if literal, ok := block.(*ast.NodeLiteral); ok && len(literal.Callouts) > 0 {
+							p.parseCalloutList(literal)
+						}
 					}
 					inDelimitedBlock = false
 					delimitedBlockLines = nil
@@ -705,14 +710,22 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 
 	switch blockType {
 	case reader.BlockLiteral:
+		// Parse callouts in literal blocks
+		calloutParser := NewCalloutParser()
+		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
 		return &ast.NodeLiteral{
-			Lines: strings.Split(content, "\n"),
-			Pos:   ast.Position{Line: lineno},
+			Lines:     cleanedLines,
+			Callouts:  callouts,
+			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockVerbatim:
+		// Parse callouts in verbatim blocks
+		calloutParser := NewCalloutParser()
+		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
 		return &ast.NodeLiteral{
-			Lines: strings.Split(content, "\n"),
-			Pos:   ast.Position{Line: lineno},
+			Lines:     cleanedLines,
+			Callouts:  callouts,
+			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockExample:
 		return &ast.NodeBlock{
@@ -756,6 +769,50 @@ func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
 		p.currentListBlockType = 0
 		p.currentListLevel = 0
 	}
+}
+
+// parseCalloutList parses callout descriptions that follow a literal block.
+// Callout list items have the format: <1> Description here
+func (p *Parser) parseCalloutList(literal *ast.NodeLiteral) {
+	calloutParser := NewCalloutParser()
+	calloutList := &ast.CalloutListNode{
+		Items: make(map[int]*ast.CalloutNode),
+	}
+
+	// Look ahead for callout list items
+	// They must immediately follow the literal block
+	for p.reader.HasMoreLines() {
+		line := p.reader.PeekLine()
+		lineno := p.reader.GetLineno()
+
+		// Stop if we hit a blank line or non-callout content
+		if strings.TrimSpace(line) == "" {
+			break
+		}
+
+		// Check if this is a callout list item
+		if !calloutParser.IsCalloutListLine(line) {
+			// Not a callout list, stop parsing
+			// But don't consume the line - it belongs to the next block
+			break
+		}
+
+		// Parse the callout list item
+		num, desc := calloutParser.ParseCalloutList(line)
+		if num > 0 {
+			calloutList.Items[num] = &ast.CalloutNode{
+				Number:      num,
+				Description: desc,
+				Pos:         ast.Position{Line: lineno},
+			}
+		}
+
+		// Consume the callout list line
+		p.reader.Advance()
+	}
+
+	// Merge descriptions into the literal block's callouts
+	calloutParser.MergeCalloutDescriptions(literal, calloutList)
 }
 
 // startNewList starts a new list with the given item as its first element.

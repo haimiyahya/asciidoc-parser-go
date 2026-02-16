@@ -542,20 +542,86 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 	inlineParser := inline.NewParser(content)
 	inlineNodes := inlineParser.Parse()
 
-	// Convert inline.Node slice to []interface{} for storage
-	// Filter out NodeText nodes since they're already in the Text field
-	nodes := make([]interface{}, 0, len(inlineNodes))
+	// Strip role syntax [.role] from text and adjust inline node positions
+	cleanedContent, offset := stripRoleSyntaxWithOffset(content)
+
+	// Adjust inline node positions based on how much text was removed
+	var adjustedNodes []interface{}
 	for _, node := range inlineNodes {
-		if node.Type != inline.NodeText {
-			nodes = append(nodes, node)
-		}
+		// Create a copy of the node with adjusted positions
+		adjustedNode := *node
+		adjustedNode.StartPos -= getOffset(offset, adjustedNode.StartPos, len(content))
+		adjustedNode.Position -= getOffset(offset, adjustedNode.Position, len(content))
+		adjustedNodes = append(adjustedNodes, &adjustedNode)
 	}
 
 	return &ast.NodeParagraph{
-		Text:        content,
-		InlineNodes: nodes,
+		Text:        cleanedContent,
+		InlineNodes: adjustedNodes,
 		Pos:  ast.Position{Line: lineno},
 	}
+}
+
+// getOffset gets the offset for a position, defaulting to 0 if not found
+func getOffset(offset map[int]int, pos, maxPos int) int {
+	if off, exists := offset[pos]; exists {
+		return off
+	}
+	// For positions past the end of the map, find the last offset
+	for i := pos; i <= maxPos; i++ {
+		if off, exists := offset[i]; exists {
+			return off
+		}
+	}
+	return 0
+}
+
+// stripRoleSyntaxWithOffset removes [.role] patterns from text and returns
+// both the cleaned text and a map of position offsets.
+func stripRoleSyntaxWithOffset(text string) (string, map[int]int) {
+	re := regexp.MustCompile(`\[\.([^\]]+)\]`)
+
+	// Find all matches and their positions
+	matches := re.FindAllStringIndex(text, -1)
+
+	// Create offset map: for each position in original text, how much to subtract
+	// to get the position in cleaned text
+	offset := make(map[int]int)
+	totalRemoved := 0
+	lastEnd := 0
+	var cleaned strings.Builder
+
+	for _, match := range matches {
+		start, end := match[0], match[1]
+
+		// Copy text before this match
+		cleaned.WriteString(text[lastEnd:start])
+
+		// Update offsets for positions within the removed section
+		for i := start; i < end; i++ {
+			offset[i] = totalRemoved + (i - start) // All positions in match map to same point
+		}
+
+		// Update total removed
+		totalRemoved += (end - start)
+		lastEnd = end
+	}
+
+	// Copy remaining text
+	cleaned.WriteString(text[lastEnd:])
+
+	// For positions after each match, set the offset
+	for i := 0; i <= len(text); i++ {
+		if _, exists := offset[i]; !exists {
+			if i > lastEnd && len(matches) > 0 {
+				offset[i] = totalRemoved
+			} else if i < matches[0][0] {
+				offset[i] = 0
+			}
+		}
+	}
+
+	return cleaned.String(), offset
 }
 
 // generateSectionID creates a section ID from a section title.

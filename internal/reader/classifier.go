@@ -106,6 +106,9 @@ const (
 	// BlockConditionalIfeval is an ifeval::expression[] conditional block.
 	BlockConditionalIfeval
 
+	// BlockStyledBlock is a styled block (style::[content]).
+	BlockStyledBlock
+
 	// BlockParagraph is a regular paragraph (default).
 	BlockParagraph
 )
@@ -139,10 +142,11 @@ func (bt BlockType) String() string {
 		BlockStyle:          "Style",
 		BlockAnchor:         "Anchor",
 		BlockAdmonition:     "Admonition",
-		BlockConditionalIfdef: "ConditionalIfdef",
+		BlockConditionalIfdef:  "ConditionalIfdef",
 		BlockConditionalIfndef: "ConditionalIfndef",
 		BlockConditionalIfeval: "ConditionalIfeval",
-		BlockParagraph:      "Paragraph",
+		BlockStyledBlock:       "StyledBlock",
+		BlockParagraph:         "Paragraph",
 	}
 	if name, ok := names[bt]; ok {
 		return name
@@ -292,6 +296,18 @@ type ConditionalInfo struct {
 	Content []string
 }
 
+// StyleBlockInfo contains information about a styled block.
+type StyleBlockInfo struct {
+	// Style is the block style (pass, sidebar, verse, quote, example, etc.)
+	Style string
+
+	// Content is the content within the [ ] brackets
+	Content string
+
+	// Attributes are any attributes specified in [attributes]
+	Attributes map[string]string
+}
+
 // Classification contains the complete classification of a line.
 type Classification struct {
 	// Type is the primary block type
@@ -317,6 +333,9 @@ type Classification struct {
 
 	// Conditional is populated for conditional directives (ifdef, ifndef, ifeval)
 	Conditional *ConditionalInfo
+
+	// StyleBlock is populated for styled blocks (pass::[], sidebar::[], etc.)
+	StyleBlock *StyleBlockInfo
 
 	// Style contains any block style information
 	Style *BlockStyleInfo
@@ -459,6 +478,13 @@ func (lc *LineClassifier) ClassifyLine(line string) *Classification {
 	if cond := lc.checkConditional(trimmed); cond != nil {
 		result.Type = cond.BlockType
 		result.Conditional = cond
+		return result
+	}
+
+	// Check for styled blocks (pass::[], sidebar::[], etc.)
+	if styleBlock := lc.checkStyledBlock(trimmed); styleBlock != nil {
+		result.Type = BlockStyledBlock
+		result.StyleBlock = styleBlock
 		return result
 	}
 
@@ -859,6 +885,59 @@ func (lc *LineClassifier) checkConditional(line string) *ConditionalInfo {
 	}
 
 	return cond
+}
+
+// checkStyledBlock checks for styled block syntax.
+// Patterns: pass::[content], sidebar::[content], verse::[content], quote::[content], example::[content]
+func (lc *LineClassifier) checkStyledBlock(line string) *StyleBlockInfo {
+	trimmed := strings.TrimSpace(line)
+
+	// Must end with ]
+	if !strings.HasSuffix(trimmed, "]") {
+		return nil
+	}
+
+	// Check for :: in the line
+	doubleColon := strings.Index(trimmed, "::")
+	if doubleColon == -1 {
+		return nil
+	}
+
+	// Extract the style name (before ::)
+	style := trimmed[:doubleColon]
+
+	// List of valid AsciiDoc block styles
+	validStyles := map[string]bool{
+		"pass":    true,
+		"sidebar": true,
+		"verse":   true,
+		"quote":   true,
+		"example": true,
+		"listing": true,
+		"literal": true,
+		"source":  true,
+	}
+
+	if !validStyles[style] {
+		return nil
+	}
+
+	// Extract the content (between :: and ])
+	// Need to find the matching [ for the ]
+	openBracket := strings.Index(trimmed[doubleColon:], "[")
+	if openBracket == -1 {
+		return nil
+	}
+	openBracket += doubleColon // Adjust to absolute position
+
+	// Extract the content between [ and ]
+	content := trimmed[openBracket+1 : len(trimmed)-1]
+
+	return &StyleBlockInfo{
+		Style:      style,
+		Content:    content,
+		Attributes: make(map[string]string),
+	}
 }
 
 // checkBlockMacro checks for block macro syntax.

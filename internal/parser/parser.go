@@ -267,6 +267,25 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			continue
 		}
 
+		// Handle styled blocks (pass::[], sidebar::[], verse::[], etc.)
+		if classification.Type == reader.BlockStyledBlock {
+			// Flush any pending paragraph
+			if len(paragraphLines) > 0 {
+				para := p.createParagraph(paragraphLines, paragraphLineno)
+				if para != nil {
+					p.addBlockToCurrentSection(doc, para)
+				}
+				paragraphLines = nil
+			}
+
+			block := p.createStyledBlock(classification.StyleBlock, lineno)
+			if block != nil {
+				p.addBlockToCurrentSection(doc, block)
+			}
+			p.reader.Advance()
+			continue
+		}
+
 		// Handle list items
 		if classification.Type.IsListItem() {
 			// Flush any pending paragraph
@@ -639,6 +658,44 @@ func (p *Parser) createMacro(macro *reader.MacroInfo, lineno int) ast.Node {
 		Path:        macro.Path,
 		Attributes:  macro.Attributes,
 		Pos:         ast.Position{Line: lineno},
+	}
+}
+
+// createStyledBlock creates a styled block node (pass::[], sidebar::[], verse::[], etc.).
+func (p *Parser) createStyledBlock(styleBlock *reader.StyleBlockInfo, lineno int) ast.Node {
+	if styleBlock == nil {
+		return nil
+	}
+
+	switch styleBlock.Style {
+	case "pass":
+		return &ast.PassThroughNode{
+			Content:    styleBlock.Content,
+			Attributes: styleBlock.Attributes,
+			Pos:        ast.Position{Line: lineno},
+		}
+	case "sidebar":
+		return &ast.SidebarNode{
+			Title:      "", // Can be parsed from content if needed
+			Content:    styleBlock.Content,
+			Attributes: styleBlock.Attributes,
+			Pos:        ast.Position{Line: lineno},
+		}
+	case "verse":
+		return &ast.VerseNode{
+			Content:    styleBlock.Content,
+			Attributes: styleBlock.Attributes,
+			Pos:        ast.Position{Line: lineno},
+		}
+	default:
+		// For other styles (quote, example, listing, literal, source),
+		// return a generic StyledBlockNode
+		return &ast.StyledBlockNode{
+			Style:      styleBlock.Style,
+			Content:    styleBlock.Content,
+			Attributes: styleBlock.Attributes,
+			Pos:        ast.Position{Line: lineno},
+		}
 	}
 }
 

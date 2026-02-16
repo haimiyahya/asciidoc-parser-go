@@ -144,6 +144,14 @@ func (c *DocBookConverter) convertNode(node ast.Node, buf *bytes.Buffer) {
 		c.convertAdmonition(n, buf)
 	case *ast.MacroNode:
 		c.convertMacro(n, buf)
+	case *ast.StyledBlockNode:
+		c.convertStyledBlock(n, buf)
+	case *ast.SidebarNode:
+		c.convertSidebar(n, buf)
+	case *ast.PassThroughNode:
+		c.convertPassThrough(n, buf)
+	case *ast.VerseNode:
+		c.convertVerse(n, buf)
 	}
 }
 
@@ -639,6 +647,90 @@ func (c *DocBookConverter) convertMacro(macro *ast.MacroNode, buf *bytes.Buffer)
 		buf.WriteString(c.indent)
 		buf.WriteString(fmt.Sprintf("<!-- %s::%s -->\n", c.escapeXML(macro.Target), c.escapeXML(macro.Path)))
 	}
+}
+
+// convertStyledBlock converts a styled block to DocBook.
+func (c *DocBookConverter) convertStyledBlock(block *ast.StyledBlockNode, buf *bytes.Buffer) {
+	c.incIndent()
+	buf.WriteString(c.indent)
+	buf.WriteString("<formalpara>\n")
+
+	c.incIndent()
+	buf.WriteString(c.indent)
+	buf.WriteString("<title>")
+	buf.WriteString(c.escapeXML(block.Style))
+	buf.WriteString("</title>\n")
+
+	buf.WriteString(c.indent)
+	buf.WriteString("<para>")
+	buf.WriteString(c.escapeXML(block.Content))
+	buf.WriteString("</para>\n")
+
+	c.decIndent()
+	c.decIndent()
+
+	buf.WriteString(c.indent)
+	buf.WriteString("</formalpara>\n")
+}
+
+// convertSidebar converts a sidebar block to DocBook.
+func (c *DocBookConverter) convertSidebar(sidebar *ast.SidebarNode, buf *bytes.Buffer) {
+	c.incIndent()
+	buf.WriteString(c.indent)
+	buf.WriteString("<sidebar>\n")
+
+	// Write title if present
+	if sidebar.Title != "" {
+		c.incIndent()
+		buf.WriteString(c.indent)
+		buf.WriteString(fmt.Sprintf("<title>%s</title>\n", c.escapeXML(sidebar.Title)))
+		c.decIndent()
+	}
+
+	// Write content
+	c.incIndent()
+	buf.WriteString(c.indent)
+	buf.WriteString("<para>")
+	buf.WriteString(c.escapeXML(sidebar.Content))
+	buf.WriteString("</para>\n")
+	c.decIndent()
+
+	c.decIndent()
+
+	buf.WriteString(c.indent)
+	buf.WriteString("</sidebar>\n")
+}
+
+// convertPassThrough converts a passthrough block to DocBook.
+// Passthrough content is output as-is without escaping.
+func (c *DocBookConverter) convertPassThrough(pass *ast.PassThroughNode, buf *bytes.Buffer) {
+	// Passthrough content is written directly without XML escaping
+	buf.WriteString(c.indent)
+	buf.WriteString(pass.Content)
+	if !strings.HasSuffix(pass.Content, "\n") {
+		buf.WriteString("\n")
+	}
+}
+
+// convertVerse converts a verse block to DocBook.
+// Verse blocks preserve line breaks and formatting.
+func (c *DocBookConverter) convertVerse(verse *ast.VerseNode, buf *bytes.Buffer) {
+	c.incIndent()
+	buf.WriteString(c.indent)
+	buf.WriteString("<literallayout>\n")
+
+	// Write content with line breaks preserved
+	lines := strings.Split(strings.TrimSpace(verse.Content), "\n")
+	for _, line := range lines {
+		buf.WriteString(c.indent)
+		buf.WriteString(c.escapeXML(line))
+		buf.WriteString("\n")
+	}
+
+	c.decIndent()
+
+	buf.WriteString(c.indent)
+	buf.WriteString("</literallayout>\n")
 }
 
 // convertTable converts a table to DocBook.

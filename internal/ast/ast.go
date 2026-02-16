@@ -57,6 +57,14 @@ const (
 	TypeBlock
 	// TypeTable is a table node type.
 	TypeTable
+	// TypeStyledBlock is a styled block node type (pass::[], sidebar::[], etc.)
+	TypeStyledBlock
+	// TypeSidebar is a sidebar block node type.
+	TypeSidebar
+	// TypePassThrough is a passthrough block node type.
+	TypePassThrough
+	// TypeVerse is a verse block node type.
+	TypeVerse
 	// TypeAttribute is an attribute entry node type.
 	TypeAttribute
 	// TypeInline is inline content type (text, formatting, links, etc.).
@@ -198,6 +206,50 @@ type MacroNode struct {
 // Table is defined in ast_table.go with full AsciiDoc table support.
 // The Table type is imported from ast_table.go.
 
+// StyledBlockNode is a styled block (pass::[], sidebar::[], verse::[], etc.).
+type StyledBlockNode struct {
+	// Style is the block style (pass, sidebar, verse, quote, example, etc.).
+	Style string
+	// Content is the block content.
+	Content string
+	// Attributes are block-level attributes.
+	Attributes map[string]string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// SidebarNode is a sidebar block.
+type SidebarNode struct {
+	// Title is the optional sidebar title.
+	Title string
+	// Content is the sidebar content.
+	Content string
+	// Attributes are block-level attributes.
+	Attributes map[string]string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// PassThroughNode is a passthrough block (content is output as-is).
+type PassThroughNode struct {
+	// Content is the raw content to pass through.
+	Content string
+	// Attributes are block-level attributes.
+	Attributes map[string]string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// VerseNode is a verse block (preserves line breaks).
+type VerseNode struct {
+	// Content is the verse content (with line breaks preserved).
+	Content string
+	// Attributes are block-level attributes.
+	Attributes map[string]string
+	// Pos is the location in the source.
+	Pos Position
+}
+
 // Node interface methods for each type.
 
 func (n *NodeDocument) Type() NodeType   { return n.Kind }
@@ -226,3 +278,15 @@ func (n *AdmonitionNode) Position() Position { return n.Pos }
 
 func (n *MacroNode) Type() NodeType   { return TypeMacro }
 func (n *MacroNode) Position() Position { return n.Pos }
+
+func (n *StyledBlockNode) Type() NodeType   { return TypeStyledBlock }
+func (n *StyledBlockNode) Position() Position { return n.Pos }
+
+func (n *SidebarNode) Type() NodeType   { return TypeSidebar }
+func (n *SidebarNode) Position() Position { return n.Pos }
+
+func (n *PassThroughNode) Type() NodeType   { return TypePassThrough }
+func (n *PassThroughNode) Position() Position { return n.Pos }
+
+func (n *VerseNode) Type() NodeType   { return TypeVerse }
+func (n *VerseNode) Position() Position { return n.Pos }

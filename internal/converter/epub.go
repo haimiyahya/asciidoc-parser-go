@@ -348,6 +348,14 @@ func (c *EPUBConverter) convertNode(node ast.Node, buf *bytes.Buffer) {
 		c.convertAdmonition(n, buf)
 	case *ast.MacroNode:
 		c.convertMacro(n, buf)
+	case *ast.StyledBlockNode:
+		c.convertStyledBlock(n, buf)
+	case *ast.SidebarNode:
+		c.convertSidebar(n, buf)
+	case *ast.PassThroughNode:
+		c.convertPassThrough(n, buf)
+	case *ast.VerseNode:
+		c.convertVerse(n, buf)
 	}
 }
 
@@ -648,6 +656,56 @@ func (c *EPUBConverter) convertMacro(macro *ast.MacroNode, buf *bytes.Buffer) {
 		// Unknown macro
 		buf.WriteString(fmt.Sprintf("<!-- %s::%s -->\n", macro.Target, macro.Path))
 	}
+}
+
+// convertStyledBlock converts a styled block to XHTML.
+func (c *EPUBConverter) convertStyledBlock(block *ast.StyledBlockNode, buf *bytes.Buffer) {
+	class := block.Style + "block"
+	buf.WriteString(fmt.Sprintf("<div class=\"%s\">%s</div>\n", class, escapeXML(block.Content)))
+}
+
+// convertSidebar converts a sidebar block to XHTML.
+func (c *EPUBConverter) convertSidebar(sidebar *ast.SidebarNode, buf *bytes.Buffer) {
+	buf.WriteString("<div class=\"sidebar\">\n")
+
+	// Write title if present
+	if sidebar.Title != "" {
+		buf.WriteString(fmt.Sprintf("<div class=\"title\">%s</div>\n", escapeXML(sidebar.Title)))
+	}
+
+	// Write content
+	buf.WriteString("<div class=\"content\">")
+	buf.WriteString(escapeXML(sidebar.Content))
+	buf.WriteString("</div>\n")
+	buf.WriteString("</div>\n")
+}
+
+// convertPassThrough converts a passthrough block to XHTML.
+// Passthrough content is output as-is without escaping.
+func (c *EPUBConverter) convertPassThrough(pass *ast.PassThroughNode, buf *bytes.Buffer) {
+	// Passthrough content is written directly without XML escaping
+	buf.WriteString(pass.Content)
+	if !strings.HasSuffix(pass.Content, "\n") {
+		buf.WriteString("\n")
+	}
+}
+
+// convertVerse converts a verse block to XHTML.
+// Verse blocks preserve line breaks and formatting.
+func (c *EPUBConverter) convertVerse(verse *ast.VerseNode, buf *bytes.Buffer) {
+	buf.WriteString("<div class=\"verseblock\">\n")
+
+	// Write content with line breaks preserved
+	lines := strings.Split(strings.TrimSpace(verse.Content), "\n")
+	for i, line := range lines {
+		buf.WriteString(escapeXML(line))
+		if i < len(lines)-1 {
+			buf.WriteString("<br/>")
+		}
+		buf.WriteString("\n")
+	}
+
+	buf.WriteString("</div>\n")
 }
 
 // convertTable converts a table to XHTML.

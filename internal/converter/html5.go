@@ -160,6 +160,14 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 		c.convertAdmonition(n, w)
 	case *ast.MacroNode:
 		c.convertMacro(n, w)
+	case *ast.StyledBlockNode:
+		c.convertStyledBlock(n, w)
+	case *ast.SidebarNode:
+		c.convertSidebar(n, w)
+	case *ast.PassThroughNode:
+		c.convertPassThrough(n, w)
+	case *ast.VerseNode:
+		c.convertVerse(n, w)
 	default:
 		// Unknown node type - skip
 	}
@@ -492,6 +500,104 @@ func (c *HTML5Converter) convertMacro(macro *ast.MacroNode, w io.Writer) {
 			fmt.Fprintln(w)
 		}
 	}
+}
+
+// convertStyledBlock converts a styled block to HTML.
+func (c *HTML5Converter) convertStyledBlock(block *ast.StyledBlockNode, w io.Writer) {
+	class := block.Style + "block"
+
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `<div class="%s">`, class)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	// Write content
+	content := strings.TrimSpace(block.Content)
+	if content != "" {
+		c.writeRawString(content, w)
+	}
+
+	if c.pretty {
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, `</div>`)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+}
+
+// convertSidebar converts a sidebar block to HTML.
+func (c *HTML5Converter) convertSidebar(sidebar *ast.SidebarNode, w io.Writer) {
+	c.writeOpenTagWithClass("div", "sidebar", w)
+
+	// Write title if present
+	if sidebar.Title != "" {
+		c.writeElementWithClass("div", "title", c.escape(sidebar.Title), w)
+	}
+
+	// Write content
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, `<div class="content">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	content := strings.TrimSpace(sidebar.Content)
+	if content != "" {
+		c.writeRawString(content, w)
+	}
+
+	if c.pretty {
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprint(w, `</div>`)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	c.writeCloseTag("div", w)
+}
+
+// convertPassThrough converts a passthrough block to HTML.
+// Passthrough content is output as-is without escaping.
+func (c *HTML5Converter) convertPassThrough(pass *ast.PassThroughNode, w io.Writer) {
+	// Passthrough content is written directly without HTML escaping
+	c.writeRawString(pass.Content, w)
+	if c.pretty && !strings.HasSuffix(pass.Content, "\n") {
+		fmt.Fprintln(w)
+	}
+}
+
+// convertVerse converts a verse block to HTML.
+// Verse blocks preserve line breaks and formatting.
+func (c *HTML5Converter) convertVerse(verse *ast.VerseNode, w io.Writer) {
+	c.writeOpenTagWithClass("div", "verseblock", w)
+
+	// Write content with line breaks preserved
+	lines := strings.Split(strings.TrimSpace(verse.Content), "\n")
+	for i, line := range lines {
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, c.escape(line))
+		if i < len(lines)-1 {
+			fmt.Fprint(w, "<br>")
+		}
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	}
+
+	c.writeCloseTag("div", w)
 }
 
 // blockClass returns CSS class for a delimited block.

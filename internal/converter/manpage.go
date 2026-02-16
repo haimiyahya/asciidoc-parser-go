@@ -316,6 +316,14 @@ func (c *ManPageConverter) convertNodeContent(nodes []ast.Node, buf *bytes.Buffe
 			buf.WriteString(c.formatAdmonition(n))
 		case *ast.Table:
 			buf.WriteString(c.formatTable(n))
+		case *ast.StyledBlockNode:
+			buf.WriteString(c.formatStyledBlock(n))
+		case *ast.SidebarNode:
+			buf.WriteString(c.formatSidebar(n))
+		case *ast.PassThroughNode:
+			buf.WriteString(c.formatPassThrough(n))
+		case *ast.VerseNode:
+			buf.WriteString(c.formatVerse(n))
 		}
 	}
 }
@@ -546,6 +554,58 @@ func (c *ManPageConverter) formatAdmonition(admonition *ast.AdmonitionNode) stri
 	buf.WriteString(fmt.Sprintf("\\fB%s:\\fR %s\n",
 		strings.ToUpper(admonition.Kind),
 		c.escapeTroff(admonition.Text)))
+
+	return buf.String()
+}
+
+// formatStyledBlock formats a styled block for man page.
+func (c *ManPageConverter) formatStyledBlock(block *ast.StyledBlockNode) string {
+	var buf bytes.Buffer
+
+	buf.WriteString(".PP\n")
+	buf.WriteString(fmt.Sprintf("\\fB[%s]\\fR\n", c.escapeTroff(block.Style)))
+	buf.WriteString(".RS 2\n")
+	buf.WriteString(c.escapeTroff(block.Content))
+	buf.WriteString("\n.RE\n")
+
+	return buf.String()
+}
+
+// formatSidebar formats a sidebar block for man page.
+func (c *ManPageConverter) formatSidebar(sidebar *ast.SidebarNode) string {
+	var buf bytes.Buffer
+
+	buf.WriteString(".PP\n")
+	if sidebar.Title != "" {
+		buf.WriteString(fmt.Sprintf("\\fB%s\\fR\n", c.escapeTroff(sidebar.Title)))
+	}
+	buf.WriteString(".RS 2\n")
+	buf.WriteString(c.escapeTroff(sidebar.Content))
+	buf.WriteString("\n.RE\n")
+
+	return buf.String()
+}
+
+// formatPassThrough formats a passthrough block for man page.
+// Passthrough content is output as-is without escaping.
+func (c *ManPageConverter) formatPassThrough(pass *ast.PassThroughNode) string {
+	// Passthrough content is written directly without troff escaping
+	return pass.Content + "\n"
+}
+
+// formatVerse formats a verse block for man page.
+// Verse blocks preserve line breaks and formatting.
+func (c *ManPageConverter) formatVerse(verse *ast.VerseNode) string {
+	var buf bytes.Buffer
+
+	buf.WriteString(".PP\n")
+	buf.WriteString(".nf\n") // no-fill mode to preserve formatting
+	lines := strings.Split(strings.TrimSpace(verse.Content), "\n")
+	for _, line := range lines {
+		buf.WriteString(c.escapeTroff(line))
+		buf.WriteString("\n")
+	}
+	buf.WriteString(".fi\n") // restore fill mode
 
 	return buf.String()
 }

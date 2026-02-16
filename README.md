@@ -318,7 +318,7 @@ go test ./internal/inline/... -v
 | Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript |
 | Admonitions | ✅ Complete | All 5 types |
 | Block Macros | ✅ Complete | Image, video, audio, include |
-| Delimited Blocks | ✅ Complete | Example, quote, literal, etc. |
+| Delimited Blocks | ✅ Complete | Example, quote, literal, styled blocks (pass::[], sidebar::[], verse::[]) |
 | AST Builder | ✅ Complete | Rich node hierarchy |
 | HTML5 Converter | ✅ Complete | Semantic HTML5 |
 | PDF Converter | ✅ Complete | With TOC, cover page, metadata |
@@ -337,7 +337,6 @@ go test ./internal/inline/... -v
 | **Bibliography** | Citation processing for academic use | Low |
 | **Extensions System** | Custom block/inline macros, tree processors | Medium |
 | **More Inline Types** | `[ ]` for roles, etc. | Low |
-| **More Delimited Block Types** | All types (pass::[ ], sidebar::[ ], etc.) | Medium |
 | **Callouts** | Reusable content blocks with `<<block-id>>` | Medium |
 | **Index Terms** | `(((term)))` indexing | Low |
 | **LSP Support** | Language Server Protocol for editor integration | Medium |

@@ -190,15 +190,12 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 // convertParagraph converts a paragraph to HTML.
 func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) {
 	// Always add newlines for Asciidoctor compatibility
-	fmt.Fprintf(w, `<div class="paragraph">
-`)
+	fmt.Fprintf(w, `<div class="paragraph">`+"\n")
 
 	// If there are no inline nodes, use simple rendering
 	if len(para.InlineNodes) == 0 {
-		fmt.Fprintf(w, `<p>%s</p>
-`, c.escape(para.Text))
-		fmt.Fprintf(w, `</div>
-`)
+		fmt.Fprintf(w, `<p>%s</p>`+"\n", c.escape(para.Text))
+		fmt.Fprintf(w, `</div>`+"\n")
 		return
 	}
 
@@ -228,10 +225,8 @@ func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) 
 		c.writeRawString(c.escape(text), w)
 	}
 
-	fmt.Fprintf(w, `</p>
-`)
-	fmt.Fprintf(w, `</div>
-`)
+	fmt.Fprintf(w, `</p>`+"\n")
+	fmt.Fprintf(w, `</div>`+"\n")
 }
 
 // convertInlineNode converts an inline.Node to HTML.
@@ -524,25 +519,21 @@ func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 	sectionClass := fmt.Sprintf("sect%d", section.Level)
 
 	// Always add newlines for Asciidoctor compatibility
-	fmt.Fprintf(w, `<div class="%s">
-`, sectionClass)
+	fmt.Fprintf(w, `<div class="%s">`+"\n", sectionClass)
 
 	// Determine heading tag based on level
 	tag := c.headingTag(section.Level)
 
 	// Write opening heading tag with id attribute if section has an ID
 	if section.ID != "" {
-		fmt.Fprintf(w, `<%s id="%s">%s</%s>
-`, tag, c.escape(section.ID), c.escape(section.Title), tag)
+		fmt.Fprintf(w, `<%s id="%s">%s</%s>`+"\n", tag, c.escape(section.ID), c.escape(section.Title), tag)
 	} else {
-		fmt.Fprintf(w, `<%s>%s</%s>
-`, tag, c.escape(section.Title), tag)
+		fmt.Fprintf(w, `<%s>%s</%s>`+"\n", tag, c.escape(section.Title), tag)
 	}
 
 	// Wrap section content in sectionbody div (only for level 1 sections, Asciidoctor compatibility)
 	if section.Level == 1 {
-		fmt.Fprintf(w, `<div class="sectionbody">
-`)
+		fmt.Fprintf(w, `<div class="sectionbody">`+"\n")
 	}
 
 	// Convert section children (paragraphs, lists, subsections, etc.)
@@ -551,12 +542,10 @@ func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 	}
 
 	if section.Level == 1 {
-		fmt.Fprintf(w, `</div>
-`) // Close sectionbody
+		fmt.Fprintf(w, `</div>`+"\n") // Close sectionbody
 	}
 
-	fmt.Fprintf(w, `</div>
-`) // Close section wrapper (sectN)
+	fmt.Fprintf(w, `</div>`+"\n") // Close section wrapper (sectN)
 }
 
 // headingTag returns appropriate HTML tag for a section level.
@@ -681,16 +670,13 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 	}
 
 	// Always add newlines for Asciidoctor compatibility
-	fmt.Fprintf(w, `<div class="%s">
-`, wrapperClass)
+	fmt.Fprintf(w, `<div class="%s">`+"\n", wrapperClass)
 
 	// For ordered lists, add class attribute
 	if tag == "ol" {
-		fmt.Fprintf(w, `<ol class="arabic">
-`)
+		fmt.Fprintf(w, `<ol class="arabic">`+"\n")
 	} else {
-		fmt.Fprintf(w, `<%s>
-`, tag)
+		fmt.Fprintf(w, `<%s>`+"\n", tag)
 	}
 
 	// Convert all list items
@@ -698,10 +684,8 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 		c.convertNode(item, w)
 	}
 
-	fmt.Fprintf(w, `</%s>
-`, tag)
-	fmt.Fprintf(w, `</div>
-`)
+	fmt.Fprintf(w, `</%s>`+"\n", tag)
+	fmt.Fprintf(w, `</div>`+"\n")
 }
 
 // listTag returns appropriate HTML tag for a list.
@@ -797,12 +781,15 @@ func (c *HTML5Converter) renderInlineText(text string, inlineNodes []interface{}
 // convertLiteral converts a literal block to HTML.
 func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 	// Always add newlines for Asciidoctor compatibility
-	fmt.Fprintf(w, `<div class="literalblock">\n`)
-	fmt.Fprintf(w, `<div class="content">\n`)
+	fmt.Fprintf(w, `<div class="literalblock">`)
+	fmt.Fprint(w, "\n")
+	fmt.Fprintf(w, `<div class="content">`)
+	fmt.Fprint(w, "\n")
 
 	if len(literal.Callouts) == 0 {
 		// No callouts, simple rendering
-		fmt.Fprintf(w, `<pre>%s</pre>\n`, c.escape(strings.Join(literal.Lines, "\n")))
+		fmt.Fprintf(w, `<pre>%s</pre>`, c.escape(strings.Join(literal.Lines, "\n")))
+		fmt.Fprint(w, "\n")
 	} else {
 		// Render with callouts
 		fmt.Fprintf(w, `<pre>`)
@@ -831,14 +818,17 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 			}
 		}
 
-		fmt.Fprintf(w, `</pre>\n`)
+		fmt.Fprintf(w, `</pre>`)
+		fmt.Fprint(w, "\n")
 
 		// Render callout descriptions
 		c.renderCalloutList(literal, w)
 	}
 
-	fmt.Fprintf(w, `</div>\n`)
-	fmt.Fprintf(w, `</div>\n`)
+	fmt.Fprintf(w, `</div>`)
+	fmt.Fprint(w, "\n")
+	fmt.Fprintf(w, `</div>`)
+	fmt.Fprint(w, "\n")
 }
 
 // renderCalloutList renders callout descriptions as an HTML list.
@@ -897,62 +887,78 @@ func (c *HTML5Converter) convertBlock(block *ast.NodeBlock, w io.Writer) {
 	// Write content
 	content := strings.Join(block.Lines, "\n")
 
-	if block.Delimiter == "____" {
+	if block.Delimiter == "_" {
 		// Quote block - special structure
-		fmt.Fprintf(w, `<div class="%s">
-`, class)
-		fmt.Fprintf(w, `<blockquote>
-`)
-		fmt.Fprintf(w, `<div class="paragraph">
-`)
-		fmt.Fprintf(w, `<p>%s</p>
-`, c.escape(content))
-		fmt.Fprintf(w, `</div>
-`)
-		fmt.Fprintf(w, `</blockquote>
-`)
-		fmt.Fprintf(w, `</div>
-`)
-	} else if block.Delimiter == "====" {
+		fmt.Fprintf(w, `<div class="%s">`, class)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<blockquote>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<div class="paragraph">`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<p>%s</p>`, c.escape(content))
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</blockquote>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+	} else if block.Delimiter == "=" {
 		// Example block - wrap in paragraph div
-		fmt.Fprintf(w, `<div class="%s">
-`, class)
-		fmt.Fprintf(w, `<div class="content">
-`)
-		fmt.Fprintf(w, `<div class="paragraph">
-`)
-		fmt.Fprintf(w, `<p>%s</p>
-`, c.escape(content))
-		fmt.Fprintf(w, `</div>
-`)
-		fmt.Fprintf(w, `</div>
-`)
-		fmt.Fprintf(w, `</div>
-`)
+		fmt.Fprintf(w, `<div class="%s">`, class)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<div class="content">`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<div class="paragraph">`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<p>%s</p>`, c.escape(content))
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+	} else if block.Delimiter == "*" {
+		// Sidebar block - wrap in paragraph div
+		fmt.Fprintf(w, `<div class="%s">`, class)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<div class="content">`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<div class="paragraph">`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<p>%s</p>`, c.escape(content))
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
 	} else if block.Delimiter == "/" || block.Delimiter == "-" {
 		// Literal/verbatim blocks
-		fmt.Fprintf(w, `<div class="%s">
-`, class)
-		fmt.Fprintf(w, `<div class="content">
-`)
-		fmt.Fprintf(w, `<pre>%s</pre>
-`, c.escape(content))
-		fmt.Fprintf(w, `</div>
-`)
-		fmt.Fprintf(w, `</div>
-`)
+		fmt.Fprintf(w, `<div class="%s">`, class)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<div class="content">`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<pre>%s</pre>`, c.escape(content))
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
 	} else {
 		// Other blocks - generic structure
-		fmt.Fprintf(w, `<div class="%s">
-`, class)
-		fmt.Fprintf(w, `<div class="content">
-`)
-		fmt.Fprintf(w, `%s
-`, c.escape(content))
-		fmt.Fprintf(w, `</div>
-`)
-		fmt.Fprintf(w, `</div>
-`)
+		fmt.Fprintf(w, `<div class="%s">`, class)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `<div class="content">`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `%s`, c.escape(content))
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprint(w, "\n")
 	}
 }
 
@@ -963,30 +969,18 @@ func (c *HTML5Converter) convertAdmonition(admonition *ast.AdmonitionNode, w io.
 	class := "admonitionblock " + kind
 
 	// Always add newlines for Asciidoctor compatibility (even in embedded mode)
-	fmt.Fprintf(w, `<div class="%s">
-`, class)
-	fmt.Fprintf(w, `<table>
-`)
-	fmt.Fprintf(w, `<tr>
-`)
-	fmt.Fprintf(w, `<td class="icon">
-`)
-	fmt.Fprintf(w, `<div class="title">%s</div>
-`, strings.ToUpper(kind[:1])+kind[1:])
-	fmt.Fprintf(w, `</td>
-`)
-	fmt.Fprintf(w, `<td class="content">
-`)
-	fmt.Fprintf(w, `%s
-`, c.escape(admonition.Text))
-	fmt.Fprintf(w, `</td>
-`)
-	fmt.Fprintf(w, `</tr>
-`)
-	fmt.Fprintf(w, `</table>
-`)
-	fmt.Fprintf(w, `</div>
-`)
+	fmt.Fprintf(w, `<div class="%s">`+"\n", class)
+	fmt.Fprintf(w, `<table>`+"\n")
+	fmt.Fprintf(w, `<tr>`+"\n")
+	fmt.Fprintf(w, `<td class="icon">`+"\n")
+	fmt.Fprintf(w, `<div class="title">%s</div>`+"\n", strings.ToUpper(kind[:1])+kind[1:])
+	fmt.Fprintf(w, `</td>`+"\n")
+	fmt.Fprintf(w, `<td class="content">`+"\n")
+	fmt.Fprintf(w, `%s`+"\n", c.escape(admonition.Text))
+	fmt.Fprintf(w, `</td>`+"\n")
+	fmt.Fprintf(w, `</tr>`+"\n")
+	fmt.Fprintf(w, `</table>`+"\n")
+	fmt.Fprintf(w, `</div>`+"\n")
 }
 
 // convertMacro converts a block macro to HTML.

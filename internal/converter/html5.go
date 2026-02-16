@@ -314,11 +314,33 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 	case inline.NodeLink:
 		if node.URL != "" {
 			class := c.getClassAttr(node.Roles)
+			// Build attributes string
+			var attrs []string
+			attrs = append(attrs, fmt.Sprintf(`href="%s"`, c.escape(node.URL)))
+
+			// Add class if present
 			if class != "" {
-				fmt.Fprintf(w, `<a href="%s" class="%s">`, c.escape(node.URL), class)
-			} else {
-				fmt.Fprintf(w, `<a href="%s">`, c.escape(node.URL))
+				attrs = append(attrs, fmt.Sprintf(`class="%s"`, class))
 			}
+
+			// Add additional attributes from node.Attributes
+			// Map Asciidoctor attributes to HTML attributes
+			for key, val := range node.Attributes {
+				// Map window -> target (Asciidoctor compatibility)
+				if key == "window" {
+					attrs = append(attrs, fmt.Sprintf(`target="%s"`, c.escape(val)))
+					// Asciidoctor also adds rel="noopener" for target="_blank"
+					if val == "_blank" {
+						if _, hasRel := node.Attributes["rel"]; !hasRel {
+							attrs = append(attrs, `rel="noopener"`)
+						}
+					}
+				} else {
+					attrs = append(attrs, fmt.Sprintf(`%s="%s"`, key, c.escape(val)))
+				}
+			}
+
+			fmt.Fprintf(w, `<a %s>`, strings.Join(attrs, " "))
 		} else {
 			c.writeRawString("<a>", w)
 		}
@@ -329,12 +351,15 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		if alt == "" {
 			alt = node.Text
 		}
+		// Wrap in span class="image" (Asciidoctor compatibility)
+		fmt.Fprint(w, `<span class="image">`)
 		class := c.getClassAttr(node.Roles)
 		if class != "" {
 			fmt.Fprintf(w, `<img src="%s" alt="%s" class="%s">`, c.escape(node.URL), c.escape(alt), class)
 		} else {
 			fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
 		}
+		fmt.Fprint(w, `</span>`)
 	case inline.NodeCrossRef:
 		// Check if this is a bibliography citation (references a bibliography entry)
 		if c.document != nil && c.document.BibliographyEntries != nil {

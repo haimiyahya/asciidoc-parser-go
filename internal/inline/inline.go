@@ -101,6 +101,9 @@ type Node struct {
 	// Roles are CSS role classes applied to this node (from [.role] syntax).
 	Roles []string
 
+	// Attributes are additional attributes (for links with window="_blank", etc.)
+	Attributes map[string]string
+
 	// StartPos is the starting position of this node's markup in source text.
 	StartPos int
 
@@ -424,38 +427,67 @@ func (p *Parser) tryImage() (*Node, int) {
 }
 
 // tryLink attempts to parse a link at the current position.
-// Supports: link:text[url], bare URLs, and https:// URLs.
+// Supports: link:url[text], bare URLs, and https:// URLs.
 func (p *Parser) tryLink() (*Node, int) {
 	remaining := p.text[p.pos:]
 
-	// Check for macro link: link:text[url]
+	// Check for macro link: link:url[text, attrs...]
 	if strings.HasPrefix(remaining, "link:") {
 		// Find the closing ]
 		closeBracket := strings.Index(remaining, "]")
 		if closeBracket == -1 {
 			return nil, p.pos
 		}
-		// Extract link:text[url]
+		// Extract link:url[text, attrs...]
 		linkSpec := remaining[5:closeBracket]
-		// Find the last [ to split text from url
-		openBracket := strings.LastIndex(linkSpec, "[")
+		// Find the [ to split url from text
+		openBracket := strings.Index(linkSpec, "[")
 		if openBracket == -1 {
 			return nil, p.pos
 		}
-		// text is before last [, url is after it
-		text := linkSpec[:openBracket]
-		url := linkSpec[openBracket+1 : len(linkSpec)]
+		// url is before [, text+attrs are after it
+		url := linkSpec[:openBracket]
+		textAndAttrs := linkSpec[openBracket+1 : len(linkSpec)]
 
-		if text == "" || url == "" {
+		// Parse text and attributes
+		// Format: text, attr1=value1, attr2=value2, ...
+		text := textAndAttrs
+		attrs := make(map[string]string)
+
+		// Check if there are attributes (comma followed by space and attribute)
+		commaIdx := strings.Index(textAndAttrs, ", ")
+		if commaIdx != -1 {
+			text = textAndAttrs[:commaIdx]
+			attrStr := textAndAttrs[commaIdx+2:]
+
+			// Parse attributes: window="_blank", rel="noopener"
+			// Simple regex-based parsing
+			attrParts := strings.Split(attrStr, ", ")
+			for _, attr := range attrParts {
+				// Split on "=" to get key-value
+				if eqIdx := strings.Index(attr, "="); eqIdx != -1 {
+					key := strings.TrimSpace(attr[:eqIdx])
+					// Remove quotes from value
+					val := attr[eqIdx+1:]
+					if len(val) >= 2 && (val[0] == '"' || val[0] == '\'') {
+						val = val[1 : len(val)-1]
+					}
+					attrs[key] = val
+				}
+			}
+		}
+
+		if url == "" {
 			return nil, p.pos
 		}
 
 		return &Node{
-			Type: NodeLink,
-			Text: text,
-			URL:  url,
-			StartPos: p.pos,
-			Position: p.pos + closeBracket + 1,
+			Type:       NodeLink,
+			Text:       text,
+			URL:        url,
+			Attributes: attrs,
+			StartPos:   p.pos,
+			Position:   p.pos + closeBracket + 1,
 		}, p.pos + closeBracket + 1
 	}
 
@@ -480,9 +512,10 @@ func (p *Parser) tryLink() (*Node, int) {
 		}
 		url := remaining[:end]
 		return &Node{
-			Type: NodeLink,
-			Text: url,
-			URL:  url,
+			Type:  NodeLink,
+			Text:  url,
+			URL:   url,
+			Roles: []string{"bare"}, // Add "bare" role for Asciidoctor compatibility
 			StartPos: p.pos,
 			Position: p.pos + end,
 		}, p.pos + end

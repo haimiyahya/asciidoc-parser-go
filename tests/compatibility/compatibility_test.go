@@ -28,6 +28,9 @@ const (
 	// asciidoctorDocTestURL is the base URL for Asciidoctor DocTest examples
 	asciidoctorDocTestURL = "https://raw.githubusercontent.com/asciidoctor/asciidoctor-doctest/main/data/examples/asciidoc"
 
+	// asciidoctorCmd is the command to run Asciidoctor
+	asciidoctorCmd = "/usr/local/bin/asciidoctor"
+
 	// compatibilityTestDir is the directory for compatibility test data
 	compatibilityTestDir = "tests/compatibility"
 
@@ -82,7 +85,7 @@ func NewCompatibilityTester(t *testing.T) *CompatibilityTester {
 
 // checkAsciidoctorAvailable checks if asciidoctor command is available
 func checkAsciidoctorAvailable() bool {
-	_, err := exec.LookPath("asciidoctor")
+	_, err := exec.LookPath(asciidoctorCmd)
 	return err == nil
 }
 
@@ -201,8 +204,9 @@ func (ct *CompatibilityTester) runAsciidoctor(source string) (string, error) {
 
 	outputFile := filepath.Join(tmpDir, "output.html")
 
-	// Run asciidoctor
-	cmd := exec.Command("asciidoctor", "-b", "html5", "-o", outputFile, "-a", "newline=\\n", inputFile)
+	// Run asciidoctor with embedded mode to get body-only content
+	// This matches the Go parser's minimal HTML output
+	cmd := exec.Command(asciidoctorCmd, "-b", "html5", "-o", outputFile, "-a", "newline=\\n", "-e", inputFile)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("asciidoctor failed: %w\nOutput: %s", err, output)
 	}
@@ -614,12 +618,12 @@ func TestCompatibility_AsciidoctorAvailable(t *testing.T) {
 	if checkAsciidoctorAvailable() {
 		t.Log("Asciidoctor is available")
 		// Get version
-		cmd := exec.Command("asciidoctor", "--version")
+		cmd := exec.Command(asciidoctorCmd, "--version")
 		if output, err := cmd.CombinedOutput(); err == nil {
 			t.Logf("Asciidoctor version: %s", string(output))
 		}
 	} else {
-		t.Skip("Asciidoctor not found in PATH. Install with: gem install asciidoctor")
+		t.Skip("Asciidoctor not found. Install with: gem install asciidoctor")
 	}
 }
 
@@ -731,26 +735,42 @@ func (g *GoldenFileManager) ListGolden() ([]string, error) {
 
 // TestCompatibility_GenerateGoldenFiles generates golden files from built-in test cases
 func TestCompatibility_GenerateGoldenFiles(t *testing.T) {
-	if os.Getenv("GENERATE_GOLDEN") != "1" {
-		t.Skip("Set GENERATE_GOLDEN=1 to generate golden files")
+	useAsciidoctor := os.Getenv("USE_ASCIIDOCTOR") == "1"
+	useGoParser := os.Getenv("GENERATE_GOLDEN") == "1"
+
+	if !useAsciidoctor && !useGoParser {
+		t.Skip("Set USE_ASCIIDOCTOR=1 to generate from Asciidoctor or GENERATE_GOLDEN=1 to generate from Go parser")
 	}
 
 	g := NewGoldenFileManager()
 	tester := NewCompatibilityTester(t)
 	testCases := getBuiltInTestCases()
 
+	if useAsciidoctor && !tester.asciidoctorAvailable {
+		t.Fatal("USE_ASCIIDOCTOR=1 set but Asciidoctor is not available")
+	}
+
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			// Generate HTML with Go parser
-			html, err := tester.parseWithGoParser(tc.Source)
-			require.NoError(t, err, "Failed to parse source")
+			var html string
+			var err error
+
+			if useAsciidoctor {
+				// Generate HTML with Asciidoctor (reference implementation)
+				html, err = tester.runAsciidoctor(tc.Source)
+				require.NoError(t, err, "Failed to run Asciidoctor")
+				t.Logf("Generated golden file from Asciidoctor: %s", tc.Name)
+			} else {
+				// Generate HTML with Go parser
+				html, err = tester.parseWithGoParser(tc.Source)
+				require.NoError(t, err, "Failed to parse source")
+				t.Logf("Generated golden file from Go parser: %s", tc.Name)
+			}
 
 			// Save as golden file
 			if err := g.SaveGolden(tc.Name, html); err != nil {
 				t.Fatalf("Failed to save golden file: %v", err)
 			}
-
-			t.Logf("Generated golden file: %s", tc.Name)
 		})
 	}
 }

@@ -727,9 +727,69 @@ func (c *HTML5Converter) listTag(item ast.Node) string {
 func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 	// Determine tag based on list type
 	if item.Marker == "::" {
-		// Labeled list: dt and dd
-		c.writeElement("dt", c.escape(item.Term), w)
-		c.writeElement("dd", c.escape(item.Definition), w)
+		// Labeled list: dt and dd (Asciidoctor compatibility)
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, `<dt class="hdlist1">`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, c.escape(item.Term))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, `</dt>`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+
+		// Write dd with p-wrapped content
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, `<dd>`)
+		if c.pretty {
+			fmt.Fprintln(w)
+			c.indent += "  "
+		}
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, `<p>`)
+		if c.pretty {
+			fmt.Fprintln(w)
+			c.indent += "  "
+		}
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, c.escape(item.Definition))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, `</p>`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprint(w, `</dd>`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
 	} else if item.NestedList != nil {
 		// Has nested list - open li, render text in p, nested list, close li
 		if c.pretty {

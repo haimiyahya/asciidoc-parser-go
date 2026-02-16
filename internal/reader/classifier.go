@@ -276,6 +276,12 @@ type MacroInfo struct {
 type AnchorInfo struct {
 	// ID is the anchor identifier
 	ID string
+
+	// IsBibliography is true for triple-bracket bibliography anchors [[[id]]]
+	IsBibliography bool
+
+	// XRefText is the optional cross-reference text for bibliography anchors [[[id,xreftext]]]
+	XRefText string
 }
 
 // ConditionalInfo contains information about a conditional directive.
@@ -536,6 +542,8 @@ func (lc *LineClassifier) ClassifyLine(line string) *Classification {
 	// Check for styled blocks (open block with style)
 	if lc.isStyledBlock(trimmed) {
 		result.Type = BlockStyle
+		// Populate the Style field
+		result.Style = lc.parseBlockStyle(trimmed)
 		return result
 	}
 
@@ -1286,8 +1294,13 @@ func (lc *LineClassifier) isSingleLineComment(line string) bool {
 func (lc *LineClassifier) isBlockAnchor(line string) bool {
 	trimmed := strings.TrimSpace(line)
 
-	// Patterns: [[id]] or [#id]
+	// Patterns: [[id]] or [[[id]]] (bibliography) or [#id]
 	// Or: [id] when followed by anchor or alone
+
+	// Check for [[[id]]] bibliography anchor
+	if strings.HasPrefix(trimmed, "[[[") && strings.HasSuffix(trimmed, "]]]") {
+		return true
+	}
 
 	// Check for [[id]]
 	if strings.HasPrefix(trimmed, "[[") && strings.HasSuffix(trimmed, "]]") {
@@ -1305,6 +1318,23 @@ func (lc *LineClassifier) isBlockAnchor(line string) bool {
 // parseBlockAnchor extracts the anchor ID from a block anchor line.
 func (lc *LineClassifier) parseBlockAnchor(line string) *AnchorInfo {
 	trimmed := strings.TrimSpace(line)
+
+	// Check for [[[id]]] or [[[id,xreftext]]] bibliography anchor format
+	if strings.HasPrefix(trimmed, "[[[") && strings.HasSuffix(trimmed, "]]]") {
+		content := trimmed[3 : len(trimmed)-3]
+		// Split on comma to extract xreftext if present
+		parts := strings.SplitN(content, ",", 2)
+		id := parts[0]
+		xrefText := ""
+		if len(parts) == 2 {
+			xrefText = strings.TrimSpace(parts[1])
+		}
+		return &AnchorInfo{
+			ID:            id,
+			IsBibliography: true,
+			XRefText:      xrefText,
+		}
+	}
 
 	// Check for [[id]] format
 	if strings.HasPrefix(trimmed, "[[") && strings.HasSuffix(trimmed, "]]") {
@@ -1374,6 +1404,31 @@ func (lc *LineClassifier) isStyledBlock(line string) bool {
 	}
 
 	return true
+}
+
+// parseBlockStyle parses a block style line like [style] or [style,opts="val"].
+func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
+	trimmed := strings.TrimSpace(line)
+
+	// Extract content between brackets
+	if !strings.HasPrefix(trimmed, "[") || !strings.HasSuffix(trimmed, "]") {
+		return nil
+	}
+
+	content := trimmed[1 : len(trimmed)-1]
+	if content == "" {
+		return nil
+	}
+
+	// Split on comma to separate style name from attributes
+	parts := strings.SplitN(content, ",", 2)
+	styleName := strings.TrimSpace(parts[0])
+
+	return &BlockStyleInfo{
+		Name:  styleName,
+		Kind:  StyleInline,
+		Attributes: make(map[string]string),
+	}
 }
 
 // countLeadingWhitespace counts leading whitespace characters.

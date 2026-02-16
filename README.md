@@ -261,6 +261,30 @@ Supported line comment prefixes for callouts:
 - `;;` for Clojure
 - `<!--1-->` for XML/HTML
 
+### Bibliography
+
+Bibliography sections allow you to define reference entries that can be cited throughout your document:
+
+```
+[bibliography]
+== Bibliography
+
+* [[[pp]]] Andy Hunt & Dave Thomas. **The Pragmatic Programmer**.
+* [[[gof,gang]]] Erich Gamma et al. __Design Patterns__.
+```
+
+Citations in text use cross-reference syntax:
+
+```
+As discussed in <<pp>>, the Pragmatic Programmer approach...
+See <<gof>> for design patterns.
+```
+
+Syntax:
+- `* [[[label]]]` - Bibliography entry with label
+- `* [[[label,xreftext]]]` - Entry with custom reference text
+- `<<label>>` - Citation that renders as `[label]` or `[xreftext]`
+
 ## CLI Options
 
 ```
@@ -371,13 +395,13 @@ go test ./internal/inline/... -v
 | Attribute Processor | ✅ Complete | Document attribute handling |
 | Include Processor | ✅ Complete | Include directive with tag filtering |
 | Conditional Processing | ✅ Complete | ifdef, ifndef, ifeval |
+| Bibliography | ✅ Complete | Citation processing with [[[label]]] syntax |
 | CLI | ✅ Complete | Full Asciidoctor-compatible options |
 
 ### Missing/Incomplete Features (Post-MVP)
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
-| **Bibliography** | Citation processing for academic use | Low |
 | **Extensions System** | Custom block/inline macros, tree processors | Medium |
 | **Index Terms** | `(((term)))` indexing | Low |
 | **LSP Support** | Language Server Protocol for editor integration | Medium |

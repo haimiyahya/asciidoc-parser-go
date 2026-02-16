@@ -21,6 +21,9 @@ type HTML5Converter struct {
 
 	// suppressHeaderFooter omits the HTML5 document shell (DOCTYPE, html, body tags).
 	suppressHeaderFooter bool
+
+	// document is the document being converted (for bibliography lookup)
+	document *ast.NodeDocument
 }
 
 // NewHTML5Converter creates a new HTML5 converter.
@@ -103,6 +106,9 @@ func (c *HTML5Converter) writeCloseTag(tag string, w io.Writer) {
 
 // Convert converts document to HTML5.
 func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
+	// Store document reference for bibliography lookup
+	c.document = doc
+
 	if !c.suppressHeaderFooter {
 		// Start HTML5 document
 		fmt.Fprint(w, "<!DOCTYPE html>")
@@ -168,6 +174,8 @@ func (c *HTML5Converter) convertNode(node ast.Node, w io.Writer) {
 		c.convertPassThrough(n, w)
 	case *ast.VerseNode:
 		c.convertVerse(n, w)
+	case *ast.BibliographyNode:
+		c.convertBibliography(n, w)
 	default:
 		// Unknown node type - skip
 	}
@@ -305,7 +313,19 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
 		}
 	case inline.NodeCrossRef:
-		// Cross-reference: <<section-id>> or <<section-id,text>> becomes <a href="#section-id">
+		// Check if this is a bibliography citation (references a bibliography entry)
+		if c.document != nil && c.document.BibliographyEntries != nil {
+			if bibEntry, ok := c.document.BibliographyEntries[node.Ref]; ok {
+				// This is a bibliography citation - render as [label] or [xreftext]
+				if bibEntry.XRefText != "" {
+					fmt.Fprintf(w, "[%s]", c.escape(bibEntry.XRefText))
+				} else {
+					fmt.Fprintf(w, "[%s]", c.escape(node.Ref))
+				}
+				break
+			}
+		}
+		// Regular cross-reference: <<section-id>> or <<section-id,text>> becomes <a href="#section-id">
 		class := c.getClassAttr(node.Roles)
 		if class != "" {
 			fmt.Fprintf(w, `<a href="#%s" class="%s">`, c.escape(node.Ref), class)
@@ -464,6 +484,95 @@ func (c *HTML5Converter) headingTag(level int) string {
 		return fmt.Sprintf("h%d", level+1)
 	}
 	return "h6" // Default to h6 for levels >= 6
+}
+
+// convertBibliography converts a bibliography section to HTML.
+func (c *HTML5Converter) convertBibliography(bib *ast.BibliographyNode, w io.Writer) {
+	// Write bibliography section heading
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	if bib.ID != "" {
+		fmt.Fprintf(w, `<h2 id="%s">`, c.escape(bib.ID))
+	} else {
+		fmt.Fprint(w, "<h2>")
+	}
+	fmt.Fprint(w, c.escape(bib.Title))
+	fmt.Fprint(w, "</h2>")
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	// Write bibliography entries in a div
+	c.writeOpenTag("div", w)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	for _, entry := range bib.Entries {
+		c.convertBibliographyEntry(entry, w)
+	}
+
+	c.indent = strings.TrimSuffix(c.indent, "  ")
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	c.writeCloseTag("div", w)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+}
+
+// convertBibliographyEntry converts a single bibliography entry to HTML.
+func (c *HTML5Converter) convertBibliographyEntry(entry *ast.BibliographyEntryNode, w io.Writer) {
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+
+	// Each entry is a <div> with an id
+	if entry.Label != "" {
+		fmt.Fprintf(w, `<div id="%s">`, c.escape(entry.Label))
+	} else {
+		fmt.Fprint(w, "<div>")
+	}
+
+	// Write the citation reference [label] at the start
+	fmt.Fprintf(w, "[%s]", c.escape(entry.Label))
+
+	// Write the entry text
+	if len(entry.InlineNodes) == 0 {
+		// Simple text entry
+		fmt.Fprint(w, c.escape(entry.Text))
+	} else {
+		// Entry with inline markup
+		lastEnd := 0
+		for _, node := range entry.InlineNodes {
+			if inlineNode, ok := node.(*inline.Node); ok {
+				startPos := inlineNode.StartPos
+				// Write any text before this inline node
+				if startPos > lastEnd {
+					text := entry.Text[lastEnd:startPos]
+					fmt.Fprint(w, c.escape(text))
+				}
+				lastEnd = inlineNode.Position
+
+				// Render the inline node
+				c.convertInlineNode(inlineNode, w)
+			}
+		}
+
+		// Write any remaining text after last inline node
+		if lastEnd < len(entry.Text) {
+			text := entry.Text[lastEnd:]
+			fmt.Fprint(w, c.escape(text))
+		}
+	}
+
+	fmt.Fprint(w, "</div>")
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
 }
 
 // convertList converts a list to HTML.

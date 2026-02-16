@@ -36,6 +36,13 @@ type Parser struct {
 	// Block anchor tracking - [[id]] before a section applies to that section
 	pendingAnchorID string
 
+	// Block style tracking - [style] before a section applies to that section
+	pendingBlockStyle string
+
+	// Bibliography tracking
+	currentBibliography *ast.BibliographyNode
+	pendingBiblioAnchor *reader.AnchorInfo
+
 	// Include processor handles include::[] directives
 	includeProcessor *processor.IncludeProcessor
 
@@ -203,6 +210,9 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 						// Handle section nesting
 						p.pushSection(doc, sec)
 					}
+				} else if bib, ok := section.(*ast.BibliographyNode); ok {
+					// Add bibliography node to document
+					p.addBlockToCurrentSection(doc, bib)
 				}
 			}
 			p.reader.Advance()
@@ -291,6 +301,14 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			continue
 		}
 
+		// Handle block styles ([style]) that apply to the next block
+		if classification.Type == reader.BlockStyle && classification.Style != nil {
+			// Store the style to apply to the next section
+			p.pendingBlockStyle = classification.Style.Name
+			p.reader.Advance()
+			continue
+		}
+
 		// Handle list items
 		if classification.Type.IsListItem() {
 			// Flush any pending paragraph
@@ -306,7 +324,15 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			if p.currentList == nil {
 				// No current list - need to check if this item starts a new list
 				if classification.List != nil {
-					p.startNewList(classification, lineno, doc)
+					// Check if this is a bibliography entry (starts with [[[)
+					if strings.HasPrefix(classification.List.Text, "[[[") {
+						// This is a bibliography entry - start list and add immediately
+						p.startNewList(classification, lineno, doc)
+						p.addListItemToList(classification, lineno)
+					} else {
+						// Regular list item - start list but don't add yet
+						p.startNewList(classification, lineno, doc)
+					}
 				}
 			} else {
 				// We have a current list - check if this item belongs to it
@@ -366,10 +392,16 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			continue
 		}
 
-		// Handle block anchors ([#id] or [[id]])
+		// Handle block anchors ([#id] or [[id]] or [[[id]]] bibliography)
 		if classification.Type == reader.BlockAnchor && classification.Anchor != nil {
-			// Store the anchor ID to apply to the next section
-			p.pendingAnchorID = classification.Anchor.ID
+			// Check if this is a bibliography anchor ([[[id]]])
+			if classification.Anchor.IsBibliography {
+				// Store as pending bibliography anchor for the next list item
+				p.pendingBiblioAnchor = classification.Anchor
+			} else {
+				// Store the anchor ID to apply to the next section
+				p.pendingAnchorID = classification.Anchor.ID
+			}
 			p.reader.Advance()
 			continue
 		}
@@ -564,6 +596,28 @@ func (p *Parser) createSection(info *reader.SectionInfo, lineno int) ast.Node {
 		return nil
 	}
 
+	// Create a copy of attributes to avoid modifying the original
+	attrs := make(map[string]string)
+	for k, v := range info.Attributes {
+		attrs[k] = v
+	}
+
+	// Check if there's a pending block style from a previous [style] line
+	// If no style attribute is set, use the pending block style
+	if _, hasStyle := attrs["style"]; !hasStyle && p.pendingBlockStyle != "" {
+		attrs["style"] = p.pendingBlockStyle
+		p.pendingBlockStyle = "" // Consume the pending style
+	} else {
+		// Clear pending style even if not used (section has its own style)
+		p.pendingBlockStyle = ""
+	}
+
+	// Check if this is a bibliography section (has style="bibliography" attribute)
+	isBibliography := false
+	if style, ok := attrs["style"]; ok && style == "bibliography" {
+		isBibliography = true
+	}
+
 	// Use explicit ID if provided, otherwise use pending anchor ID, then auto-generate from title
 	sectionID := info.ID
 	if sectionID == "" {
@@ -585,16 +639,28 @@ func (p *Parser) createSection(info *reader.SectionInfo, lineno int) ast.Node {
 			Level:      0,
 			Title:       info.Title,
 			ID:          sectionID,
-			Attributes:  info.Attributes,
+			Attributes:  attrs,
 			Pos:         ast.Position{Line: lineno},
 		}
+	}
+
+	// If this is a bibliography section, create a BibliographyNode instead
+	if isBibliography {
+		p.currentBibliography = &ast.BibliographyNode{
+			Title:      info.Title,
+			ID:         sectionID,
+			Entries:    make([]*ast.BibliographyEntryNode, 0),
+			Attributes: attrs,
+			Pos:        ast.Position{Line: lineno},
+		}
+		return p.currentBibliography
 	}
 
 	return &ast.NodeSection{
 		Level:      info.Level,
 		Title:       info.Title,
 		ID:          sectionID,
-		Attributes:  info.Attributes,
+		Attributes:  attrs,
 		Pos:         ast.Position{Line: lineno},
 	}
 }
@@ -634,6 +700,72 @@ func (p *Parser) createListItem(info *reader.ListInfo, lineno int) ast.Node {
 		Definition:    info.Text, // For labeled lists, Text contains the definition
 		InlineNodes:   nodes,
 		Pos:          ast.Position{Line: lineno},
+	}
+}
+
+// createBibliographyEntry creates a bibliography entry node.
+func (p *Parser) createBibliographyEntry(info *reader.ListInfo, lineno int) *ast.BibliographyEntryNode {
+	if info == nil {
+		return nil
+	}
+
+	// Parse bibliography anchor from the text
+	// Format: [[[label]]] or [[[label,xreftext]]]
+	text := info.Text
+	var label, xrefText, entryText string
+
+	// Debug output
+	// fmt.Printf("[DEBUG] createBibliographyEntry: text=%q\n", text)
+
+	// Check if text starts with [[[ and ends with ]]]
+	if strings.HasPrefix(text, "[[[") && strings.Contains(text, "]]]") {
+		// Find the closing ]]]
+		endIdx := strings.Index(text, "]]]")
+		if endIdx != -1 {
+			// Extract content between [[[ and ]]]
+			anchorContent := text[3:endIdx]
+			restOfText := strings.TrimSpace(text[endIdx+3:])
+
+			// Split on comma to get label and optional xreftext
+			parts := strings.SplitN(anchorContent, ",", 2)
+			label = parts[0]
+			if len(parts) == 2 {
+				xrefText = strings.TrimSpace(parts[1])
+			}
+			entryText = restOfText
+		} else {
+			// Invalid format, treat as regular text
+			entryText = text
+		}
+	} else {
+		// Not a bibliography entry format, but we're in a bibliography section
+		// Treat the entire text as the entry with no label
+		entryText = text
+	}
+
+	// If no label was found, this isn't a valid bibliography entry
+	if label == "" {
+		return nil
+	}
+
+	// Parse inline markup within the entry text
+	inlineParser := inline.NewParser(entryText)
+	inlineNodes := inlineParser.Parse()
+
+	// Convert inline.Node slice to []interface{} for storage
+	nodes := make([]interface{}, 0, len(inlineNodes))
+	for _, node := range inlineNodes {
+		if node.Type != inline.NodeText {
+			nodes = append(nodes, node)
+		}
+	}
+
+	return &ast.BibliographyEntryNode{
+		Label:        label,
+		XRefText:     xrefText,
+		Text:         entryText,
+		InlineNodes:  nodes,
+		Pos:         ast.Position{Line: lineno},
 	}
 }
 
@@ -845,6 +977,43 @@ func (p *Parser) addListItemToList(classification *reader.Classification, lineno
 	info := classification.List
 	if info == nil || p.currentList == nil {
 		return
+	}
+
+	// Try to create a bibliography entry from the list item text
+	// Bibliography entries are identified by [[[label]]] or [[[label,xreftext]]] syntax
+	biblioEntry := p.createBibliographyEntry(info, lineno)
+	if biblioEntry != nil {
+		// This is a bibliography entry - ensure we have a bibliography node
+		if p.currentBibliography == nil {
+			// Create an implicit bibliography section
+			p.currentBibliography = &ast.BibliographyNode{
+				Title:      "Bibliography",
+				ID:         "bibliography",
+				Entries:    make([]*ast.BibliographyEntryNode, 0),
+				Attributes: make(map[string]string),
+				Pos:        ast.Position{Line: lineno},
+			}
+			// Add to document blocks if not already present
+			p.addBlockToCurrentSection(p.currentDocument, p.currentBibliography)
+		}
+
+		p.currentBibliography.Entries = append(p.currentBibliography.Entries, biblioEntry)
+
+		// Add entry to document's bibliography map for citation lookup
+		if p.currentDocument != nil && p.currentDocument.BibliographyEntries == nil {
+			p.currentDocument.BibliographyEntries = make(map[string]*ast.BibliographyEntryNode)
+		}
+		if p.currentDocument != nil {
+			p.currentDocument.BibliographyEntries[biblioEntry.Label] = biblioEntry
+		}
+
+		// Close the current list since this item belongs to the bibliography, not the list
+		// This prevents the empty/partial list from being added to the document
+		p.currentList = nil
+		p.currentListBlockType = 0
+		p.currentListLevel = 0
+
+		return // Don't add as a regular list item
 	}
 
 	listItem := p.createListItem(info, lineno)

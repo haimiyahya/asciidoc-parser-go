@@ -73,6 +73,10 @@ const (
 	TypeCallout
 	// TypeCalloutList is a list of callout descriptions.
 	TypeCalloutList
+	// TypeBibliography is a bibliography section node type.
+	TypeBibliography
+	// TypeBibliographyEntry is a single bibliography entry node type.
+	TypeBibliographyEntry
 )
 
 // Position represents a location in the source.
@@ -91,6 +95,8 @@ type NodeDocument struct {
 	Blocks []Node
 	// Attributes are document-level attributes.
 	Attributes map[string]string
+	// BibliographyEntries maps citation labels to their entries for citations lookup.
+	BibliographyEntries map[string]*BibliographyEntryNode
 	// Pos is the location in the source.
 	Pos Position
 }
@@ -280,6 +286,34 @@ type CalloutListNode struct {
 	Pos Position
 }
 
+// BibliographyNode represents a bibliography section.
+type BibliographyNode struct {
+	// Title is the bibliography section title.
+	Title string
+	// ID is the section ID (for anchors).
+	ID string
+	// Entries are the bibliography entries.
+	Entries []*BibliographyEntryNode
+	// Attributes are section-level attributes.
+	Attributes map[string]string
+	// Pos is the location in the source.
+	Pos Position
+}
+
+// BibliographyEntryNode represents a single bibliography entry with triple-bracket anchor.
+type BibliographyEntryNode struct {
+	// Label is the citation identifier (e.g., "pp" for [[[pp]]]).
+	Label string
+	// XRefText is the optional custom reference text (e.g., "gang" for [[[gof,gang]]]).
+	XRefText string
+	// Text is the entry text content.
+	Text string
+	// InlineNodes contains inline markup nodes found within the entry text.
+	InlineNodes []interface{}
+	// Pos is the location in the source.
+	Pos Position
+}
+
 // Node interface methods for each type.
 
 func (n *NodeDocument) Type() NodeType   { return n.Kind }
@@ -326,3 +360,9 @@ func (n *CalloutNode) Position() Position { return n.Pos }
 
 func (n *CalloutListNode) Type() NodeType   { return TypeCalloutList }
 func (n *CalloutListNode) Position() Position { return n.Pos }
+
+func (n *BibliographyNode) Type() NodeType   { return TypeBibliography }
+func (n *BibliographyNode) Position() Position { return n.Pos }
+
+func (n *BibliographyEntryNode) Type() NodeType   { return TypeBibliographyEntry }
+func (n *BibliographyEntryNode) Position() Position { return n.Pos }

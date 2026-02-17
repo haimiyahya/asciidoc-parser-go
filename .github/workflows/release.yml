@@ -132,14 +132,10 @@ jobs:
       - name: Prepare release assets
         run: |
           cd artifacts
-          for dir in */; do
-            cd "$dir"
-            for file in *; do
-              mv "$file" "../$file"
-            done
-            cd ..
-            rmdir "$dir"
-          done
+          # Find all files (recursively) and move them to current directory
+          find . -type f -exec mv {} . \;
+          # Remove empty subdirectories
+          find . -type d -empty -delete
           ls -la
 
       - name: Generate checksums

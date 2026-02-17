@@ -1,0 +1,17 @@
+.Configuration Example
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.Configuration File
+[source,toml]
+----
+[server]
+host = "localhost"
+port = 8080
+ssl = true
+
+[database]
+driver = "postgres"
+host = "localhost"
+port = 5432
+name = "myapp"
+----

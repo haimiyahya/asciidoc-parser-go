@@ -246,7 +246,7 @@ func (c *PDFConverter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 	html := htmlBuf.String()
 
 	// Wrap HTML with PDF-specific styling
-	html = c.wrapWithPDFStyles(html)
+	html = c.wrapWithPDFStyles(html, doc)
 
 	// Convert HTML to PDF using chromedp
 	pdfData, err := c.htmlToPDF(html)
@@ -407,7 +407,7 @@ func htmlEscape(s string) string {
 }
 
 // wrapWithPDFStyles wraps HTML with appropriate styles for PDF output.
-func (c *PDFConverter) wrapWithPDFStyles(html string) string {
+func (c *PDFConverter) wrapWithPDFStyles(html string, doc *ast.NodeDocument) string {
 	// Extract body content if DOCTYPE is present
 	bodyContent := html
 	if strings.HasPrefix(html, "<!DOCTYPE html>") || strings.HasPrefix(html, "<html") {
@@ -431,7 +431,7 @@ func (c *PDFConverter) wrapWithPDFStyles(html string) string {
 
 	// Add TOC
 	if c.generateTOC {
-		contentBuilder.WriteString(c.generateTOCHTML(nil))
+		contentBuilder.WriteString(c.generateTOCHTML(doc))
 		contentBuilder.WriteString(`<div class="page-break"></div>`)
 	}
 

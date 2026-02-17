@@ -941,10 +941,25 @@ func (lc *LineClassifier) checkStyledBlock(line string) *StyleBlockInfo {
 	// Extract the content between [ and ]
 	content := trimmed[openBracket+1 : len(trimmed)-1]
 
+	// Parse attributes from content (e.g., "source,go" -> style="source", language="go")
+	attributes := make(map[string]string)
+
+	// Check for comma-separated values (e.g., source,go or listing,python)
+	if strings.Contains(content, ",") {
+		parts := strings.SplitN(content, ",", 2)
+		if len(parts) == 2 {
+			// For source blocks, the second part is the language
+			if style == "source" || style == "listing" {
+				attributes["language"] = strings.TrimSpace(parts[1])
+				content = "" // Content is the actual block content, not this
+			}
+		}
+	}
+
 	return &StyleBlockInfo{
 		Style:      style,
 		Content:    content,
-		Attributes: make(map[string]string),
+		Attributes: attributes,
 	}
 }
 
@@ -1407,6 +1422,7 @@ func (lc *LineClassifier) isStyledBlock(line string) bool {
 }
 
 // parseBlockStyle parses a block style line like [style] or [style,opts="val"].
+// For source blocks, also extracts the language: [source,go] -> style="source", language="go"
 func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 	trimmed := strings.TrimSpace(line)
 
@@ -1424,10 +1440,26 @@ func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 	parts := strings.SplitN(content, ",", 2)
 	styleName := strings.TrimSpace(parts[0])
 
+	attrs := make(map[string]string)
+
+	// Handle [source,language] or [listing,language] syntax
+	if len(parts) == 2 {
+		secondPart := strings.TrimSpace(parts[1])
+		// Check if it's a simple language identifier (no = sign)
+		if !strings.Contains(secondPart, "=") && (styleName == "source" || styleName == "listing") {
+			// Treat as language identifier
+			attrs["language"] = secondPart
+		} else {
+			// Parse as key=value attributes
+			// For now, just store the raw content - full parsing would be more complex
+			attrs["raw"] = secondPart
+		}
+	}
+
 	return &BlockStyleInfo{
 		Name:  styleName,
 		Kind:  StyleInline,
-		Attributes: make(map[string]string),
+		Attributes: attrs,
 	}
 }
 

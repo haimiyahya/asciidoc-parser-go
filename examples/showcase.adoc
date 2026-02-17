@@ -1,0 +1,958 @@
+= AsciiDoc Parser Go - Feature Showcase
+v0.1.0
+:toc:
+:toclevels: 3
+:sectnums:
+:figure-caption: Figure
+:table-caption: Table
+:example-caption: Example
+:imagesdir: https://picsum.photos
+
+// Document attributes demonstrate attribute substitution
+{author}: <Your Name>
+{email}: <your.email@example.com>
+{revdate}: 2026-02-17
+
+abstract::
+This document showcases all features implemented in asciidoc-parser-go, a native Go implementation of an AsciiDoc parser and processor. Each section demonstrates specific AsciiDoc syntax and capabilities.
+
+== Introduction
+
+The *asciidoc-parser-go* project is a native Go implementation that targets near-full compliance with the https://asciidoc.org/[AsciiDoc Language Specification] while maintaining compatibility with https://asciidoctor.org/[Asciidoctor].
+
+// Inline formatting demonstration
+This document features:
+* **Bold text** for emphasis
+* _Italic text_ for subtle highlights
+* `Monospace text` for code references
+* ^Superscript^ for mathematical notation like E=mc^2^
+* ~Subscript~ for chemical formulas like H~2~O
+
+// Cross-reference example
+See <<section-blocks>> for delimited block examples.
+
+== Text Formatting
+
+=== Constrained Formatting
+
+Constrained formatting requires matching delimiters around the text:
+
+[cols="2*"]
+|===
+|
+* **Bold** uses `**text**`
+* _Italic_ uses `_text_`
+* `Monospace` uses `` `text` ``
+
+|
+* ^Superscript^ uses `^text^`
+* ~Subscript~ uses `~text~`
+* `+Passthrough+` uses `+text+`
+|===
+
+=== Unconstrained Formatting
+
+Single words can be formatted without balanced delimiters:
+
+*The* quick *brown* *fox* `jumps` `over` `the` `lazy` `dog`.
+
+=== Links and Images
+
+*External link*: https://github.com/haimiyahya/asciidoc-parser-go
+
+*Link with text*: link:GitHub[https://github.com/haimiyahya/asciidoc-parser-go]
+
+*Email*: mailto:example@example.com
+
+== Lists
+
+=== Unordered Lists
+
+Bullet points use asterisks, dashes, or hyphens:
+
+* First item
+* Second item
+** Nested item
+** Another nested item
+* Third item
+* Fourth item
+
+=== Ordered Lists
+
+. First step
+. Second step
+. Third step
+
+... Nested ordered list:
+.. Sub-step A
+.. Sub-step B
+. Back to main list
+
+=== Labeled (Description) Lists
+
+Term 1:: Definition of the first term. Can span multiple lines if needed.
+Term 2:: Definition of the second term.
+Term 3:: Definition with *inline formatting* and `code`.
+
+=== Mixed Nested Lists
+
+* Main item 1
+. Numbered sub-item
+. Another numbered item
+* Main item 2
+** Bullet sub-item
+** Nested bullet
+. Numbered under bullet
+. Another number
+
+== Admonitions
+
+NOTE: This is a note. Use notes to provide additional information or tips that are helpful but not essential.
+
+TIP: This is a tip. Tips are helpful suggestions for making tasks easier or more efficient.
+
+WARNING: This is a warning. Warnings alert the reader to potential problems or risks.
+
+CAUTION: This is a caution. Cautions indicate moderate-risk situations that could lead to minor problems.
+
+IMPORTANT: This is important information that the reader should pay special attention to.
+
+== Delimited Blocks
+
+=== Example Block
+
+====
+This is an example block.
+It preserves whitespace formatting
+and is useful for code samples or
+content that needs visual distinction.
+====
+
+=== Quote Block
+
+[quote, Albert Einstein]
+____
+Imagination is more important than knowledge. Knowledge is limited. Imagination encircles the world.
+____
+
+=== Sidebar Block
+
+****
+Sidebar blocks are useful for:
+* Callout boxes
+* Related information
+* Tangential content
+* Tips and tricks
+****
+
+=== Literal Block
+
+----
+This is a literal block.
+All whitespace is preserved.
+    Indentation is maintained.
+    *Bold* and _italic_ are NOT processed.
+----
+
+=== Styled Blocks
+
+[verse]
+____
+Roses are red,
+  Violets are blue,
+    Sugar is sweet,
+      And so are you.
+____
+
+[pass]
+++++
+This is a *passthrough* block.
+All markup is passed through as-is.
+<strong>HTML tags work here!</strong>
+++++
+
+== Tables
+
+[cols="3*"]
+.Basic Table
+|===
+|Column 1 |Column 2 |Column 3
+|Data 1   |Data 2   |Data 3
+|Data 4   |Data 5   |Data 6
+|===
+
+[cols="3*",options="header"]
+.Table with Header
+|===
+|Name |Age |Occupation
+|Alice |28 |Engineer
+|Bob   |34 |Designer
+|Carol |42 |Manager
+|===
+
+[cols="3*",options="header"]
+.Table of Operating Systems
+|===
+|OS |Market Share |Year
+|Windows |70% |1985
+|macOS   |17% |1984
+|Linux   |4%  |1991
+|===
+
+[cols="2,2,2a",options="header",frame="all",grid="all",stripes="even"]
+.Complex Table with Styles
+|===
+|Feature |Status |Notes
+|Parser |Complete |Full AsciiDoc syntax support
+|Converter |Complete |5 backends supported
+|LSP |Complete |Editor integration ready
+|===
+
+[cols="20%,50%,30%",options="header"]
+.Table with Column Widths
+|===
+|ID |Description |Count
+|001 |Basic paragraph with simple text formatting |10
+|002 |Complex nested lists with multiple levels |25
+|003 |Tables with various formatting options |15
+|===
+
+== Code Blocks with Callouts
+
+=== Go Example
+
+[source,go]
+----
+func main() {
+    name := "AsciiDoc" // <1>
+    fmt.Printf("Hello, %s!\n", name) // <2>
+}
+----
+<1> Variable declaration
+<2> Formatted output
+
+=== Bash Example
+
+[source,bash]
+----
+#!/bin/bash
+echo "Starting build..." # <1>
+go build ./... # <2>
+echo "Build complete!" # <3>
+----
+<1> Print start message
+<2> Build all packages
+<3> Print completion message
+
+== Syntax Highlighted Code Examples
+
+The parser supports syntax highlighting for multiple programming languages using Chroma.
+
+=== Go (Golang)
+
+[source,go]
+----
+package main
+
+import (
+    "fmt"
+    "net/http"
+)
+
+// Handler processes HTTP requests
+func Handler(w http.ResponseWriter, r *http.Request) {
+    name := r.URL.Query().Get("name")
+    if name == "" {
+        name = "World"
+    }
+
+    w.Header().Set("Content-Type", "text/plain")
+    fmt.Fprintf(w, "Hello, %s!\n", name)
+}
+
+func main() {
+    http.HandleFunc("/", Handler)
+    fmt.Println("Server starting on :8080")
+    http.ListenAndServe(":8080", nil)
+}
+----
+
+=== SQL
+
+[source,sql]
+----
+-- Create a users table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT true
+);
+
+-- Insert sample data
+INSERT INTO users (username, email) VALUES
+    ('john_doe', 'john@example.com'),
+    ('jane_smith', 'jane@example.com');
+
+-- Query with JOIN
+SELECT u.username, u.email, COUNT(o.id) as order_count
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id
+WHERE u.is_active = true
+GROUP BY u.id, u.username, u.email
+HAVING COUNT(o.id) > 0
+ORDER BY order_count DESC;
+----
+
+=== C\#
+
+[source,csharp]
+----
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace AsciiDocParser
+{
+    public class Document
+    {
+        public string Title { get; set; }
+        public List<Block> Blocks { get; set; } = new();
+
+        public void AddBlock(Block block)
+        {
+            Blocks.Add(block);
+        }
+
+        public override string ToString()
+        {
+            return $"Document: {Title} ({Blocks.Count} blocks)";
+        }
+    }
+
+    public abstract class Block
+    {
+        public abstract void Render();
+    }
+
+    public class ParagraphBlock : Block
+    {
+        public string Content { get; set; }
+
+        public override void Render()
+        {
+            Console.WriteLine($"<p>{Content}</p>");
+        }
+    }
+}
+----
+
+=== JavaScript/TypeScript
+
+[source,javascript]
+----
+// Async function to fetch user data
+async function fetchUserData(userId) {
+    try {
+        const response = await fetch(`/api/users/${userId}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const userData = await response.json();
+
+        // Transform the data
+        const user = {
+            id: userData.id,
+            fullName: `${userData.firstName} ${userData.lastName}`,
+            email: userData.email.toLowerCase(),
+            isAdmin: userData.roles?.includes('admin') || false
+        };
+
+        return user;
+    } catch (error) {
+        console.error('Failed to fetch user:', error);
+        throw error;
+    }
+}
+
+// Usage with arrow functions and promises
+const getUsers = async () => {
+    const users = await Promise.all([
+        fetchUserData(1),
+        fetchUserData(2),
+        fetchUserData(3)
+    ]);
+    return users.filter(u => u.isAdmin);
+};
+----
+
+=== XML
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appSettings>
+        <add key="ApplicationName" value="AsciiDoc Parser" />
+        <add key="Version" value="1.0.0" />
+        <add key="DebugMode" value="false" />
+    </appSettings>
+
+    <connectionStrings>
+        <add name="DefaultConnection"
+             providerName="System.Data.SqlClient"
+             connectionString="Server=localhost;Database=AsciiDocDB;Integrated Security=True;" />
+    </connectionStrings>
+
+    <system.web>
+        <compilation debug="false" targetFramework="4.8" />
+        <httpRuntime targetFramework="4.8" />
+        <customErrors mode="RemoteOnly" />
+    </system.web>
+
+    <location path="admin">
+        <system.web>
+            <authorization>
+                <allow roles="Administrators" />
+                <deny users="*" />
+            </authorization>
+        </system.web>
+    </location>
+</configuration>
+----
+
+=== JSON
+
+[source,json]
+----
+{
+  "name": "asciidoc-parser-go",
+  "version": "0.1.0",
+  "description": "Native Go AsciiDoc parser and processor",
+  "author": {
+    "name": "Project Team",
+    "email": "team@example.com"
+  },
+  "features": [
+    "Line-oriented reader",
+    "Block classifier",
+    "Inline parser",
+    "AST builder",
+    "HTML5 converter",
+    "PDF converter",
+    "LSP server"
+  ],
+  "supportedFormats": {
+    "input": ["asciidoc", "adoc"],
+    "output": ["html5", "pdf", "docbook", "manpage", "epub"]
+  },
+  "dependencies": {
+    "go": ">=1.23",
+    "chroma": "^0.10.0"
+  }
+}
+----
+
+=== YAML
+
+[source,yaml]
+----
+# Application Configuration
+app:
+  name: asciidoc-parser-go
+  version: 0.1.0
+  environment: development
+
+server:
+  host: localhost
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 120s
+
+logging:
+  level: debug
+  format: json
+  output: stdout
+
+  # Log levels by package
+  packages:
+    parser: info
+    converter: warn
+    lsp: error
+
+features:
+  syntax_highlighting: true
+  pdf_generation: true
+  lsp_support: true
+----
+
+=== Python
+
+[source,python]
+----
+from dataclasses import dataclass
+from typing import List, Optional
+from datetime import datetime
+
+@dataclass
+class User:
+    """Represents a user in the system."""
+    id: int
+    username: str
+    email: str
+    created_at: datetime
+    is_active: bool = True
+
+class UserService:
+    """Service for managing users."""
+
+    def __init__(self, db_connection):
+        self.db = db_connection
+        self._cache = {}
+
+    async def get_user(self, user_id: int) -> Optional[User]:
+        """Retrieve a user by ID with caching."""
+        # Check cache first
+        if user_id in self._cache:
+            return self._cache[user_id]
+
+        # Query database
+        query = "SELECT * FROM users WHERE id = %s"
+        result = await self.db.fetch_one(query, user_id)
+
+        if result:
+            user = User(**result)
+            self._cache[user_id] = user
+            return user
+
+        return None
+
+    async def create_user(self, username: str, email: str) -> User:
+        """Create a new user."""
+        query = """
+            INSERT INTO users (username, email, created_at)
+            VALUES (%s, %s, %s)
+            RETURNING *
+        """
+        result = await self.db.fetch_one(
+            query,
+            username,
+            email,
+            datetime.now()
+        )
+        return User(**result)
+----
+
+=== Rust
+
+[source,rust]
+----
+use std::collections::HashMap;
+
+#[derive(Debug, Clone)]
+struct Document {
+    title: String,
+    blocks: Vec<Block>,
+    metadata: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone)]
+enum Block {
+    Paragraph { content: String },
+    List { items: Vec<String> },
+    Table { rows: Vec<Vec<String>> },
+}
+
+impl Document {
+    fn new(title: impl Into<String>) -> Self {
+        Document {
+            title: title.into(),
+            blocks: Vec::new(),
+            metadata: HashMap::new(),
+        }
+    }
+
+    fn add_block(&mut self, block: Block) {
+        self.blocks.push(block);
+    }
+
+    fn block_count(&self) -> usize {
+        self.blocks.len()
+    }
+
+    fn render(&self) -> String {
+        let mut output = format!("# {}\n\n", self.title);
+
+        for block in &self.blocks {
+            match block {
+                Block::Paragraph { content } => {
+                    output.push_str(&format!("{}\n\n", content));
+                }
+                Block::List { items } => {
+                    for item in items {
+                        output.push_str(&format!("* {}\n", item));
+                    }
+                    output.push('\n');
+                }
+                Block::Table { rows } => {
+                    // Simplified table rendering
+                    for row in rows {
+                        output.push_str(&format!("| {}\n", row.join(" | ")));
+                    }
+                    output.push('\n');
+                }
+            }
+        }
+
+        output
+    }
+}
+
+fn main() {
+    let mut doc = Document::new("My Document");
+
+    doc.add_block(Block::Paragraph {
+        content: "This is a sample paragraph.".to_string(),
+    });
+
+    doc.add_block(Block::List {
+        items: vec![
+            "First item".to_string(),
+            "Second item".to_string(),
+            "Third item".to_string(),
+        ],
+    });
+
+    println!("{}", doc.render());
+}
+----
+
+=== CSS
+
+[source,css]
+----
+/* Base styles */
+:root {
+    --primary-color: #2196F3;
+    --secondary-color: #FF9800;
+    --text-color: #333;
+    --bg-color: #fff;
+    --border-radius: 4px;
+}
+
+/* Reset and base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+table th,
+table td {
+    border: 1px solid #ddd;
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+
+table thead th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+}
+
+table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Utility classes */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.5em 1em;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn--primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn--secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+----
+
+=== HTML
+
+[source,html]
+----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AsciiDoc Parser Go</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <img src="logo.svg" alt="Logo">
+                <span>AsciiDoc Go</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="#docs">Documentation</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section id="hero" class="hero">
+            <h1>Native Go AsciiDoc Parser</h1>
+            <p>Fast, lightweight, and compatible with Asciidoctor</p>
+            <div class="cta-buttons">
+                <button class="btn btn--primary">Get Started</button>
+                <button class="btn btn--secondary">View Demo</button>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <h3>Fast Parsing</h3>
+                    <p>Written in pure Go for maximum performance</p>
+                </article>
+                <article class="feature-card">
+                    <h3>Multiple Backends</h3>
+                    <p>HTML5, PDF, DocBook, and more</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 AsciiDoc Parser Go. MIT License.</p>
+    </footer>
+</body>
+</html>
+----
+
+== Included Content
+
+The following content is included from separate files:
+
+=== Include: Code Snippet
+
+include::includes/code.adoc[]
+
+=== Include: Configuration
+
+include::includes/config.adoc[]
+
+=== Include: Team Section
+
+ifdef::team-info[]
+include::includes/team.adoc[]
+endif::[]
+
+== UI Macros (Extensions)
+
+=== Keyboard Shortcuts
+
+Common keyboard shortcuts:
+
+kbd:[Ctrl+C] - Copy
+kbd:[Ctrl+V] - Paste
+kbd:[Ctrl+Z] - Undo
+kbd:[Ctrl+Shift+Z] - Redo
+kbd:[F5] - Refresh
+
+=== Buttons
+
+Dialog buttons:
+
+btn:[OK] - Confirm action
+btn:[Cancel] - Cancel action
+btn:[Apply] - Apply changes
+btn:[Delete] - Delete item (warning)
+
+=== Menu Paths
+
+Navigation examples:
+
+menu:[File > New > Document]
+menu:[Edit > Find > Replace]
+menu:[View > Zoom > Zoom In]
+
+== Cross-References
+
+=== Internal References
+
+See <<section-blocks,Delimited Blocks>> for block examples.
+
+See <<section-ui-macros>> for UI macro examples.
+
+See <<section-code-callouts>> for callout examples.
+
+=== External References
+
+Documentation link: https://docs.asciidoctor.org/asciidoc/latest/
+
+== Bibliography
+
+[bibliography]
+== References
+
+* [[[asciidoc-lang,1]]] Eclipse Foundation. _AsciiDoc Language Specification_. https://gitlab.eclipse.org/eclipse/asciidoc-lang/asciidoc-lang
+* [[[asciidoctor,2]]] Asciidoctor Project. _Asciidoctor Documentation_. https://docs.asciidoctor.org/asciidoc/latest/
+* [[[go,3]]] Go Team. _The Go Programming Language_. https://go.dev/
+
+As shown in <<asciidoc-lang>>, the AsciiDoc Language Specification is maintained by the Eclipse Foundation. The <<asciidoctor>> project provides the reference implementation.
+
+== Index Terms
+
+((AsciiDoc))
+((Parser, Go implementation))
+((Language, Server, Protocol))
+
+(((markup, lightweight)))
+(((documentation, technical)))
+(((cross-platform, compatibility)))
+
+This section demonstrates index terms that would appear in a printed document's index. The ((term)) syntax creates visible index terms, while (((hidden))) terms only appear in the index.
+
+== Conditional Processing
+
+ifdef::basebackend-html[]
+[NOTE]
+====
+This note only appears when generating HTML output.
+The basebackend attribute is set to 'html'.
+====
+endif::[]
+
+ifndef::basebackend-pdf[]
+[NOTE]
+====
+This note appears when NOT generating PDF.
+====
+endif::[]
+
+ifeval::{"{asciidoctor-version}" >= "2.0"}
+This content requires Asciidoctor 2.0 or higher.
+endif::[]
+
+== Roles and CSS Classes
+
+Built-in roles allow custom styling:
+
+[.role-red]
+This paragraph has a custom role applied.
+
+[.role-blue]
+Blue text can highlight important information.
+
+[.role-highlight]
+This text has a highlight background.
+
+[[section-code-callouts]]
+== Code and Callouts
+
+:id-anchor:
+Paragraphs can have IDs for direct linking.
+
+== Attributes and Substitution
+
+=== Attribute References
+
+Document attributes: `{toc}`, `{sectnums}`, `{revdate}` show predefined attributes.
+
+=== Attribute Substitution
+
+:my-var: Custom Value
+
+The value of my-var is: {my-var}.
+
+=== Inline Attributes
+
+You can set attributes inline: {set:product-name}My Product{set}.
+
+Now {product-name} is available throughout the document.
+
+== Extensions and Macros
+
+=== Footnotes
+
+This is a paragraph with a footnote.reference:footnote[This is the footnote text.]
+
+You can reference the same footnote again footnote:footnote[].
+
+=== Image with Attributes
+
+image:https://picsum.photos/400/200[Alt Text, width=400, height=200, title=Sample Image]
+
+=== Video (HTML5)
+
+video::sample.mp4[width=640, height=480, poster=poster.jpg]
+
+=== Audio (HTML5)
+
+audio::podcast.mp3[]
+
+== Mathematical Notation
+
+Superscript examples:
+* E = mc^2^ (Einstein's mass-energy equivalence)
+* x^2^ + y^2^ = r^2^ (Pythagorean theorem)
+* H~2~O (water molecule)
+
+Chemical formulas:
+* CO~2~ (carbon dioxide)
+* NaCl (sodium chloride)
+
+== Colophon
+
+[cols="2*"]
+|===
+|Document Title |AsciiDoc Parser Go - Feature Showcase
+|Version |{revnumber}
+|Date |{revdate}
+|Generator |asciidoc-parser-go v0.1.0
+|Backends |HTML5, PDF, DocBook, Man Page, EPUB
+|Compatibility |100% Asciidoctor compatible
+|===
+
+[quote, unknown]
+____
+The best documentation is a working example.
+____

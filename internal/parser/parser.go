@@ -40,6 +40,7 @@ type Parser struct {
 
 	// Block style tracking - [style] before a section applies to that section
 	pendingBlockStyle string
+	pendingBlockStyleAttrs map[string]string
 
 	// Bibliography tracking
 	currentBibliography *ast.BibliographyNode
@@ -349,6 +350,7 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 		if classification.Type == reader.BlockStyle && classification.Style != nil {
 			// Store the style to apply to the next section
 			p.pendingBlockStyle = classification.Style.Name
+			p.pendingBlockStyleAttrs = classification.Style.Attributes
 			p.reader.Advance()
 			continue
 		}
@@ -1052,11 +1054,34 @@ func (p *Parser) createStyledBlock(styleBlock *reader.StyleBlockInfo, lineno int
 func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string, lineno int) ast.Node {
 	content := strings.Join(lines, "\n")
 
+	// Check if this is a source/listing block with pending style
+	isSourceBlock := (p.pendingBlockStyle == "source" || p.pendingBlockStyle == "listing")
+	if isSourceBlock && (blockType == reader.BlockLiteral || blockType == reader.BlockVerbatim) {
+		// Create a StyledBlockNode for syntax highlighting
+		attrs := make(map[string]string)
+		if p.pendingBlockStyleAttrs != nil {
+			for k, v := range p.pendingBlockStyleAttrs {
+				attrs[k] = v
+			}
+		}
+		p.pendingBlockStyle = ""       // Consume the pending style
+		p.pendingBlockStyleAttrs = nil // Clear attributes
+
+		return &ast.StyledBlockNode{
+			Style:      "source",
+			Content:    content,
+			Attributes: attrs,
+			Pos:        ast.Position{Line: lineno},
+		}
+	}
+
 	switch blockType {
 	case reader.BlockLiteral:
 		// Parse callouts in literal blocks
 		calloutParser := NewCalloutParser()
 		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
+		p.pendingBlockStyle = ""       // Consume the pending style
+		p.pendingBlockStyleAttrs = nil // Clear attributes
 		return &ast.NodeLiteral{
 			Lines:     cleanedLines,
 			Callouts:  callouts,
@@ -1066,6 +1091,8 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		// Parse callouts in verbatim blocks
 		calloutParser := NewCalloutParser()
 		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
+		p.pendingBlockStyle = ""       // Consume the pending style
+		p.pendingBlockStyleAttrs = nil // Clear attributes
 		return &ast.NodeLiteral{
 			Lines:     cleanedLines,
 			Callouts:  callouts,

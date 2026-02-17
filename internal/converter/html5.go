@@ -3,11 +3,14 @@ package converter
 
 import (
 	"fmt"
-	"html"
+	htmlstd "html"
 	"io"
 	"math"
 	"strings"
 
+	"github.com/alecthomas/chroma/v2/formatters/html"
+	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/extension"
 	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
@@ -57,7 +60,341 @@ func (c *HTML5Converter) WithExtensionRegistry(registry *extension.Registry) *HT
 
 // escape escapes HTML special characters.
 func (c *HTML5Converter) escape(s string) string {
-	return html.EscapeString(s)
+	return htmlstd.EscapeString(s)
+}
+
+// writeCSS writes CSS styles to the output.
+func (c *HTML5Converter) writeCSS(w io.Writer) {
+	css := `
+<style>
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	line-height: 1.6;
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 1rem;
+	color: #333;
+}
+h1, h2, h3, h4, h5, h6 {
+	margin-top: 1.5em;
+	margin-bottom: 0.5em;
+	font-weight: 600;
+}
+p {
+	margin: 0.5em 0;
+}
+ul, ol {
+	margin: 0.5em 0;
+	padding-left: 2em;
+}
+code {
+	background-color: #f4f4f4;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 0.9em;
+}
+.listingblock, .literalblock {
+	background-color: #f4f4f4;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1em 0;
+	overflow-x: auto;
+}
+.listingblock pre, .literalblock pre {
+	margin: 0;
+	padding: 0;
+}
+.tableblock {
+	margin: 1em 0;
+}
+table.tableblock {
+	border-collapse: collapse;
+	width: 100%;
+}
+table.tableblock th,
+table.tableblock td {
+	border: 1px solid #ddd;
+	padding: 0.5em 0.75em;
+	text-align: left;
+}
+table.tableblock thead th {
+	background-color: #f2f2f2;
+	font-weight: 600;
+	text-align: center;
+}
+table.tableblock.frame-all {
+	border: 1px solid #ddd;
+}
+table.tableblock.grid-all td,
+table.tableblock.grid-all th {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.grid-all td:first-child,
+table.tableblock.grid-all th:first-child {
+	border-left: none;
+}
+.admonitionblock {
+	margin: 1em 0;
+	padding: 1em;
+	border-left: 4px solid #4CAF50;
+	background-color: #f8f8f8;
+}
+.admonitionblock.note {
+	border-left-color: #2196F3;
+}
+.admonitionblock.tip {
+	border-left-color: #4CAF50;
+}
+.admonitionblock.warning {
+	border-left-color: #FF9800;
+}
+.admonitionblock.caution {
+	border-left-color: #FF5722;
+}
+.admonitionblock.important {
+	border-left-color: #9C27B0;
+}
+.admonitionblock td.icon {
+	padding-right: 1em;
+	font-weight: bold;
+}
+.quoteblock {
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 4px solid #ddd;
+	color: #555;
+}
+.quoteblock blockquote {
+	margin: 0;
+}
+.sidebarblock {
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1em 0;
+}
+.exampleblock {
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1em 0;
+}
+.sect1 {
+	margin-bottom: 2em;
+}
+.sect2 {
+	margin-top: 1.5em;
+}
+a {
+	color: #2196F3;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+strong, b {
+	font-weight: 600;
+}
+em, i {
+	font-style: italic;
+}
+/* Chroma Syntax Highlighting (GitHub theme) */
+.highlight {
+	margin: 1em 0;
+}
+.highlight pre {
+	background-color: #f6f8fa;
+	border-radius: 6px;
+	padding: 16px;
+	overflow: auto;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+.highlight code {
+	background: none;
+	padding: 0;
+	font-family: inherit;
+}
+/* Chroma token colors (GitHub theme) */
+.chroma . { color: #24292e; } /* Plain text */
+.chroma .k { color: #cf222e; } /* Keyword */
+.chroma .kd { color: #cf222e; } /* Keyword declaration */
+.chroma .kn { color: #cf222e; } /* Keyword namespace */
+.chroma .kt { color: #cf222e; } /* Keyword type */
+.chroma .n { color: #6f42c1; } /* Name */
+.chroma .na { color: #6f42c1; } /* Name attribute */
+.chroma .nb { color: #959da5; } /* Name builtin */
+.chroma .bp { color: #959da5; } /* Name pseudo builtin */
+.chroma .nc { color: #6f42c1; } /* Name class */
+.chroma .no { color: #cf222e; } /* Name constant */
+.chroma .nd { color: #6f42c1; } /* Name decorator */
+.chroma .ni { color: #0550ae; } /* Name entity */
+.chroma .ne { color: #cf222e; } /* Name exception */
+.chroma .nf { color: #8250df; } /* Name function */
+.chroma .nl { color: #959da5; } /* Name label */
+.chroma .nn { color: #6f42c1; } /* Name namespace */
+.chroma .nx { color: #24292e; } /* Name other */
+.chroma .py { color: #959da5; } /* Name property */
+.chroma .nt { color: #22863a; } /* Name tag */
+.chroma .nv { color: #e36209; } /* Name variable */
+.chroma .vc { color: #e36209; } /* Name variable class */
+.chroma .vg { color: #e36209; } /* Name variable global */
+.chroma .vi { color: #e36209; } /* Name variable instance */
+.chroma .vm { color: #e36209; } /* Name variable magic */
+.chroma .l { color: #0550ae; } /* Literal */
+.chroma .s { color: #0a3069; } /* Literal string */
+.chroma .sa { color: #0a3069; } /* Literal string affine */
+.chroma .sb { color: #0a3069; } /* Literal string backtick */
+.chroma .sc { color: #0a3069; } /* Literal string char */
+.chroma .dl { color: #0a3069; } /* Literal string delimiter */
+.chroma .sd { color: #0a3069; } /* Literal string doc */
+.chroma .s2 { color: #0a3069; } /* Literal string double */
+.chroma .se { color: #cf222e; } /* Literal string escape */
+.chroma .sh { color: #0a3069; } /* Literal string heredoc */
+.chroma .si { color: #0a3069; } /* Literal string interpol */
+.chroma .sx { color: #0a3069; } /* Literal string other */
+.chroma .sr { color: #0550ae; } /* Literal string regex */
+.chroma .s1 { color: #0a3069; } /* Literal string single */
+.chroma .ss { color: #cf222e; } /* Literal string symbol */
+.chroma .m { color: #0550ae; } /* Literal number */
+.chroma .mb { color: #0550ae; } /* Literal number bin */
+.chroma .mf { color: #0550ae; } /* Literal number float */
+.chroma .mh { color: #0550ae; } /* Literal number hex */
+.chroma .mi { color: #0550ae; } /* Literal number integer */
+.chroma .il { color: #0550ae; } /* Literal number long */
+.chroma .mo { color: #0550ae; } /* Literal number oct */
+.chroma .o { color: #cf222e; } /* Operator */
+.chroma .ow { color: #cf222e; } /* Operator word */
+.chroma .p { color: #24292e; } /* Punctuation */
+.chroma .c { color: #6e7781; font-style: italic; } /* Comment */
+.chroma .ch { color: #6e7781; font-style: italic; } /* Comment hashbang */
+.chroma .cm { color: #6e7781; font-style: italic; } /* Comment multiline */
+.chroma .cp { color: #6e7781; } /* Comment preproc */
+.chroma .cpf { color: #6e7781; } /* Comment preproc file */
+.chroma .c1 { color: #6e7781; font-style: italic; } /* Comment single */
+.chroma .cs { color: #6e7781; font-style: italic; } /* Comment special */
+.chroma .g { color: #24292e; } /* Generic */
+.chroma .gd { color: #cf222e; background-color: #ffebe9; } /* Generic deleted */
+.chroma .ge { color: #24292e; font-style: italic; } /* Generic emphasis */
+.chroma .gh { color: #0550ae; font-weight: bold; } /* Generic heading */
+.chroma .gs { color: #24292e; font-weight: bold; } /* Generic strong */
+.chroma .gu { color: #959da5; font-weight: bold; } /* Generic subheading */
+.chroma .gi { color: #22863a; background-color: #f0fff4; } /* Generic inserted */
+.chroma .go { color: #959da5; } /* Generic output */
+.chroma .gp { color: #959da5; } /* Generic prompt */
+.chroma .gr { color: #cf222e; } /* Generic error */
+.chroma .gt { color: #cf222e; } /* Generic traceback */
+.chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+</style>
+`
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+	fmt.Fprint(w, css)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+}
+
+// convertSourceBlock converts a source/listing block with syntax highlighting.
+func (c *HTML5Converter) convertSourceBlock(block *ast.StyledBlockNode, w io.Writer) {
+	// Get the language from attributes
+	language := "text" // default
+	if lang, ok := block.Attributes["language"]; ok && lang != "" {
+		language = lang
+	}
+
+	// Split content into lines
+	lines := strings.Split(block.Content, "\n")
+	if len(lines) == 0 {
+		return
+	}
+
+	// Find the lexer for the language
+	lexer := lexers.Get(language)
+	if lexer == nil {
+		lexer = lexers.Fallback
+	}
+
+	// Tokenize the code
+	content := strings.Join(lines, "\n")
+	iterator, err := lexer.Tokenise(nil, content)
+	if err != nil {
+		// Fallback to plain pre/code if tokenization fails
+		c.writeOpenTagWithClass("div", "listingblock", w)
+		fmt.Fprintf(w, `<pre><code class="language-%s">%s</code></pre>`, language, c.escape(content))
+		c.writeCloseTag("div", w)
+		return
+	}
+
+	// Use the github style for syntax highlighting (light theme)
+	style := styles.GitHub
+
+	// Format the HTML - use functional options
+	formatter := html.New(
+		html.Standalone(false),
+		html.WithClasses(true),
+	)
+
+	// Build the HTML
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `<div class="listingblock">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `<div class="content">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `<pre class="highlight"><code class="language-%s chroma" data-lang="%s">`, language, language)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	// Write the highlighted code
+	var buf strings.Builder
+	if err := formatter.Format(&buf, style, iterator); err == nil {
+		c.writeRawString(buf.String(), w)
+	} else {
+		// Fallback on error
+		c.writeRawString(c.escape(content), w)
+	}
+
+	fmt.Fprintf(w, `</code></pre>`)
+
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `</div>`)
+
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `</div>`)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
 }
 
 // writeElement writes a simple HTML element with content (inline).
@@ -129,6 +466,7 @@ func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 			fmt.Fprintln(w)
 		}
 		c.writeOpenTag("html", w)
+		c.writeCSS(w)
 		c.writeOpenTag("body", w)
 	}
 
@@ -1064,6 +1402,12 @@ func (c *HTML5Converter) convertMacro(macro *ast.MacroNode, w io.Writer) {
 // convertStyledBlock converts a styled block to HTML.
 func (c *HTML5Converter) convertStyledBlock(block *ast.StyledBlockNode, w io.Writer) {
 	class := block.Style + "block"
+
+	// Handle source and listing blocks with syntax highlighting
+	if block.Style == "source" || block.Style == "listing" {
+		c.convertSourceBlock(block, w)
+		return
+	}
 
 	if c.pretty {
 		fmt.Fprint(w, c.indent)

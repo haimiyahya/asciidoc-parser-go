@@ -1,0 +1,7 @@
+.Team Information
+~~~~~~~~~~~~~~~~~
+
+| Name | Role | GitHub |
+|------|------|--------|
+| Project Lead | Developer | @haimiyahya |
+| Contributors | Community | @all |

@@ -281,30 +281,6 @@ em, i {
 <div class="paragraph">
 <p>Constrained formatting requires matching delimiters around the text:</p>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_unconstrained_formatting">Unconstrained Formatting</h3>
-<div class="paragraph">
-<p>Single words can be formatted without balanced delimiters:</p>
-</div>
-<div class="paragraph">
-<p><strong>The</strong> quick <strong>brown</strong> <strong>fox</strong> <code>jumps</code> <code>over</code> <code>the</code> <code>lazy</code> <code>dog</code>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_links_and_images">Links and Images</h3>
-<div class="paragraph">
-<p><strong>External link</strong>: <a href="https://github.com/haimiyahya/asciidoc-parser-go" class="bare">https://github.com/haimiyahya/asciidoc-parser-go</a></p>
-</div>
-<div class="paragraph">
-<p><strong>Link with text</strong>: <a href="GitHub">https://github.com/haimiyahya/asciidoc-parser-go</a></p>
-</div>
-<div class="paragraph">
-<p><strong>Email</strong>: mailto:example@example.com</p>
-</div>
-</div>
-</div>
-</div>
     <table class="tableblock frame-all grid-all stretch">
     <colgroup>
       <col style="width: 100%;">
@@ -334,6 +310,30 @@ em, i {
       </tr>
     </tbody>
   </table>
+</div>
+<div class="sect2">
+<h3 id="_unconstrained_formatting">Unconstrained Formatting</h3>
+<div class="paragraph">
+<p>Single words can be formatted without balanced delimiters:</p>
+</div>
+<div class="paragraph">
+<p><strong>The</strong> quick <strong>brown</strong> <strong>fox</strong> <code>jumps</code> <code>over</code> <code>the</code> <code>lazy</code> <code>dog</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_links_and_images">Links and Images</h3>
+<div class="paragraph">
+<p><strong>External link</strong>: <a href="https://github.com/haimiyahya/asciidoc-parser-go" class="bare">https://github.com/haimiyahya/asciidoc-parser-go</a></p>
+</div>
+<div class="paragraph">
+<p><strong>Link with text</strong>: <a href="GitHub">https://github.com/haimiyahya/asciidoc-parser-go</a></p>
+</div>
+<div class="paragraph">
+<p><strong>Email</strong>: mailto:example@example.com</p>
+</div>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="lists">Lists</h2>
 <div class="sectionbody">
@@ -533,21 +533,6 @@ This is important information that the reader should pay special attention to.
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_example_block">Example Block</h3>
-</div>
-<div class="sect2">
-<h3 id="_quote_block">Quote Block</h3>
-</div>
-<div class="sect2">
-<h3 id="_sidebar_block">Sidebar Block</h3>
-</div>
-<div class="sect2">
-<h3 id="_literal_block">Literal Block</h3>
-</div>
-<div class="sect2">
-<h3 id="_styled_blocks">Styled Blocks</h3>
-</div>
-</div>
-</div>
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
@@ -558,6 +543,9 @@ content that needs visual distinction.</p>
 </div>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_quote_block">Quote Block</h3>
 <div class="quoteblock">
 <blockquote>
 <div class="paragraph">
@@ -565,6 +553,9 @@ content that needs visual distinction.</p>
 </div>
 </blockquote>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_sidebar_block">Sidebar Block</h3>
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
@@ -576,6 +567,9 @@ content that needs visual distinction.</p>
 </div>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_literal_block">Literal Block</h3>
 <div class="literalblock">
 <div class="content">
 <pre>This is a literal block.
@@ -584,6 +578,9 @@ All whitespace is preserved.
     *Bold* and _italic_ are NOT processed.</pre>
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_styled_blocks">Styled Blocks</h3>
 <div class="quoteblock">
 <blockquote>
 <div class="paragraph">
@@ -601,26 +598,12 @@ All markup is passed through as-is.
 &lt;strong&gt;HTML tags work here!&lt;/strong&gt;
 </div>
 </div>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="tables">Tables</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>.Basic Table</p>
-</div>
-<div class="paragraph">
-<p>.Table with Header</p>
-</div>
-<div class="paragraph">
-<p>.Table of Operating Systems</p>
-</div>
-<div class="paragraph">
-<p>.Complex Table with Styles</p>
-</div>
-<div class="paragraph">
-<p>.Table with Column Widths</p>
-</div>
-</div>
-</div>
   <table class="tableblock frame-all grid-all stretch">
   <colgroup>
     <col style="width: 33.3333%;">
@@ -645,6 +628,9 @@ All markup is passed through as-is.
     </tr>
   </tbody>
 </table>
+<div class="paragraph">
+<p>.Basic Table</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 33.3333%;">
@@ -674,6 +660,9 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>.Table with Header</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 33.3333%;">
@@ -703,6 +692,9 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>.Table of Operating Systems</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 33.3333%;">
@@ -732,6 +724,9 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>.Complex Table with Styles</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 33.3333%;">
@@ -761,23 +756,16 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>.Table with Column Widths</p>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="_code_blocks_with_callouts">Code Blocks with Callouts</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p><strong>Go Example</strong></p>
-</div>
-<div class="paragraph">
-<p>&lt;1&gt; Variable declaration &lt;2&gt; Formatted output</p>
-</div>
-<div class="paragraph">
-<p><strong>Bash Example</strong></p>
-</div>
-<div class="paragraph">
-<p>&lt;1&gt; Print start message &lt;2&gt; Build all packages &lt;3&gt; Print completion message</p>
-</div>
-</div>
-</div>
+<div class="sect2">
+<h3 id="_go_example">Go Example</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-go chroma" data-lang="go">
@@ -787,6 +775,12 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+<div class="paragraph">
+<p>&lt;1&gt; Variable declaration &lt;2&gt; Formatted output</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bash_example">Bash Example</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
@@ -796,47 +790,20 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Build complete!&#34;</span> <span class="c1"># &lt;3&gt;</span></span></span></code></pre></code></pre>
   </div>
 </div>
+<div class="paragraph">
+<p>&lt;1&gt; Print start message &lt;2&gt; Build all packages &lt;3&gt; Print completion message</p>
+</div>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="_syntax_highlighted_code_examples">Syntax Highlighted Code Examples</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The parser supports syntax highlighting for multiple programming languages using Chroma.</p>
 </div>
-<div class="paragraph">
-<p><strong>Go (Golang)</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>SQL</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>C#</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>JavaScript/TypeScript</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>XML</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>JSON</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>YAML</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>Python</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>Rust</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>CSS</strong></p>
-</div>
-<div class="paragraph">
-<p><strong>HTML</strong></p>
-</div>
-</div>
-</div>
+<div class="sect2">
+<h3 id="_go_golang">Go (Golang)</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-go chroma" data-lang="go">
@@ -865,6 +832,9 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="sql">SQL</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-sql chroma" data-lang="sql">
@@ -892,6 +862,9 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">order_count</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="c">C#</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-csharp chroma" data-lang="csharp">
@@ -934,6 +907,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_javascript_typescript">JavaScript/TypeScript</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-javascript chroma" data-lang="javascript">
@@ -974,6 +950,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span><span class="p">;</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="xml">XML</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-xml chroma" data-lang="xml">
@@ -1008,6 +987,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="nt">&lt;/configuration&gt;</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="json">JSON</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-json chroma" data-lang="json">
@@ -1039,6 +1021,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="yaml">YAML</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
@@ -1072,6 +1057,9 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">lsp_support</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="python">Python</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-python chroma" data-lang="python">
@@ -1128,6 +1116,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">User</span><span class="p">(</span><span class="o">*</span><span class="o">*</span><span class="n">result</span><span class="p">)</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="rust">Rust</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-rust chroma" data-lang="rust">
@@ -1211,6 +1202,9 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="css">CSS</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-css chroma" data-lang="css">
@@ -1287,6 +1281,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="html">HTML</h3>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-html chroma" data-lang="html">
@@ -1345,6 +1342,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="p">/</span><span class="nt">html</span><span class="p">&gt;</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="_included_content">Included Content</h2>
 <div class="sectionbody">
@@ -1353,24 +1353,6 @@ All markup is passed through as-is.
 </div>
 <div class="sect2">
 <h3 id="_include_code_snippet">Include: Code Snippet</h3>
-<div class="paragraph">
-<p>.Code Snippet Example</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_include_configuration">Include: Configuration</h3>
-<div class="paragraph">
-<p>.Configuration Example ~~~~~~~~~~~~~~~~~~~~~~~~</p>
-</div>
-<div class="paragraph">
-<p>.Configuration File</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_include_team_section">Include: Team Section</h3>
-</div>
-</div>
-</div>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-go chroma" data-lang="go">
@@ -1388,6 +1370,15 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+<div class="paragraph">
+<p>.Code Snippet Example</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_include_configuration">Include: Configuration</h3>
+<div class="paragraph">
+<p>.Configuration Example ~~~~~~~~~~~~~~~~~~~~~~~~</p>
+</div>
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-toml chroma" data-lang="toml">
@@ -1402,6 +1393,15 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="nx">port</span> <span class="p">=</span> <span class="mi">5432</span>
 </span></span><span class="line"><span class="cl"><span class="nx">name</span> <span class="p">=</span> <span class="s2">&#34;myapp&#34;</span></span></span></code></pre></code></pre>
   </div>
+</div>
+<div class="paragraph">
+<p>.Configuration File</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_include_team_section">Include: Team Section</h3>
+</div>
+</div>
 </div>
 <div class="sect1">
 <h2 id="_ui_macros_extensions">UI Macros (Extensions)</h2>
@@ -1501,12 +1501,6 @@ All markup is passed through as-is.
 <div class="sect1">
 <h2 id="_conditional_processing">Conditional Processing</h2>
 <div class="sectionbody">
-<!-- ifeval::{&#34;{asciidoctor-version}&#34; &gt;= &#34;2.0&#34;} -->
-<div class="paragraph">
-<p>This content requires Asciidoctor 2.0 or higher.</p>
-</div>
-</div>
-</div>
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
@@ -1519,6 +1513,12 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 <div class="content">
 <div class="paragraph">
 <p>This note appears when NOT generating PDF.</p>
+</div>
+</div>
+</div>
+<!-- ifeval::{&#34;{asciidoctor-version}&#34; &gt;= &#34;2.0&#34;} -->
+<div class="paragraph">
+<p>This content requires Asciidoctor 2.0 or higher.</p>
 </div>
 </div>
 </div>
@@ -1640,8 +1640,6 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 <div class="sect1">
 <h2 id="colophon">Colophon</h2>
 <div class="sectionbody">
-</div>
-</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 50%;">
@@ -1680,6 +1678,8 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 <p>The best documentation is a working example.</p>
 </div>
 </blockquote>
+</div>
+</div>
 </div>
 </body>
 </html>

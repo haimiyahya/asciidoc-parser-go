@@ -203,7 +203,8 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 					p.reader.Advance()
 					block := p.createDelimitedBlock(delimitedBlockType, delimitedBlockLines, delimitedBlockLineno)
 					if block != nil {
-						doc.Blocks = append(doc.Blocks, block)
+						// Add to current section if exists, otherwise to doc.Blocks
+						p.addBlockToCurrentSection(doc, block)
 
 						// Parse callout list after literal/verbatim blocks
 						if literal, ok := block.(*ast.NodeLiteral); ok && len(literal.Callouts) > 0 {

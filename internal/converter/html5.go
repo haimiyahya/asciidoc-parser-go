@@ -889,11 +889,11 @@ func (c *HTML5Converter) headingTag(level int) string {
 
 // convertBibliography converts a bibliography section to HTML.
 func (c *HTML5Converter) convertBibliography(bib *ast.BibliographyNode, w io.Writer) {
-	// Asciidoctor compatibility: bibliography is wrapped in sect1/sectionbody divs
+	// Use semantic HTML5 <section> tag for better Reader Mode compatibility
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
 	}
-	fmt.Fprint(w, `<div class="sect1">`)
+	fmt.Fprint(w, `<section class="sect1">`)
 	if c.pretty {
 		fmt.Fprintln(w)
 		c.indent += "  "
@@ -979,7 +979,7 @@ func (c *HTML5Converter) convertBibliography(bib *ast.BibliographyNode, w io.Wri
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
 	}
-	fmt.Fprint(w, "</div>")
+	fmt.Fprint(w, "</section>")
 	if c.pretty {
 		fmt.Fprintln(w)
 	}

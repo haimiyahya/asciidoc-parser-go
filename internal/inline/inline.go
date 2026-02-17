@@ -331,18 +331,16 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "<<") ||
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
-				strings.HasPrefix(remaining, "**") ||
-				strings.HasPrefix(remaining, "*") ||
-				strings.HasPrefix(remaining, "__") ||
-				strings.HasPrefix(remaining, "_") ||
-				strings.HasPrefix(remaining, "`") ||
+				isValidBoldStart(p.text, i) ||
+				isValidItalicStart(p.text, i) ||
+				isValidMonospaceStart(p.text, i) ||
 				strings.HasPrefix(remaining, "+++") || // Raw passthrough
 				strings.HasPrefix(remaining, "++") || // Span
-				strings.HasPrefix(remaining, "+") || // Inline passthrough
+				(strings.HasPrefix(remaining, "+") && i+1 < len(p.text) && p.text[i+1] != ' ') || // Inline passthrough (not followed by space)
 				strings.HasPrefix(remaining, "http://") ||
 				strings.HasPrefix(remaining, "https://") ||
-				strings.HasPrefix(remaining, "~") ||
-				strings.HasPrefix(remaining, "^") ||
+				(strings.HasPrefix(remaining, "~") && i+1 < len(p.text) && p.text[i+1] != ' ') || // Subscript (not followed by space)
+				(strings.HasPrefix(remaining, "^") && i+1 < len(p.text) && p.text[i+1] != ' ') || // Superscript (not followed by space)
 				strings.HasPrefix(remaining, "(((") || // Concealed index term
 				strings.HasPrefix(remaining, "((") { // Flow index term
 				nextInlinePos = i
@@ -371,6 +369,70 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// isValidBoldStart checks if position i is the start of valid bold markup (** or *)
+// For unconstrained bold (*), the next character must be non-space and there must be a closing * later
+func isValidBoldStart(text string, i int) bool {
+	if i >= len(text) {
+		return false
+	}
+	// Check for constrained bold: **text**
+	if i+1 < len(text) && text[i] == '*' && text[i+1] == '*' {
+		// Make sure there's a closing ** later
+		closeIdx := strings.Index(text[i+2:], "**")
+		return closeIdx > 0
+	}
+	// Check for unconstrained bold: *text* (single word or phrase, not followed by space)
+	if text[i] == '*' {
+		if i+1 >= len(text) || text[i+1] == ' ' {
+			return false // Must be followed by non-space
+		}
+		// Make sure there's a closing * later
+		closeIdx := strings.Index(text[i+1:], "*")
+		return closeIdx > 0
+	}
+	return false
+}
+
+// isValidItalicStart checks if position i is the start of valid italic markup (__ or _)
+func isValidItalicStart(text string, i int) bool {
+	if i >= len(text) {
+		return false
+	}
+	// Check for constrained italic: __text__
+	if i+1 < len(text) && text[i] == '_' && text[i+1] == '_' {
+		closeIdx := strings.Index(text[i+2:], "__")
+		return closeIdx > 0
+	}
+	// Check for unconstrained italic: _text_
+	if text[i] == '_' {
+		if i+1 >= len(text) || text[i+1] == ' ' {
+			return false
+		}
+		closeIdx := strings.Index(text[i+1:], "_")
+		return closeIdx > 0
+	}
+	return false
+}
+
+// isValidMonospaceStart checks if position i is the start of valid monospace markup (`` or `)
+func isValidMonospaceStart(text string, i int) bool {
+	if i >= len(text) {
+		return false
+	}
+	// Check for constrained monospace: ``text``
+	if i+1 < len(text) && text[i] == '`' && text[i+1] == '`' {
+		closeIdx := strings.Index(text[i+2:], "``")
+		return closeIdx > 0
+	}
+	// Check for single backtick monospace
+	if text[i] == '`' {
+		// Single backtick must have a closing backtick
+		closeIdx := strings.Index(text[i+1:], "`")
+		return closeIdx > 0
+	}
+	return false
 }
 
 // tryImage attempts to parse an inline image at current position.
@@ -961,3 +1023,23 @@ func (p *Parser) tryInlinePassThrough() (*Node, int) {
 
 	return nil, p.pos
 }
+
+// DebugTest function for troubleshooting
+func DebugTestInline() {
+    tests := []string{
+        `**Bold** uses **text**`,
+        `* **Bold** uses **text**`,
+    }
+    
+    for _, text := range tests {
+        parser := NewParser(text)
+        nodes := parser.Parse()
+        
+        fmt.Printf("\nInput: %q\n", text)
+        fmt.Printf("Node count: %d\n", len(nodes))
+        for i, node := range nodes {
+            fmt.Printf("  [%d] Type=%v, Text=%q\n", i, node.Type, node.Text)
+        }
+    }
+}
+

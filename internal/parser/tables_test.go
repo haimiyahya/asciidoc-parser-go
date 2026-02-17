@@ -176,6 +176,8 @@ func TestParseTableWithAttributes(t *testing.T) {
 }
 
 func TestParseTableWithHeaderRow(t *testing.T) {
+	// Note: The |= prefix is a per-cell header indicator that Asciidoctor
+	// treats as literal text in basic PSV tables. Use [options="header"] instead.
 	source := `|===
 |= Header 1 |= Header 2 |= Header 3
 | Data 1 | Data 2 | Data 3 |
@@ -190,11 +192,11 @@ func TestParseTableWithHeaderRow(t *testing.T) {
 	table, ok := doc.Blocks[0].(*ast.Table)
 	require.True(t, ok)
 
-	// First row should be marked as header
-	assert.Equal(t, ast.TableRowHeader, table.Rows[0].Kind)
-	assert.Equal(t, "Header 1", table.Rows[0].Cells[0].Text)
-	assert.Equal(t, "Header 2", table.Rows[0].Cells[1].Text)
-	assert.Equal(t, "Header 3", table.Rows[0].Cells[2].Text)
+	// Per-cell indicators are kept as literal text for Asciidoctor compatibility
+	assert.Equal(t, ast.TableRowBody, table.Rows[0].Kind)
+	assert.Equal(t, "= Header 1", table.Rows[0].Cells[0].Text)
+	assert.Equal(t, "= Header 2", table.Rows[0].Cells[1].Text)
+	assert.Equal(t, "= Header 3", table.Rows[0].Cells[2].Text)
 
 	// Second row should be body
 	assert.Equal(t, ast.TableRowBody, table.Rows[1].Kind)
@@ -202,6 +204,8 @@ func TestParseTableWithHeaderRow(t *testing.T) {
 }
 
 func TestParseTableWithCellAlignment(t *testing.T) {
+	// Note: Per-cell alignment indicators (>, ^, <) are kept as literal text
+	// for Asciidoctor compatibility. Use column specifications instead.
 	source := `|===
 | >right | ^center | <left |
 | data | data | data |
@@ -216,15 +220,17 @@ func TestParseTableWithCellAlignment(t *testing.T) {
 	table, ok := doc.Blocks[0].(*ast.Table)
 	require.True(t, ok)
 
-	// Check alignment
-	assert.Equal(t, "right", table.Rows[0].Cells[0].HorizontalAlign)
-	assert.Equal(t, "center", table.Rows[0].Cells[1].HorizontalAlign)
-	assert.Equal(t, "left", table.Rows[0].Cells[2].HorizontalAlign)
+	// Alignment indicators are kept as literal text for Asciidoctor compatibility
+	assert.Equal(t, ">right", table.Rows[0].Cells[0].Text)
+	assert.Equal(t, "^center", table.Rows[0].Cells[1].Text)
+	assert.Equal(t, "<left", table.Rows[0].Cells[2].Text)
 }
 
 func TestTableHelperMethods(t *testing.T) {
-	source := `|===
-|= Header
+	// Test with options="header" for proper header row support
+	source := `[options="header"]
+|===
+| Header
 | Data 1
 | Data 2
 |===`
@@ -238,7 +244,7 @@ func TestTableHelperMethods(t *testing.T) {
 	table, ok := doc.Blocks[0].(*ast.Table)
 	require.True(t, ok)
 
-	// Test HasHeader
+	// Test HasHeader - should be true with options="header"
 	assert.True(t, table.HasHeader())
 
 	// Test HeaderRow
@@ -260,4 +266,65 @@ func TestTableHelperMethods(t *testing.T) {
 
 	// Test Grid
 	assert.Equal(t, ast.GridAll, table.GetGrid())
+}
+
+func TestTableOptionsHeader(t *testing.T) {
+	// Test that options="header" correctly marks first row as header
+	source := `[options="header"]
+|===
+| Name | Age | City
+| Alice | 30 | NYC
+| Bob | 25 | LA
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 3 rows total
+	assert.Len(t, table.Rows, 3)
+
+	// First row should be header
+	assert.Equal(t, ast.TableRowHeader, table.Rows[0].Kind, "First row should be header")
+	assert.Equal(t, "Name", table.Rows[0].Cells[0].Text)
+
+	// Other rows should be body
+	assert.Equal(t, ast.TableRowBody, table.Rows[1].Kind, "Second row should be body")
+	assert.Equal(t, "Alice", table.Rows[1].Cells[0].Text)
+
+	assert.Equal(t, ast.TableRowBody, table.Rows[2].Kind, "Third row should be body")
+	assert.Equal(t, "Bob", table.Rows[2].Cells[0].Text)
+}
+
+func TestTableNoHeaderWithoutOption(t *testing.T) {
+	// Test that tables without options="header" don't mark first row as header
+	source := `|===
+| A | B
+| C | D
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 2 rows total
+	assert.Len(t, table.Rows, 2)
+
+	// First row should NOT be a header (no options="header" specified)
+	assert.Equal(t, ast.TableRowBody, table.Rows[0].Kind, "First row should be body when no header option")
+	assert.Equal(t, "A", table.Rows[0].Cells[0].Text)
+
+	// Second row should also be body
+	assert.Equal(t, ast.TableRowBody, table.Rows[1].Kind)
+	assert.Equal(t, "C", table.Rows[1].Cells[0].Text)
 }

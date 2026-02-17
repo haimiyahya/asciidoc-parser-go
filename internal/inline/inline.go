@@ -42,15 +42,6 @@ const (
 	// NodeCrossRef is a cross-reference (<<section-id>>).
 	NodeCrossRef
 
-	// NodeKbd is a keyboard key combination (kbd:[Ctrl+C]).
-	NodeKbd
-
-	// NodeBtn is a button label (btn:[OK]).
-	NodeBtn
-
-	// NodeMenu is a menu path (menu:[File > Save]).
-	NodeMenu
-
 	// NodeIndexTerm is an index term entry.
 	NodeIndexTerm
 
@@ -78,9 +69,6 @@ func (nt NodeType) String() string {
 		NodeLink:       "Link",
 		NodeImage:      "Image",
 		NodeCrossRef:   "CrossRef",
-		NodeKbd:        "Kbd",
-		NodeBtn:        "Btn",
-		NodeMenu:       "Menu",
 		NodeIndexTerm:  "IndexTerm",
 		NodeCustomMacro: "CustomMacro",
 		NodePassThrough:    "PassThrough",
@@ -229,30 +217,6 @@ func (p *Parser) Parse() []*Node {
 			continue
 		}
 
-		if node, newPos := p.tryKbd(); node != nil {
-			p.applyRoles(node, pendingRoles)
-			pendingRoles = nil
-			nodes = append(nodes, node)
-			p.pos = newPos
-			continue
-		}
-
-		if node, newPos := p.tryBtn(); node != nil {
-			p.applyRoles(node, pendingRoles)
-			pendingRoles = nil
-			nodes = append(nodes, node)
-			p.pos = newPos
-			continue
-		}
-
-		if node, newPos := p.tryMenu(); node != nil {
-			p.applyRoles(node, pendingRoles)
-			pendingRoles = nil
-			nodes = append(nodes, node)
-			p.pos = newPos
-			continue
-		}
-
 		if node, newPos := p.tryCrossRef(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
@@ -367,9 +331,6 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "<<") ||
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
-				strings.HasPrefix(remaining, "kbd:") ||
-				strings.HasPrefix(remaining, "btn:") ||
-				strings.HasPrefix(remaining, "menu:") ||
 				strings.HasPrefix(remaining, "**") ||
 				strings.HasPrefix(remaining, "*") ||
 				strings.HasPrefix(remaining, "__") ||
@@ -854,95 +815,6 @@ func (p *Parser) applyRoles(node *Node, roles []string) {
 	if len(roles) > 0 {
 		node.Roles = append(node.Roles, roles...)
 	}
-}
-
-// tryKbd attempts to parse a keyboard macro: kbd:[keys] or kbd:[keys+keys].
-// Supports key combinations like Ctrl+C, Alt+Shift+Del.
-func (p *Parser) tryKbd() (*Node, int) {
-	remaining := p.text[p.pos:]
-
-	// Check for kbd macro: kbd:[keys]
-	if strings.HasPrefix(remaining, "kbd:[") {
-		// Find the closing ]
-		closeIndex := strings.Index(remaining[4:], "]")
-		if closeIndex == -1 {
-			return nil, p.pos
-		}
-
-		// Extract the keys
-		keys := remaining[5 : closeIndex+4]
-		if keys == "" {
-			return nil, p.pos
-		}
-
-		return &Node{
-			Type:     NodeKbd,
-			Text:     keys,
-			StartPos: p.pos,
-			Position: p.pos + closeIndex + 5,
-		}, p.pos + closeIndex + 5
-	}
-
-	return nil, p.pos
-}
-
-// tryBtn attempts to parse a button macro: btn:[label].
-func (p *Parser) tryBtn() (*Node, int) {
-	remaining := p.text[p.pos:]
-
-	// Check for btn macro: btn:[label]
-	if strings.HasPrefix(remaining, "btn:[") {
-		// Find the closing ]
-		closeIndex := strings.Index(remaining[4:], "]")
-		if closeIndex == -1 {
-			return nil, p.pos
-		}
-
-		// Extract the label
-		label := remaining[5 : closeIndex+4]
-		if label == "" {
-			return nil, p.pos
-		}
-
-		return &Node{
-			Type:     NodeBtn,
-			Text:     label,
-			StartPos: p.pos,
-			Position: p.pos + closeIndex + 5,
-		}, p.pos + closeIndex + 5
-	}
-
-	return nil, p.pos
-}
-
-// tryMenu attempts to parse a menu macro: menu:[File > Save] or menu:[File,Save].
-// Supports menu paths with > or , as separator.
-func (p *Parser) tryMenu() (*Node, int) {
-	remaining := p.text[p.pos:]
-
-	// Check for menu macro: menu:[path]
-	if strings.HasPrefix(remaining, "menu:[") {
-		// Find the closing ]
-		closeIndex := strings.Index(remaining[5:], "]")
-		if closeIndex == -1 {
-			return nil, p.pos
-		}
-
-		// Extract the menu path
-		path := remaining[6 : closeIndex+5]
-		if path == "" {
-			return nil, p.pos
-		}
-
-		return &Node{
-			Type:     NodeMenu,
-			Text:     path,
-			StartPos: p.pos,
-			Position: p.pos + closeIndex + 6,
-		}, p.pos + closeIndex + 6
-	}
-
-	return nil, p.pos
 }
 
 // tryIndexTerm attempts to parse an index term: ((term)) or (((term, secondary, tertiary))).

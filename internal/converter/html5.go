@@ -385,36 +385,6 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			c.renderInlineChildren(node, w)
 		}
 		c.writeRawString("</a>", w)
-	case inline.NodeKbd:
-		// Keyboard macro: kbd:[Ctrl+C] -> <kbd><span class="key">Ctrl</span>+<span class="key">C</span></kbd>
-		class := c.getClassAttr(node.Roles)
-		if class != "" {
-			c.writeRawString(`<kbd class="`+class+`">`, w)
-		} else {
-			c.writeRawString("<kbd>", w)
-		}
-		c.renderKbdKeys(node.Text, w)
-		c.writeRawString("</kbd>", w)
-	case inline.NodeBtn:
-		// Button macro: btn:[OK] -> <b class="btn">OK</b>
-		class := c.getClassAttr(node.Roles)
-		if class != "" {
-			c.writeRawString(`<b class="btn `+class+`">`, w)
-		} else {
-			c.writeRawString(`<b class="btn">`, w)
-		}
-		c.writeRawString(c.escape(node.Text), w)
-		c.writeRawString("</b>", w)
-	case inline.NodeMenu:
-		// Menu macro: menu:[File > Save] -> <span class="menu"><span class="menuitem">File</span> &#10140; <span class="menuitem">Save</span></span>
-		class := c.getClassAttr(node.Roles)
-		if class != "" {
-			c.writeRawString(`<span class="menu `+class+`">`, w)
-		} else {
-			c.writeRawString(`<span class="menu">`, w)
-		}
-		c.renderMenuPath(node.Text, w)
-		c.writeRawString("</span>", w)
 	case inline.NodeIndexTerm:
 		// Index terms: ((term)) is flow (visible), (((term))) is concealed (hidden)
 		// For Asciidoctor compatibility in HTML5:
@@ -462,45 +432,6 @@ func (c *HTML5Converter) getClassAttr(roles []string) string {
 	}
 	// Join roles with spaces for HTML class attribute
 	return strings.Join(roles, " ")
-}
-
-// renderKbdKeys renders keyboard key combinations with proper formatting.
-// Splits on "+" and wraps each key in a span.key element.
-func (c *HTML5Converter) renderKbdKeys(keys string, w io.Writer) {
-	keyParts := strings.Split(keys, "+")
-	for i, key := range keyParts {
-		trimmedKey := strings.TrimSpace(key)
-		if trimmedKey != "" {
-			c.writeRawString(`<span class="key">`, w)
-			c.writeRawString(c.escape(trimmedKey), w)
-			c.writeRawString(`</span>`, w)
-			if i < len(keyParts)-1 {
-				c.writeRawString("+", w)
-			}
-		}
-	}
-}
-
-// renderMenuPath renders a menu path with proper formatting.
-// Splits on " > " or "," and wraps each menu item in a span.menuitem element.
-func (c *HTML5Converter) renderMenuPath(path string, w io.Writer) {
-	// Try to split on " > " first
-	items := strings.Split(path, " > ")
-	if len(items) == 1 {
-		// Try comma separator
-		items = strings.Split(path, ",")
-	}
-	for i, item := range items {
-		trimmedItem := strings.TrimSpace(item)
-		if trimmedItem != "" {
-			c.writeRawString(`<span class="menuitem">`, w)
-			c.writeRawString(c.escape(trimmedItem), w)
-			c.writeRawString(`</span>`, w)
-			if i < len(items)-1 {
-				c.writeRawString(` &#10140; `, w) // Unicode right arrow
-			}
-		}
-	}
 }
 
 // renderInlineChildren renders child inline nodes within a parent inline node.
@@ -1342,10 +1273,21 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 		c.writeElement("caption", c.escape(table.Caption), w)
 	}
 
-	// For basic tables, all rows go in tbody
-	// (Header row detection is disabled for basic AsciiDoc compatibility)
+	// Write thead if table has a header row
+	if table.HasHeader() {
+		c.writeOpenTag("thead", w)
+		headerRow := table.HeaderRow()
+		c.writeTableRow(headerRow, "th", w)
+		c.writeCloseTag("thead", w)
+	}
+
+	// Write tbody for body rows
 	c.writeOpenTag("tbody", w)
 	for _, row := range table.Rows {
+		// Skip header row if it was already rendered in thead
+		if table.HasHeader() && row.Kind == ast.TableRowHeader {
+			continue
+		}
 		c.writeTableRow(&row, "td", w)
 	}
 	c.writeCloseTag("tbody", w)

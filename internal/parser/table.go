@@ -28,9 +28,11 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 	}
 
 	table := &ast.Table{
-		Rows:       make([]ast.TableRow, 0),
-		Attributes: make(map[string]string),
-		Pos:        ast.Position{Line: lineno},
+		Rows:           make([]ast.TableRow, 0),
+		Attributes:     make(map[string]string),
+		Pos:            ast.Position{Line: lineno},
+		HeaderRowIndex: -1, // Initialize to -1 to indicate no header
+		FooterRowIndex: -1, // Initialize to -1 to indicate no footer
 	}
 
 	// First line might contain table attributes
@@ -51,7 +53,21 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 		table.Columns = p.parseColumnSpecs(colsSpec)
 	}
 
+	// Check for header option in attributes
+	hasHeaderOption := false
+	if options, ok := table.Attributes["options"]; ok {
+		// Options can be comma-separated like "header,footer" or just "header"
+		optParts := strings.Split(options, ",")
+		for _, opt := range optParts {
+			if strings.TrimSpace(opt) == "header" {
+				hasHeaderOption = true
+				break
+			}
+		}
+	}
+
 	// Parse rows
+	firstRow := true
 	for i := lineIdx; i < len(lines); i++ {
 		line := strings.TrimSpace(lines[i])
 
@@ -79,14 +95,19 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 			line = strings.TrimLeft(line, "_")
 		}
 
-		isHeaderRow := false // Always false for basic tables
+		// Mark first row as header if option is set
+		isHeaderRow := hasHeaderOption && firstRow
 
 		// Parse the row
 		format := table.GetFormat()
 		row := p.parseRow(line, format, isHeaderRow)
 
-		// Set row kind
-		row.Kind = rowKind
+		// Set row kind (footer takes precedence, otherwise use parsed header status or default to body)
+		if rowKind == ast.TableRowFooter {
+			row.Kind = rowKind
+		} else if !isHeaderRow {
+			row.Kind = rowKind
+		}
 
 		// Track header row index
 		if row.Kind == ast.TableRowHeader && table.HeaderRowIndex < 0 {
@@ -99,6 +120,9 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 		}
 
 		table.Rows = append(table.Rows, row)
+
+		// Clear first row flag after processing
+		firstRow = false
 	}
 
 	// If no explicit header but columns specified, first row might be header
@@ -126,7 +150,7 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 }
 
 // parseTableAttributes parses attributes from the first line of a table.
-// Example: [cols="1,2,3",frame="all",grid="rows"]
+// Example: [cols="1,2,3",frame="all",grid="rows",%autowidth,options="header"]
 func (p *TableParser) parseTableAttributes(line string) map[string]string {
 	attrs := make(map[string]string)
 
@@ -144,6 +168,14 @@ func (p *TableParser) parseTableAttributes(line string) map[string]string {
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
+			continue
+		}
+
+		// Handle positional attributes (starting with %)
+		if strings.HasPrefix(part, "%") {
+			attrName := strings.TrimPrefix(part, "%")
+			// For positional attributes like %autowidth, convert to key="true" format
+			attrs[attrName] = "true"
 			continue
 		}
 
@@ -275,10 +307,17 @@ func (p *TableParser) parseRow(line string, format ast.TableFormat, isHeaderRow 
 		cells = p.parsePSVRow(line, isHeaderRow)
 	}
 
-	return ast.TableRow{
+	row := ast.TableRow{
 		Cells:      cells,
 		Attributes: make(map[string]string),
 	}
+
+	// Set row kind based on isHeaderRow parameter
+	if isHeaderRow {
+		row.Kind = ast.TableRowHeader
+	}
+
+	return row
 }
 
 // parsePSVRow parses a Pipe Separated Values row.

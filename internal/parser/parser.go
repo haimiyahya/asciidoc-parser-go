@@ -145,12 +145,36 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 	var delimitedBlockLines []string
 	var delimitedBlockLineno int
 
+	// Track pending attribute line for delimited blocks (e.g., [options="header"] before table)
+	var pendingAttributeLine string
+
 	for p.reader.HasMoreLines() {
 		line := p.reader.PeekLine()
 		lineno := p.reader.GetLineno()
 
 		// Classify the line
 		classification := p.classifier.ClassifyLine(line)
+
+		// Handle attribute lines before delimited blocks (e.g., [options="header"] before |===)
+		// This must be checked before classification since we consume the line
+		if strings.HasPrefix(strings.TrimSpace(line), "[") && !inDelimitedBlock && pendingAttributeLine == "" {
+			// Save the line and consume it, then check if next line is a table delimiter
+			savedLine := line
+			p.reader.Advance()
+			if p.reader.HasMoreLines() {
+				nextLine := p.reader.PeekLine()
+				nextClass := p.classifier.ClassifyLine(nextLine)
+				if nextClass.Type == reader.BlockTable {
+					// This attribute line belongs to a table
+					pendingAttributeLine = savedLine
+					continue
+				}
+			}
+			// Not followed by a table - this is a standalone attribute line
+			// Restore it and let the normal attribute handling code process it
+			p.reader.UnshiftLine(savedLine)
+			// Continue to normal processing
+		}
 
 		// Handle delimited blocks
 		if classification.Type.IsDelimitedBlock() {
@@ -160,6 +184,14 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				delimitedBlockType = classification.Type
 				delimitedBlockLines = []string{}
 				delimitedBlockLineno = lineno
+
+				// For tables with pending attribute line, add it at the beginning
+				if pendingAttributeLine != "" && classification.Type == reader.BlockTable {
+					delimitedBlockLines = append(delimitedBlockLines, pendingAttributeLine)
+					// Don't reset lineno - use the current line (delimiter) for correct positioning
+					pendingAttributeLine = ""
+				}
+
 				p.reader.Advance()
 				continue
 			} else {

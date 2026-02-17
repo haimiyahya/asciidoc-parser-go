@@ -72,6 +72,26 @@ jobs:
             goarch: arm64
             binary: asciidoc-lsp
             ext: ''
+          - name: asciidoc-darwin-amd64
+            goos: darwin
+            goarch: amd64
+            binary: asciidoc
+            ext: ''
+          - name: asciidoc-darwin-arm64
+            goos: darwin
+            goarch: arm64
+            binary: asciidoc
+            ext: ''
+          - name: asciidoc-lsp-darwin-amd64
+            goos: darwin
+            goarch: amd64
+            binary: asciidoc-lsp
+            ext: ''
+          - name: asciidoc-lsp-darwin-arm64
+            goos: darwin
+            goarch: arm64
+            binary: asciidoc-lsp
+            ext: ''
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -150,12 +170,16 @@ jobs:
             Download the binary for your platform, make it executable (Linux/macOS), and place it in your PATH.
 
             ```bash
-            # Example for Linux/macOS
-            chmod +x asciidoc-linux-amd64
+            # Linux/macOS (Intel)
+            chmod +x asciidoc-linux-amd64  # or asciidoc-darwin-amd64
             mv asciidoc-linux-amd64 /usr/local/bin/asciidoc
 
-            # Example for Windows
-            # Rename and add to your PATH
+            # macOS (Apple Silicon M1/M2/M3)
+            chmod +x asciidoc-darwin-arm64
+            mv asciidoc-darwin-arm64 /usr/local/bin/asciidoc
+
+            # Windows
+            # Rename asciidoc-windows-amd64.exe to asciidoc.exe and add to PATH
             ```
 
             ### Verify Checksum

@@ -643,6 +643,22 @@ Additional information.
 |e|Emphasis |s|Strong |v|Verse cell
 |===`,
 		},
+
+		// Table repeat cells
+		{
+			Name: "tables/repeat-cells",
+			Category: "tables",
+			Source: `|===
+|3*Same | Different
+|===`,
+		},
+		{
+			Name: "tables/repeat-multiple",
+			Category: "tables",
+			Source: `|===
+|2*A |2*B | C
+|===`,
+		},
 	}
 }
 

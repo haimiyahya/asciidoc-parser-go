@@ -374,7 +374,8 @@ func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell
 		}
 
 		// Check for repeat indicator (e.g., 3* for repeating cell)
-		if match := regexp.MustCompile(`^(\d+)\*(.+)`).FindStringSubmatch(trimmed); len(match) > 0 {
+		// Syntax: 3*value means "value" appears 3 times in the row
+		if match := regexp.MustCompile(`^(\d+)\*(.*)`).FindStringSubmatch(trimmed); len(match) > 0 {
 			if repeat, err := strconv.Atoi(match[1]); err == nil {
 				cell.Repeat = repeat
 				trimmed = match[2]
@@ -409,9 +410,11 @@ func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell
 		cells = append(cells, cell)
 
 		// Handle repeat - duplicate cells
+		// The repeat syntax is: 3*|value which means "value" appears 3 times
 		if cell.Repeat > 1 {
+			repeatCount := cell.Repeat
 			cell.Repeat = 0 // Reset so we don't repeat again
-			for i := 1; i < cell.Repeat; i++ {
+			for i := 1; i < repeatCount; i++ {
 				cells = append(cells, cell)
 			}
 		}

@@ -240,7 +240,7 @@ em, i {
 <div class="paragraph">
 <p>This document showcases all features implemented in asciidoc-parser-go, a native Go implementation of an AsciiDoc parser and processor. Each section demonstrates specific AsciiDoc syntax and capabilities.</p>
 </div>
-<div class="sect1">
+<section class="sect1">
 <h2 id="introduction">Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -272,11 +272,11 @@ em, i {
 <p>See <a href="#section-blocks">section-blocks</a> for delimited block examples.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_text_formatting">Text Formatting</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="_constrained_formatting">Constrained Formatting</h3>
 <div class="paragraph">
 <p>Constrained formatting requires matching delimiters around the text:</p>
@@ -310,8 +310,8 @@ em, i {
       </tr>
     </tbody>
   </table>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_unconstrained_formatting">Unconstrained Formatting</h3>
 <div class="paragraph">
 <p>Single words can be formatted without balanced delimiters:</p>
@@ -319,8 +319,8 @@ em, i {
 <div class="paragraph">
 <p><strong>The</strong> quick <strong>brown</strong> <strong>fox</strong> <code>jumps</code> <code>over</code> <code>the</code> <code>lazy</code> <code>dog</code>.</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_links_and_images">Links and Images</h3>
 <div class="paragraph">
 <p><strong>External link</strong>: <a href="https://github.com/haimiyahya/asciidoc-parser-go" class="bare">https://github.com/haimiyahya/asciidoc-parser-go</a></p>
@@ -331,13 +331,13 @@ em, i {
 <div class="paragraph">
 <p><strong>Email</strong>: mailto:example@example.com</p>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="lists">Lists</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="_unordered_lists">Unordered Lists</h3>
 <div class="paragraph">
 <p>Bullet points use asterisks, dashes, or hyphens:</p>
@@ -361,8 +361,8 @@ em, i {
 </li>
 </ul>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_ordered_lists">Ordered Lists</h3>
 <div class="olist arabic">
 <ol class="arabic">
@@ -401,8 +401,8 @@ em, i {
 </li>
 </ol>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_labeled_description_lists">Labeled (Description) Lists</h3>
 <div class="dlist">
 <dl>
@@ -420,8 +420,8 @@ em, i {
 </dd>
 </dl>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_mixed_nested_lists">Mixed Nested Lists</h3>
 <div class="ulist">
 <ul>
@@ -460,10 +460,10 @@ em, i {
 </li>
 </ol>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="admonitions">Admonitions</h2>
 <div class="sectionbody">
 <div class="admonitionblock note">
@@ -527,11 +527,11 @@ This is important information that the reader should pay special attention to.
 </table>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_delimited_blocks">Delimited Blocks</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="_example_block">Example Block</h3>
 <div class="exampleblock">
 <div class="content">
@@ -543,8 +543,8 @@ content that needs visual distinction.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_quote_block">Quote Block</h3>
 <div class="quoteblock">
 <blockquote>
@@ -553,8 +553,8 @@ content that needs visual distinction.</p>
 </div>
 </blockquote>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_sidebar_block">Sidebar Block</h3>
 <div class="sidebarblock">
 <div class="content">
@@ -567,8 +567,8 @@ content that needs visual distinction.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_literal_block">Literal Block</h3>
 <div class="literalblock">
 <div class="content">
@@ -578,8 +578,8 @@ All whitespace is preserved.
     *Bold* and _italic_ are NOT processed.</pre>
 </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_styled_blocks">Styled Blocks</h3>
 <div class="quoteblock">
 <blockquote>
@@ -598,10 +598,10 @@ All markup is passed through as-is.
 &lt;strong&gt;HTML tags work here!&lt;/strong&gt;
 </div>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="tables">Tables</h2>
 <div class="sectionbody">
   <table class="tableblock frame-all grid-all stretch">
@@ -760,11 +760,11 @@ All markup is passed through as-is.
 <p>.Table with Column Widths</p>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_code_blocks_with_callouts">Code Blocks with Callouts</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="_go_example">Go Example</h3>
 <div class="listingblock">
   <div class="content">
@@ -778,8 +778,8 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>&lt;1&gt; Variable declaration &lt;2&gt; Formatted output</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_bash_example">Bash Example</h3>
 <div class="listingblock">
   <div class="content">
@@ -793,16 +793,16 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>&lt;1&gt; Print start message &lt;2&gt; Build all packages &lt;3&gt; Print completion message</p>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_syntax_highlighted_code_examples">Syntax Highlighted Code Examples</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The parser supports syntax highlighting for multiple programming languages using Chroma.</p>
 </div>
-<div class="sect2">
+<section class="sect2">
 <h3 id="_go_golang">Go (Golang)</h3>
 <div class="listingblock">
   <div class="content">
@@ -832,8 +832,8 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="sql">SQL</h3>
 <div class="listingblock">
   <div class="content">
@@ -862,8 +862,8 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">order_count</span><span class="w"> </span><span class="k">DESC</span><span class="p">;</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="c">C#</h3>
 <div class="listingblock">
   <div class="content">
@@ -907,8 +907,8 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_javascript_typescript">JavaScript/TypeScript</h3>
 <div class="listingblock">
   <div class="content">
@@ -950,8 +950,8 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span><span class="p">;</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="xml">XML</h3>
 <div class="listingblock">
   <div class="content">
@@ -987,8 +987,8 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="nt">&lt;/configuration&gt;</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="json">JSON</h3>
 <div class="listingblock">
   <div class="content">
@@ -1021,8 +1021,8 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="yaml">YAML</h3>
 <div class="listingblock">
   <div class="content">
@@ -1057,8 +1057,8 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">lsp_support</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="python">Python</h3>
 <div class="listingblock">
   <div class="content">
@@ -1116,8 +1116,8 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">User</span><span class="p">(</span><span class="o">*</span><span class="o">*</span><span class="n">result</span><span class="p">)</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="rust">Rust</h3>
 <div class="listingblock">
   <div class="content">
@@ -1202,8 +1202,8 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="css">CSS</h3>
 <div class="listingblock">
   <div class="content">
@@ -1281,8 +1281,8 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="html">HTML</h3>
 <div class="listingblock">
   <div class="content">
@@ -1342,16 +1342,16 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="p">/</span><span class="nt">html</span><span class="p">&gt;</span></span></span></code></pre></code></pre>
   </div>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_included_content">Included Content</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The following content is included from separate files:</p>
 </div>
-<div class="sect2">
+<section class="sect2">
 <h3 id="_include_code_snippet">Include: Code Snippet</h3>
 <div class="listingblock">
   <div class="content">
@@ -1373,8 +1373,8 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>.Code Snippet Example</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_include_configuration">Include: Configuration</h3>
 <div class="paragraph">
 <p>.Configuration Example ~~~~~~~~~~~~~~~~~~~~~~~~</p>
@@ -1397,16 +1397,16 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>.Configuration File</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_include_team_section">Include: Team Section</h3>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_ui_macros_extensions">UI Macros (Extensions)</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="_keyboard_shortcuts">Keyboard Shortcuts</h3>
 <div class="paragraph">
 <p>Common keyboard shortcuts:</p>
@@ -1414,8 +1414,8 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>kbd:[CtrlC] - Copy kbd:[CtrlV] - Paste kbd:[CtrlZ] - Undo kbd:[CtrlShift+Z] - Redo kbd:[F5] - Refresh</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="buttons">Buttons</h3>
 <div class="paragraph">
 <p>Dialog buttons:</p>
@@ -1423,8 +1423,8 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>btn:[OK] - Confirm action btn:[Cancel] - Cancel action btn:[Apply] - Apply changes btn:[Delete] - Delete item (warning)</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_menu_paths">Menu Paths</h3>
 <div class="paragraph">
 <p>Navigation examples:</p>
@@ -1432,13 +1432,13 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>menu:[File &gt; New &gt; Document] menu:[Edit &gt; Find &gt; Replace] menu:[View &gt; Zoom &gt; Zoom In]</p>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_cross_references">Cross-References</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="_internal_references">Internal References</h3>
 <div class="paragraph">
 <p>See <a href="#section-blocks">Delimited Blocks</a> for block examples.</p>
@@ -1449,16 +1449,16 @@ All markup is passed through as-is.
 <div class="paragraph">
 <p>See <a href="#section-code-callouts">section-code-callouts</a> for callout examples.</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_external_references">External References</h3>
 <div class="paragraph">
 <p>Documentation link: https://docs.asciidoctor.org/asciidoc/latest/</p>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="bibliography">Bibliography</h2>
 <div class="sectionbody">
 <div class="sect1">
@@ -1483,8 +1483,8 @@ All markup is passed through as-is.
 <p>As shown in [1], the AsciiDoc Language Specification is maintained by the Eclipse Foundation. The [2] project provides the reference implementation.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_index_terms">Index Terms</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1497,8 +1497,8 @@ All markup is passed through as-is.
 <p>This section demonstrates index terms that would appear in a printed document&#39;s index. The term syntax creates visible index terms, while  terms only appear in the index.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_conditional_processing">Conditional Processing</h2>
 <div class="sectionbody">
 <div class="exampleblock">
@@ -1521,8 +1521,8 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 <p>This content requires Asciidoctor 2.0 or higher.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_roles_and_css_classes">Roles and CSS Classes</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1538,31 +1538,31 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 <p>This text has a highlight background.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="section-code-callouts">Code and Callouts</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Paragraphs can have IDs for direct linking.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_attributes_and_substitution">Attributes and Substitution</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="_attribute_references">Attribute References</h3>
 <div class="paragraph">
 <p>Document attributes: <code>{toc}</code>, <code>{sectnums}</code>, <code>{revdate}</code> show predefined attributes.</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_attribute_substitution">Attribute Substitution</h3>
 <div class="paragraph">
 <p>The value of my-var is: {my-var}.</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_inline_attributes">Inline Attributes</h3>
 <div class="paragraph">
 <p>You can set attributes inline: {set:product-name}My Product{set}.</p>
@@ -1570,13 +1570,13 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 <div class="paragraph">
 <p>Now {product-name} is available throughout the document.</p>
 </div>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_extensions_and_macros">Extensions and Macros</h2>
 <div class="sectionbody">
-<div class="sect2">
+<section class="sect2">
 <h3 id="footnotes">Footnotes</h3>
 <div class="paragraph">
 <p>This is a paragraph with a footnote.reference:footnote[This is the footnote text.]</p>
@@ -1584,26 +1584,26 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 <div class="paragraph">
 <p>You can reference the same footnote again footnote:footnote[].</p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_image_with_attributes">Image with Attributes</h3>
 <div class="paragraph">
 <p><span class="image"><img src="https://picsum.photos/400/200" alt="Alt Text, width=400, height=200, title=Sample Image"></span></p>
 </div>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_video_html5">Video (HTML5)</h3>
 <video src="sample.mp4">
 </video>
-</div>
-<div class="sect2">
+</section>
+<section class="sect2">
 <h3 id="_audio_html5">Audio (HTML5)</h3>
 <audio src="podcast.mp3">
 </audio>
+</section>
 </div>
-</div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="_mathematical_notation">Mathematical Notation</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1636,8 +1636,8 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 </ul>
 </div>
 </div>
-</div>
-<div class="sect1">
+</section>
+<section class="sect1">
 <h2 id="colophon">Colophon</h2>
 <div class="sectionbody">
 <table class="tableblock frame-all grid-all stretch">
@@ -1680,6 +1680,6 @@ The basebackend attribute is set to &#39;html&#39;.</p>
 </blockquote>
 </div>
 </div>
-</div>
+</section>
 </body>
 </html>

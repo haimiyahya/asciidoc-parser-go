@@ -809,8 +809,9 @@ func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 	// Determine section class based on level (.sect1, .sect2, etc.)
 	sectionClass := fmt.Sprintf("sect%d", section.Level)
 
-	// Always add newlines for Asciidoctor compatibility
-	fmt.Fprintf(w, `<div class="%s">`+"\n", sectionClass)
+	// Use semantic <section> tag for better Reader Mode compatibility
+	// Keep the class attribute for styling compatibility
+	fmt.Fprintf(w, `<section class="%s">`+"\n", sectionClass)
 
 	// Determine heading tag based on level
 	tag := c.headingTag(section.Level)
@@ -836,7 +837,7 @@ func (c *HTML5Converter) convertSection(section *ast.NodeSection, w io.Writer) {
 		fmt.Fprintf(w, `</div>`+"\n") // Close sectionbody
 	}
 
-	fmt.Fprintf(w, `</div>`+"\n") // Close section wrapper (sectN)
+	fmt.Fprintf(w, `</section>`+"\n") // Close section wrapper (sectN)
 }
 
 // headingTag returns appropriate HTML tag for a section level.

@@ -132,23 +132,15 @@ jobs:
       - name: Prepare release assets
         run: |
           cd artifacts
-          # Move all files from subdirectories, renaming if there's a conflict
-          for dir in */; do
-            dir="${dir%/}"
-            if [ -d "$dir" ]; then
-              for file in "$dir"/*; do
-                if [ -f "$file" ]; then
-                  basename=$(basename "$file")
-                  # If target exists as directory, remove it first
-                  if [ -d "$basename" ]; then
-                    rm -rf "$basename"
-                  fi
-                  mv "$file" .
-                fi
-              done
-              rmdir "$dir" 2>/dev/null || true
-            fi
-          done
+          # Show structure for debugging
+          echo "Directory structure:"
+          find . -type f -o -type d | sort
+          echo ""
+          # Find all files recursively and move them to current directory
+          find . -mindepth 2 -type f -exec bash -c 'target="$(basename "$1")"; counter=0; while [ -e "$target" ] && [ "$target" != "$1" ]; do counter=$((counter+1)); target="${target%.*}_$counter.${target##*.}"; done; mv "$1" "$target"' _ {} \;
+          # Remove all empty subdirectories
+          find . -mindepth 1 -type d -delete
+          echo "Final structure:"
           ls -la
 
       - name: Generate checksums

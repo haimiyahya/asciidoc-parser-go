@@ -210,7 +210,8 @@ func TestBareURLWithPunctuation(t *testing.T) {
 
 	output := buf.String()
 	// Should include full URL in href, but period is separate text
-	assert.Contains(t, output, `href="https://example.com">https://example.com</a>.`, "HTML should contain link with period after")
+	assert.Contains(t, output, `href="https://example.com"`, "HTML should contain link with correct href")
+	assert.Contains(t, output, `https://example.com</a>.`, "Period should be outside the link")
 }
 
 func TestBareURLWithMultiplePunctuation(t *testing.T) {
@@ -237,7 +238,7 @@ func TestBareURLWithMultiplePunctuation(t *testing.T) {
 
 		output := buf.String()
 		// URL should be clean without punctuation
-		assert.Contains(t, output, `href="https://site.com">`, "URL should be clean")
+		assert.Contains(t, output, `href="https://site.com"`, "URL should be clean")
 	}
 }
 

@@ -74,14 +74,12 @@ More text.`
 		t.Error("Flow index term 'visible term' not found in HTML output")
 	}
 
-	// Should have data-indexterm attribute
-	if !strings.Contains(html, "data-indexterm") {
-		t.Error("data-indexterm attribute not found in HTML output")
-	}
+	// Concealed index terms should not appear in output (Asciidoctor behavior)
+	// They're used for index generation but not displayed in HTML
 
-	// Concealed index term should have the indexterm-concealed class
-	if !strings.Contains(html, "indexterm-concealed") {
-		t.Error("indexterm-concealed class not found in HTML output")
+	// The paragraph should end with just a period (concealed term produces no output)
+	if !strings.Contains(html, "<p>Paragraph with visible term and .</p>") {
+		t.Error("Paragraph should not contain concealed index term in HTML output")
 	}
 }
 

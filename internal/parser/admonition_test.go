@@ -176,7 +176,7 @@ func TestAdmonitionHTML5Conversion(t *testing.T) {
 	require.NoError(t, err)
 
 	output := buf.String()
-	assert.Contains(t, output, `<div class="admonition-note"`)
+	assert.Contains(t, output, `<div class="admonitionblock note"`)
 	assert.Contains(t, output, `This is important`)
 }
 
@@ -195,5 +195,5 @@ func TestWarningHTML5Conversion(t *testing.T) {
 	require.NoError(t, err)
 
 	output := buf.String()
-	assert.Contains(t, output, `<div class="admonition-warning"`)
+	assert.Contains(t, output, `<div class="admonitionblock warning"`)
 }

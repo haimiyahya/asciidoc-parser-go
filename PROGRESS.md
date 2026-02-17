@@ -2,13 +2,45 @@
 
 This file tracks resolved issues and remaining work for Asciidoctor compatibility.
 
-## Date: 2026-02-17 (Session 4)
+## Date: 2026-02-17 (Session 4 - Extended)
 
 ### ✅ Newly Resolved Issues
 
-#### 12. Table Compatibility Fixes (9 tests)
+#### 13. Table Header Support (options="header")
 **Problem**:
-- Per-cell style indicators (`l|`, `m|`, etc.) were being parsed but Asciidoctor treats them as separate cells
+- Tables couldn't specify header rows via attributes
+- No way to create `<thead>` with `<th>` tags in HTML output
+
+**Solution**:
+- Implemented `[options="header"]` attribute support
+- Attribute lines before `|===` delimiters are now captured and parsed
+- HTML5 converter renders header rows with `<thead>` and `<th>` tags
+- Body rows are rendered with `<tbody>` and `<td>` tags
+- Fixed `HeaderRowIndex` initialization (was defaulting to 0, now correctly -1)
+
+**Files Modified**:
+- `internal/parser/parser.go` - Added attribute line capture before table delimiters
+- `internal/parser/table.go` - Fixed HeaderRowIndex initialization
+- `internal/converter/html5.go` - Added thead/th rendering logic
+
+#### 14. Comprehensive Table Attribute Support
+**Features Added**:
+- **frame attribute**: `frame="all"`, `frame="sides"`, `frame="topbot"`, `frame="none"`
+- **grid attribute**: `grid="all"`, `grid="rows"`, `grid="cols"`, `grid="none"`
+- **stripes attribute**: `stripes="even"`, `stripes="odd"`, `stripes="none"`
+- **autowidth attribute**: `[%autowidth]` suppresses colgroup generation
+- **caption attribute**: `caption="Table Title"` adds caption element
+
+**Files Modified**:
+- `internal/parser/table.go` - Attribute parsing already in place via `parseTableAttributes()`
+- `internal/converter/html5.go` - Added autowidth support to skip colgroup
+- `internal/parser/tables_test.go` - Added 6 new attribute tests
+- `internal/converter/converter_test.go` - Added 8 new converter tests
+
+### 📝 Notes
+
+#### Previous Session Issues
+**Table Compatibility Fixes (from earlier in Session 4)**:
 - Repeat cell syntax (`3*value`) was being expanded but Asciidoctor keeps it as literal text
 - Multi-line cell continuation (`|+`) was being parsed specially but Asciidoctor treats it as a new row
 - Vertical alignment indicators (`.^`, `.<`, `>.`) were being parsed but Asciidoctor keeps them as literal text

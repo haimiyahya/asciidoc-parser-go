@@ -148,6 +148,8 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 
 	// Track pending attribute line for delimited blocks (e.g., [options="header"] before table)
 	var pendingAttributeLine string
+	// Track pending caption line for tables (e.g., .Table Title before |===)
+	var pendingCaptionLine string
 
 	for p.reader.HasMoreLines() {
 		line := p.reader.PeekLine()
@@ -159,13 +161,37 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 		// Handle attribute lines before delimited blocks (e.g., [options="header"] before |===)
 		// This must be checked before classification since we consume the line
 		if strings.HasPrefix(strings.TrimSpace(line), "[") && !inDelimitedBlock && pendingAttributeLine == "" {
-			// Save the line and consume it, then check if next line is a table delimiter
+			// Save the line and consume it, then check if next line(s) lead to a table
 			savedLine := line
 			p.reader.Advance()
 			if p.reader.HasMoreLines() {
 				nextLine := p.reader.PeekLine()
+				trimmedNext := strings.TrimSpace(nextLine)
 				nextClass := p.classifier.ClassifyLine(nextLine)
-				if nextClass.Type == reader.BlockTable {
+
+				// Check if followed by table delimiter OR caption (then delimiter)
+				isTableFollowed := nextClass.Type == reader.BlockTable
+				// Also check if next line is a caption - look one more line ahead
+				isCaptionThenTable := false
+				if strings.HasPrefix(trimmedNext, ".") && !strings.HasPrefix(trimmedNext, "..") &&
+					!strings.HasPrefix(trimmedNext, ".#") {
+					// Might be a caption - check if line after that is table delimiter
+					p.reader.Advance() // Consume the potential caption
+					if p.reader.HasMoreLines() {
+						thirdLine := p.reader.PeekLine()
+						thirdClass := p.classifier.ClassifyLine(thirdLine)
+						if thirdClass.Type == reader.BlockTable {
+							isCaptionThenTable = true
+							pendingCaptionLine = nextLine // Save the caption
+						}
+					}
+					if !isCaptionThenTable {
+						// Not followed by table, put the line back
+						p.reader.UnshiftLine(nextLine)
+					}
+				}
+
+				if isTableFollowed || isCaptionThenTable {
 					// This attribute line belongs to a table
 					pendingAttributeLine = savedLine
 					continue
@@ -173,6 +199,29 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			}
 			// Not followed by a table - this is a standalone attribute line
 			// Restore it and let the normal attribute handling code process it
+			p.reader.UnshiftLine(savedLine)
+			// Continue to normal processing
+		}
+
+		// Handle caption lines before tables (e.g., .Table Title before |===)
+		// Must come after attribute line check since captions can follow attributes
+		trimmedLine := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmedLine, ".") && !strings.HasPrefix(trimmedLine, "..") &&
+			!strings.HasPrefix(trimmedLine, ".#") && !inDelimitedBlock &&
+			pendingCaptionLine == "" {
+			// This might be a table caption - save and check if next line is table
+			savedLine := line
+			p.reader.Advance()
+			if p.reader.HasMoreLines() {
+				nextLine := p.reader.PeekLine()
+				nextClass := p.classifier.ClassifyLine(nextLine)
+				if nextClass.Type == reader.BlockTable {
+					// This caption line belongs to a table
+					pendingCaptionLine = savedLine
+					continue
+				}
+			}
+			// Not followed by a table - restore it
 			p.reader.UnshiftLine(savedLine)
 			// Continue to normal processing
 		}
@@ -186,11 +235,16 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				delimitedBlockLines = []string{}
 				delimitedBlockLineno = lineno
 
-				// For tables with pending attribute line, add it at the beginning
-				if pendingAttributeLine != "" && classification.Type == reader.BlockTable {
-					delimitedBlockLines = append(delimitedBlockLines, pendingAttributeLine)
-					// Don't reset lineno - use the current line (delimiter) for correct positioning
-					pendingAttributeLine = ""
+				// For tables, add pending attribute and caption lines at the beginning
+				if classification.Type == reader.BlockTable {
+					if pendingAttributeLine != "" {
+						delimitedBlockLines = append(delimitedBlockLines, pendingAttributeLine)
+						pendingAttributeLine = ""
+					}
+					if pendingCaptionLine != "" {
+						delimitedBlockLines = append(delimitedBlockLines, pendingCaptionLine)
+						pendingCaptionLine = ""
+					}
 				}
 
 				p.reader.Advance()

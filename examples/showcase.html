@@ -616,6 +616,7 @@ All markup is passed through as-is.
     <col style="width: 33.3333%;">
     <col style="width: 33.3334%;">
   </colgroup>
+  <caption>Basic Table</caption>
   <tbody>
     <tr>
       <td class="tableblock halign-left valign-top"><p class="tableblock">Column 1</p></td>
@@ -634,21 +635,21 @@ All markup is passed through as-is.
     </tr>
   </tbody>
 </table>
-<div class="paragraph">
-<p>.Basic Table</p>
-</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 33.3333%;">
   <col style="width: 33.3333%;">
   <col style="width: 33.3334%;">
 </colgroup>
-<tbody>
+<caption>Table with Header</caption>
+<thead>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Name</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Age</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Occupation</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Name</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Age</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Occupation</p></th>
   </tr>
+</thead>
+<tbody>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Alice</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">28</p></td>
@@ -666,21 +667,21 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>.Table with Header</p>
-</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 33.3333%;">
   <col style="width: 33.3333%;">
   <col style="width: 33.3334%;">
 </colgroup>
-<tbody>
+<caption>Table of Operating Systems</caption>
+<thead>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">OS</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Market Share</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Year</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">OS</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Market Share</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Year</p></th>
   </tr>
+</thead>
+<tbody>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Windows</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">70%</p></td>
@@ -698,21 +699,21 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>.Table of Operating Systems</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
+<table class="tableblock frame-all grid-all stretch stripes-even">
 <colgroup>
   <col style="width: 33.3333%;">
   <col style="width: 33.3333%;">
   <col style="width: 33.3334%;">
 </colgroup>
-<tbody>
+<caption>Complex Table with Styles</caption>
+<thead>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Feature</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Notes</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Feature</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Status</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Notes</p></th>
   </tr>
+</thead>
+<tbody>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Parser</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Complete</p></td>
@@ -730,21 +731,21 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>.Complex Table with Styles</p>
-</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
   <col style="width: 33.3333%;">
   <col style="width: 33.3333%;">
   <col style="width: 33.3334%;">
 </colgroup>
-<tbody>
+<caption>Table with Column Widths</caption>
+<thead>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">ID</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Description</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Count</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">ID</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Description</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Count</p></th>
   </tr>
+</thead>
+<tbody>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">001</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Basic paragraph with simple text formatting</p></td>
@@ -762,9 +763,6 @@ All markup is passed through as-is.
   </tr>
 </tbody>
 </table>
-<div class="paragraph">
-<p>.Table with Column Widths</p>
-</div>
 </div>
 </section>
 <section class="sect1">
@@ -1467,7 +1465,7 @@ All markup is passed through as-is.
 <section class="sect1">
 <h2 id="bibliography">Bibliography</h2>
 <div class="sectionbody">
-<div class="sect1">
+<section class="sect1">
   <h2 id="_references">References</h2>
   <div class="sectionbody">
     <div class="ulist bibliography">
@@ -1484,7 +1482,7 @@ All markup is passed through as-is.
       </ul>
     </div>
   </div>
-</div>
+</section>
 <div class="paragraph">
 <p>As shown in [1], the AsciiDoc Language Specification is maintained by the Eclipse Foundation. The [2] project provides the reference implementation.</p>
 </div>

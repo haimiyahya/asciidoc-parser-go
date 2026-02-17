@@ -66,6 +66,19 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 		}
 	}
 
+	// Check for caption (line starting with single .)
+	// Caption comes after attributes but before table content
+	if lineIdx < len(lines) {
+		captionLine := strings.TrimSpace(lines[lineIdx])
+		if strings.HasPrefix(captionLine, ".") && !strings.HasPrefix(captionLine, "..") && !strings.HasPrefix(captionLine, ".#") {
+			// This is a caption line (single . not followed by . or #)
+			// Remove the leading . and trim
+			table.Caption = strings.TrimLeft(captionLine, ".")
+			table.Caption = strings.TrimSpace(table.Caption)
+			lineIdx++
+		}
+	}
+
 	// Parse rows
 	firstRow := true
 	for i := lineIdx; i < len(lines); i++ {

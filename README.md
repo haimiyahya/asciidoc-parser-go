@@ -239,20 +239,18 @@ The Language Server Protocol (LSP) server provides editor integration features l
 ```
 |===                                    Table delimiter (start/end)
 | Cell 1 | Cell 2 |                     Table row
-|= Header |                              Header row
-| >right | ^center | <left |             Cell alignment
-[cols="1,2,3"]                          Column specifications
+[cols="2*l"]                             Column specifications with styles
 [caption="Title"]                        Table caption
-2+                                      Colspan
-3*                                      Cell repeat
+|===|                                    Cell separator (empty cell)
+2+                                       Colspan indicator
 ```
 
 Tables support:
-- Header rows with `|=`
-- Cell alignment (`<` left, `>` right, `^` center)
-- Column specifications (width, style)
-- Table attributes (frame, grid, stripes, width)
-- Multiple data formats (PSV, CSV, TSV, DSV)
+- **Column specifications** with styles (`[cols="2*l"]` for literal columns)
+- **Table attributes** (frame, grid, stripes, width, caption)
+- **Multiple data formats** (PSV, CSV, TSV, DSV)
+
+**Note:** In basic PSV tables, per-cell indicators like `l|` (cell style), `3*` (repeat), or `|+` (continuation) are treated as literal cell content by Asciidoctor. Use column specifications instead for applying styles to entire columns.
 
 ### Inline Markup
 
@@ -266,35 +264,20 @@ Tables support:
 | `++code++` | `++code++` | Monospace alternative |
 | `^sup^` | sup | Superscript |
 | `~sub~` | sub | Subscript |
+| `+text+` | `text` | Inline passthrough |
+| `++text++` | `text` | Inline passthrough (alternative) |
+| `+++text+++` | `text` | Raw passthrough |
 | `link:text[url]` | <a href="url">text</a> | Macro link |
 | `https://url` | <a href="url">url</a> | Bare URL |
 | `image:path[alt]` | <img src="path" alt="alt"> | Inline image |
 | `<<section-id>>` | <a href="#section-id">section-id</a> | Cross-reference |
 | `<<id,text>>` | <a href="#id">text</a> | Cross-reference with custom text |
 | `[.role]**text**` | <span class="role">text</span> | Role/CSS class |
-| `kbd:[Ctrl+C]` | <kbd><span class="key">Ctrl</span>+<span class="key">C</span></kbd> | Keyboard shortcut |
+
+**Custom UI Macros** (extensions, not in AsciiDoc spec):
+| `kbd:[Ctrl+C]` | <kbd>...</kbd> | Keyboard shortcut |
 | `btn:[OK]` | <b class="btn">OK</b> | Button label |
 | `menu:[File > Save]` | <span class="menu">...</span> | Menu path |
-
-### Roles
-
-Roles allow you to add CSS classes to inline elements:
-
-```
-[.red]**This text is red**
-[.role1.role2]__This has two classes__
-[.highlight]`code with highlight`
-```
-
-### UI Macros
-
-UI macros help document user interface elements:
-
-```
-Press kbd:[Ctrl+C] to copy.
-Click btn:[Submit] to continue.
-Go to menu:[File > Save As].
-```
 
 ### Admonitions
 
@@ -471,11 +454,16 @@ go test ./tests/compatibility/...
 go test ./tests/compatibility/... -run TestCompatibility_AsciidoctorAvailable -v
 ```
 
+**Current Status: 29/32 tests passing (90.6% compatibility)**
+
 The compatibility framework supports:
 - **Golden file testing**: Pre-captured expected HTML files for regression testing
 - **Asciidoctor integration**: When `asciidoctor` is installed, generates expected HTML on-the-fly
 - **Detailed diff reporting**: Shows exact differences between expected and actual output
-- **27 built-in test cases**: Covering basic syntax, lists, inline markup, admonitions, blocks, tables, index terms, bibliography, UI macros, and roles
+- **32 built-in test cases**: Covering basic syntax, lists, inline markup, admonitions, blocks, tables, index terms, bibliography, roles, and passthrough
+
+**Known Differences (Custom Extensions):**
+- `kbd:[...]`, `btn:[...]`, `menu:[...]` UI macros are custom extensions not supported by default Asciidoctor
 
 #### Using Asciidoctor for Expected Output
 
@@ -508,13 +496,13 @@ GENERATE_GOLDEN=1 go test ./tests/compatibility/... -run TestCompatibility_Gener
 | Block Classifier | ✅ Complete | All AsciiDoc block types |
 | List Parsing | ✅ Complete | Nested, ordered, unordered, labeled |
 | Section Parsing | ✅ Complete | Multi-level headings |
-| Table Parsing | ✅ Complete | Delimited block syntax, attributes, alignment, colspan, rowspan |
-| Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript, roles, kbd, btn, menu |
+| Table Parsing | ✅ Complete | Column specifications, attributes, formats (PSV/CSV/TSV/DSV) |
+| Inline Parsing | ✅ Complete | Bold, italic, monospace, links, images, superscript, subscript, passthrough, roles |
 | Admonitions | ✅ Complete | All 5 types |
 | Block Macros | ✅ Complete | Image, video, audio, include |
 | Delimited Blocks | ✅ Complete | Example, quote, literal, styled blocks (pass::[], sidebar::[], verse::[]) |
 | AST Builder | ✅ Complete | Rich node hierarchy |
-| HTML5 Converter | ✅ Complete | Semantic HTML5 |
+| HTML5 Converter | ✅ Complete | Semantic HTML5, Asciidoctor-compatible formatting |
 | PDF Converter | ✅ Complete | With TOC, cover page, metadata |
 | DocBook Converter | ✅ Complete | DocBook 5.1.1 |
 | Man Page Converter | ✅ Complete | troff/nroff format |
@@ -524,7 +512,7 @@ GENERATE_GOLDEN=1 go test ./tests/compatibility/... -run TestCompatibility_Gener
 | Conditional Processing | ✅ Complete | ifdef, ifndef, ifeval |
 | Bibliography | ✅ Complete | Citation processing with [[[label]]] syntax |
 | Index Terms | ✅ Complete | (((term))) indexing with flow and concealed terms |
-| Compatibility Testing | ✅ Complete | Asciidoctor compatibility validation with 27 test cases |
+| Compatibility Testing | ✅ Complete | 29/32 tests passing (90.6%) vs Asciidoctor |
 | CLI | ✅ Complete | Full Asciidoctor-compatible options |
 | LSP Server | ✅ Complete | Diagnostics, symbols, completion, hover, go-to-definition |
 

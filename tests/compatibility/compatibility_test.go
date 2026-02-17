@@ -659,6 +659,22 @@ Additional information.
 |2*A |2*B | C
 |===`,
 		},
+
+		// Table vertical alignment
+		{
+			Name: "tables/vertical-alignment",
+			Category: "tables",
+			Source: `|===
+|.^Top |.Middle |>.Bottom
+|===`,
+		},
+		{
+			Name: "tables/vertical-alignment-mixed",
+			Category: "tables",
+			Source: `|===
+|.^<left top |>.>right bottom |.<center middle
+|===`,
+		},
 	}
 }
 

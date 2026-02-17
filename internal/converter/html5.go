@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"math"
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
@@ -1300,16 +1301,35 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 	numCols := table.ColumnCount()
 	if numCols > 0 {
 		colWidth := 100.0 / float64(numCols)
+		// Track the sum of floored widths for accurate last column calculation
+		sumFloored := 0.0
 		for i := 0; i < numCols; i++ {
-			// Last column may have slightly different width for rounding
-			width := colWidth
+			var width float64
 			if i == numCols-1 {
-				width = 100.0 - (colWidth*float64(numCols-1)) + 0.0001
+				// Last column gets the remainder based on actual floored values
+				width = 100.0 - sumFloored
+			} else {
+				width = colWidth
 			}
 			if c.pretty {
 				fmt.Fprint(w, c.indent)
 			}
-			fmt.Fprintf(w, `<col style="width: %.4f%%;">`, width)
+			// Asciidoctor uses integer for whole numbers, 4 decimals for fractions
+			// For fractional values, Asciidoctor floors to 4 decimals (not rounds)
+			var displayWidth float64
+			if width == math.Trunc(width) {
+				displayWidth = width
+				fmt.Fprintf(w, `<col style="width: %.0f%%;">`, displayWidth)
+			} else {
+				// Floor to 4 decimals like Asciidoctor
+				displayWidth = math.Floor(width*10000) / 10000
+				// Format with variable precision to trim trailing zeros
+				widthStr := fmt.Sprintf("%.4f", displayWidth)
+				widthStr = strings.TrimRight(widthStr, "0")
+				widthStr = strings.TrimRight(widthStr, ".")
+				fmt.Fprintf(w, `<col style="width: %s%%;">`, widthStr)
+			}
+			sumFloored += displayWidth
 			if c.pretty {
 				fmt.Fprintln(w)
 			}

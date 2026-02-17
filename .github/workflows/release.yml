@@ -132,10 +132,23 @@ jobs:
       - name: Prepare release assets
         run: |
           cd artifacts
-          # Find all files (recursively) and move them to current directory
-          find . -type f -exec mv {} . \;
-          # Remove empty subdirectories
-          find . -type d -empty -delete
+          # Move all files from subdirectories, renaming if there's a conflict
+          for dir in */; do
+            dir="${dir%/}"
+            if [ -d "$dir" ]; then
+              for file in "$dir"/*; do
+                if [ -f "$file" ]; then
+                  basename=$(basename "$file")
+                  # If target exists as directory, remove it first
+                  if [ -d "$basename" ]; then
+                    rm -rf "$basename"
+                  fi
+                  mv "$file" .
+                fi
+              done
+              rmdir "$dir" 2>/dev/null || true
+            fi
+          done
           ls -la
 
       - name: Generate checksums

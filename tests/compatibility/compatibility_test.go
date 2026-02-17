@@ -627,6 +627,22 @@ Additional information.
 |+continued cell 1 |Cell 3
 |===`,
 		},
+
+		// Table cell styles
+		{
+			Name: "tables/cell-styles",
+			Category: "tables",
+			Source: `|===
+|Normal cell |l|Literal cell |m|Monospace cell
+|===`,
+		},
+		{
+			Name: "tables/cell-styles-advanced",
+			Category: "tables",
+			Source: `|===
+|e|Emphasis |s|Strong |v|Verse cell
+|===`,
+		},
 	}
 }
 

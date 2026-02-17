@@ -293,6 +293,7 @@ func (p *TableParser) parseRow(line string, format ast.TableFormat, isHeaderRow 
 //           | Cell 1 | Cell 2 || Cell 3 |
 //           | >right | ^center | <left |
 //           |= Header 1 |= Header 2 (header row)
+//           |l|Literal cell |m|Monospace cell (cell styles)
 func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell {
 	var cells []ast.TableCell
 
@@ -307,8 +308,38 @@ func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell
 		parts = parts[:len(parts)-1]
 	}
 
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
+	// Current style to apply to next cell
+	var currentStyle string
+
+	for i, part := range parts {
+		trimmed := strings.TrimSpace(part)
+
+		// Check for single-letter style indicator (l, m, v, a, e, h, s, d)
+		// These indicate cell style for the following cell ONLY when:
+		// - It's a single letter that IS a valid style indicator
+		// - It's followed by actual cell content (not another style indicator)
+		isStyle := false
+		if len(trimmed) == 1 && p.isCellStyleIndicator(trimmed) {
+			// Check if this might be a style indicator by looking ahead
+			// A style indicator must be followed by actual cell content
+			if i+1 < len(parts) {
+				nextPart := strings.TrimSpace(parts[i+1])
+				// If next part has content and is NOT another style indicator, this is a style indicator
+				if nextPart != "" && !p.isCellStyleIndicator(nextPart) {
+					isStyle = true
+				}
+				// Also if next part is empty but there's more content after that,
+				// it could be like: |l||content| which would mean empty literal cell
+				if nextPart == "" && i+2 < len(parts) {
+					isStyle = true
+				}
+			}
+		}
+
+		if isStyle {
+			currentStyle = p.normalizeCellStyle(trimmed)
+			continue
+		}
 
 		cell := ast.TableCell{
 			ColSpan:    1,
@@ -316,53 +347,63 @@ func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell
 			Attributes: make(map[string]string),
 		}
 
+		// Apply current style if set
+		if currentStyle != "" {
+			cell.Style = currentStyle
+			currentStyle = "" // Reset after use
+		}
+
 		// Check for leading alignment indicators
 		// Note: The = character is kept as literal text (|= Header becomes "= Header")
 		// because it's part of the cell content in basic AsciiDoc tables.
-		if len(part) > 0 {
-			switch part[0] {
+		if len(trimmed) > 0 {
+			switch trimmed[0] {
 			case '<':
 				cell.HorizontalAlign = "left"
-				part = strings.TrimSpace(part[1:])
+				trimmed = strings.TrimSpace(trimmed[1:])
 			case '>':
 				cell.HorizontalAlign = "right"
-				part = strings.TrimSpace(part[1:])
+				trimmed = strings.TrimSpace(trimmed[1:])
 			case '^':
 				cell.HorizontalAlign = "center"
-				part = strings.TrimSpace(part[1:])
+				trimmed = strings.TrimSpace(trimmed[1:])
 			case '.':
 				// Default alignment
-				part = strings.TrimSpace(part[1:])
+				trimmed = strings.TrimSpace(trimmed[1:])
 			}
 		}
 
 		// Check for repeat indicator (e.g., 3* for repeating cell)
-		if match := regexp.MustCompile(`^(\d+)\*(.+)`).FindStringSubmatch(part); len(match) > 0 {
+		if match := regexp.MustCompile(`^(\d+)\*(.+)`).FindStringSubmatch(trimmed); len(match) > 0 {
 			if repeat, err := strconv.Atoi(match[1]); err == nil {
 				cell.Repeat = repeat
-				part = match[2]
+				trimmed = match[2]
 			}
 		}
 
 		// Check for colspan indicator (e.g., 2+ or +)
-		if match := regexp.MustCompile(`^(\d+)?\+(.*)`).FindStringSubmatch(part); len(match) > 0 && match[1] != "" {
+		if match := regexp.MustCompile(`^(\d+)?\+(.*)`).FindStringSubmatch(trimmed); len(match) > 0 && match[1] != "" {
 			if colspan, err := strconv.Atoi(match[1]); err == nil {
 				cell.ColSpan = colspan
-				part = match[2]
+				trimmed = match[2]
 			}
 		}
 
-		// Parse inline content
-		cell.Text = part
-		if part != "" {
-			inlineParser := inline.NewParser(part)
-			inlineNodes := inlineParser.Parse()
-			cell.InlineNodes = make([]interface{}, 0)
-			for _, node := range inlineNodes {
-				if node.Type != inline.NodeText {
-					cell.InlineNodes = append(cell.InlineNodes, node)
+		// Parse inline content based on cell style
+		cell.Text = trimmed
+		if trimmed != "" {
+			// For literal cells, don't parse inline content
+			if cell.Style != "literal" {
+				inlineParser := inline.NewParser(trimmed)
+				inlineNodes := inlineParser.Parse()
+				cell.InlineNodes = make([]interface{}, 0)
+				for _, node := range inlineNodes {
+					if node.Type != inline.NodeText {
+						cell.InlineNodes = append(cell.InlineNodes, node)
+					}
 				}
 			}
+			// For literal cells, InlineNodes remain empty
 		}
 
 		cells = append(cells, cell)
@@ -555,4 +596,60 @@ func (p *TableParser) handleCellContinuation(table *ast.Table, line string, line
 
 	// Add the new row to the table
 	table.Rows = append(table.Rows, newRow)
+}
+
+// isCellStyleIndicator checks if a single character is a cell style indicator.
+// Cell style indicators are always lowercase single letters.
+func (p *TableParser) isCellStyleIndicator(s string) bool {
+	if len(s) != 1 {
+		return false
+	}
+	// Must be lowercase letter (a-z)
+	if s[0] < 'a' || s[0] > 'z' {
+		return false
+	}
+	switch s {
+	case "l": // literal
+		return true
+	case "m": // monospace
+		return true
+	case "v": // verse
+		return true
+	case "a": // asciidoc
+		return true
+	case "e": // emphasis
+		return true
+	case "h": // header
+		return true
+	case "s": // strong
+		return true
+	case "d": // disk
+		return true
+	default:
+		return false
+	}
+}
+
+// normalizeCellStyle converts a single-letter style indicator to a normalized style name.
+func (p *TableParser) normalizeCellStyle(s string) string {
+	switch strings.ToLower(s) {
+	case "l":
+		return "literal"
+	case "m":
+		return "monospace"
+	case "v":
+		return "verse"
+	case "a":
+		return "asciidoc"
+	case "e":
+		return "emphasis"
+	case "h":
+		return "header"
+	case "s":
+		return "strong"
+	case "d":
+		return "disk"
+	default:
+		return ""
+	}
 }

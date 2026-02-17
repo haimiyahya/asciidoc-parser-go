@@ -1405,8 +1405,29 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 
 	fmt.Fprint(w, ">")
 
-	// Write cell content wrapped in p.tableblock (Asciidoctor compatibility)
-	fmt.Fprint(w, `<p class="tableblock">`)
+	// Determine content wrapper based on cell style
+	style := cell.Style
+	var contentWrapper string
+
+	switch style {
+	case "literal":
+		contentWrapper = "code"  // <code> for literal
+	case "monospace":
+		contentWrapper = "code"  // <code> for monospace
+	case "verse":
+		contentWrapper = "div"   // <div> for verse (preserves line breaks)
+	case "emphasis":
+		contentWrapper = "em"    // <em> for emphasis
+	case "strong", "header":
+		contentWrapper = "strong" // <strong> for strong/header
+	default:
+		contentWrapper = "p"     // <p> for normal content
+	}
+
+	// Write opening content wrapper tag
+	if contentWrapper != "" {
+		fmt.Fprintf(w, `<%s class="tableblock">`, contentWrapper)
+	}
 
 	// Check if cell has multi-line content
 	cellText := cell.Text
@@ -1469,7 +1490,10 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 		}
 	}
 
-	fmt.Fprint(w, `</p>`)
+	// Close the content wrapper tag
+	if contentWrapper != "" {
+		fmt.Fprintf(w, `</%s>`, contentWrapper)
+	}
 	fmt.Fprintf(w, "</%s>", tag)
 	if c.pretty {
 		fmt.Fprintln(w)

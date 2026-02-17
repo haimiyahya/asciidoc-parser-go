@@ -617,6 +617,16 @@ Additional information.
 			Category: "passthrough",
 			Source: `This is a ++span++ that groups text.`,
 		},
+
+		// Multi-line table cells
+		{
+			Name: "tables/multiline",
+			Category: "tables",
+			Source: `|===
+|Cell 1 |Cell 2
+|+continued cell 1 |Cell 3
+|===`,
+		},
 	}
 }
 

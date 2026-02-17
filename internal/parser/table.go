@@ -65,6 +65,13 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 			continue
 		}
 
+		// Check for cell continuation: |+
+		// This continues the last cell of the previous row
+		if strings.HasPrefix(line, "|+") || line == "|+" {
+			p.handleCellContinuation(table, lines[i], i)
+			continue
+		}
+
 		// Determine row kind for this specific row
 		rowKind := ast.TableRowBody
 
@@ -526,4 +533,26 @@ func IsTableLine(line string) bool {
 		strings.HasPrefix(line, "[") ||
 		strings.HasPrefix(line, "|=") ||
 		strings.HasPrefix(line, "|_")
+}
+
+// IsCellContinuation checks if a line is a cell continuation marker.
+func IsCellContinuation(line string) bool {
+	line = strings.TrimSpace(line)
+	return strings.HasPrefix(line, "|+") || line == "|+"
+}
+
+// handleCellContinuation handles the |+ continuation syntax for multi-line cells.
+// In Asciidoctor, |+ at the start creates a new row where cells with content
+// are added to the table. The |+ prefix is preserved as literal text in cells.
+func (p *TableParser) handleCellContinuation(table *ast.Table, line string, lineno int) {
+	// Trim the leading | but keep the + as literal text
+	// |+ content becomes a row with first cell being "+ content"
+	line = strings.TrimLeft(line, "| \t")
+
+	// Parse this as a regular row - the + will be part of the cell content
+	format := table.GetFormat()
+	newRow := p.parseRow("|"+line, format, false)
+
+	// Add the new row to the table
+	table.Rows = append(table.Rows, newRow)
 }

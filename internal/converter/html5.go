@@ -1408,8 +1408,23 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 	// Write cell content wrapped in p.tableblock (Asciidoctor compatibility)
 	fmt.Fprint(w, `<p class="tableblock">`)
 
+	// Check if cell has multi-line content
+	cellText := cell.Text
+	hasMultiLine := strings.Contains(cellText, "\n")
+
 	if len(cell.InlineNodes) == 0 {
-		c.writeRawString(c.escape(cell.Text), w)
+		if hasMultiLine {
+			// For multi-line cells, replace newlines with <br> tags
+			lines := strings.Split(cellText, "\n")
+			for i, line := range lines {
+				c.writeRawString(c.escape(line), w)
+				if i < len(lines)-1 {
+					c.writeRawString(`<br>`, w)
+				}
+			}
+		} else {
+			c.writeRawString(c.escape(cell.Text), w)
+		}
 	} else {
 		// Render inline nodes
 		lastEnd := 0
@@ -1419,7 +1434,18 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 				// Write any text before this inline node
 				if startPos > lastEnd {
 					text := cell.Text[lastEnd:startPos]
-					c.writeRawString(c.escape(text), w)
+					// Handle multi-line text between inline nodes
+					if strings.Contains(text, "\n") {
+						lines := strings.Split(text, "\n")
+						for i, line := range lines {
+							c.writeRawString(c.escape(line), w)
+							if i < len(lines)-1 {
+								c.writeRawString(`<br>`, w)
+							}
+						}
+					} else {
+						c.writeRawString(c.escape(text), w)
+					}
 				}
 				lastEnd = inlineNode.Position
 				// Render the inline node
@@ -1429,7 +1455,17 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 		// Write any remaining text
 		if lastEnd < len(cell.Text) {
 			text := cell.Text[lastEnd:]
-			c.writeRawString(c.escape(text), w)
+			if strings.Contains(text, "\n") {
+				lines := strings.Split(text, "\n")
+				for i, line := range lines {
+					c.writeRawString(c.escape(line), w)
+					if i < len(lines)-1 {
+						c.writeRawString(`<br>`, w)
+					}
+				}
+			} else {
+				c.writeRawString(c.escape(text), w)
+			}
 		}
 	}
 

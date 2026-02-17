@@ -600,6 +600,23 @@ Additional information.
 
 [.role1.role2]__This has two classes__`,
 		},
+
+		// Passthrough macros
+		{
+			Name: "passthrough/inline",
+			Category: "passthrough",
+			Source: `Use +<b>bold</b>+ for inline passthrough.`,
+		},
+		{
+			Name: "passthrough/raw",
+			Category: "passthrough",
+			Source: `This +++<b>raw HTML</b>+++ is passed through.`,
+		},
+		{
+			Name: "passthrough/span",
+			Category: "passthrough",
+			Source: `This is a ++span++ that groups text.`,
+		},
 	}
 }
 

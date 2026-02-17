@@ -56,6 +56,14 @@ const (
 
 	// NodeCustomMacro is a custom inline macro (registered via extension system).
 	NodeCustomMacro
+
+	// NodePassThrough is inline passthrough content (+text+).
+	// The content is passed through with substitutions applied.
+	NodePassThrough
+
+	// NodeRawPassThrough is raw inline passthrough (+++text+++).
+	// The content is passed through WITHOUT any substitutions.
+	NodeRawPassThrough
 )
 
 // String returns the string representation of NodeType.
@@ -75,6 +83,8 @@ func (nt NodeType) String() string {
 		NodeMenu:       "Menu",
 		NodeIndexTerm:  "IndexTerm",
 		NodeCustomMacro: "CustomMacro",
+		NodePassThrough:    "PassThrough",
+		NodeRawPassThrough: "RawPassThrough",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -283,6 +293,25 @@ func (p *Parser) Parse() []*Node {
 			continue
 		}
 
+		// Check for raw passthrough BEFORE span (+++text+++ before ++text++)
+		if node, newPos := p.tryRawPassThrough(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		// Check for inline passthrough (+text+)
+		// Must be before monospace which also uses single characters
+		if node, newPos := p.tryInlinePassThrough(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
 		if node, newPos := p.trySpan(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
@@ -346,7 +375,9 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "__") ||
 				strings.HasPrefix(remaining, "_") ||
 				strings.HasPrefix(remaining, "`") ||
-				strings.HasPrefix(remaining, "++") ||
+				strings.HasPrefix(remaining, "+++") || // Raw passthrough
+				strings.HasPrefix(remaining, "++") || // Span
+				strings.HasPrefix(remaining, "+") || // Inline passthrough
 				strings.HasPrefix(remaining, "http://") ||
 				strings.HasPrefix(remaining, "https://") ||
 				strings.HasPrefix(remaining, "~") ||
@@ -1002,4 +1033,59 @@ func (p *Parser) parseIndexTerms(s string) []string {
 	}
 
 	return terms
+}
+
+// tryRawPassThrough attempts to parse raw inline passthrough: +++text+++.
+// The content is passed through WITHOUT any substitutions.
+func (p *Parser) tryRawPassThrough() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for triple-plus passthrough: +++text+++
+	if strings.HasPrefix(remaining, "+++") {
+		closeIndex := strings.Index(remaining[3:], "+++")
+		if closeIndex != -1 && closeIndex > 0 {
+			text := remaining[3 : closeIndex+3]
+			return &Node{
+				Type:     NodeRawPassThrough,
+				Text:     text,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 6,
+			}, p.pos + closeIndex + 6
+		}
+	}
+
+	return nil, p.pos
+}
+
+// tryInlinePassThrough attempts to parse inline passthrough: +text+.
+// The content is passed through with substitutions applied.
+func (p *Parser) tryInlinePassThrough() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for single-plus passthrough: +text+
+	// Must not be followed by another + (that would be ++ or +++)
+	if strings.HasPrefix(remaining, "+") && len(remaining) > 1 {
+		// Check if this is actually ++ or +++ (should be handled elsewhere)
+		if strings.HasPrefix(remaining, "++") {
+			return nil, p.pos
+		}
+
+		// Must be followed by a non-space character
+		if remaining[1] == ' ' {
+			return nil, p.pos
+		}
+
+		closeIndex := strings.Index(remaining[1:], "+")
+		if closeIndex != -1 && closeIndex > 0 {
+			text := remaining[1 : closeIndex+1]
+			return &Node{
+				Type:     NodePassThrough,
+				Text:     text,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 2,
+			}, p.pos + closeIndex + 2
+		}
+	}
+
+	return nil, p.pos
 }

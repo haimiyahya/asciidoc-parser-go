@@ -424,6 +424,14 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			c.writeRawString(c.escape(node.Text), w)
 		}
 		// Concealed index terms produce no output
+	case inline.NodePassThrough:
+		// Inline passthrough: +text+ - content is passed through with substitutions
+		// Apply special characters substitution only
+		c.writeRawString(c.escape(node.Text), w)
+	case inline.NodeRawPassThrough:
+		// Raw inline passthrough: +++text+++ - content is passed through WITHOUT any escaping
+		// This is used for HTML fragments, etc.
+		c.writeRawString(node.Text, w)
 	case inline.NodeCustomMacro:
 		// Custom inline macro - check extension registry
 		if c.extensionRegistry != nil {

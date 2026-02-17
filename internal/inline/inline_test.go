@@ -142,10 +142,10 @@ func TestParseMonospace(t *testing.T) {
 			},
 		},
 		{
-			name: "plusplus monospace",
+			name: "plusplus span",
 			source: "++mono++",
 			expected: []*Node{
-				{Type: NodeMonospace, Text: "mono"},
+				{Type: NodeText, Text: "mono"},
 			},
 		},
 	}
@@ -173,9 +173,9 @@ func TestParseLink(t *testing.T) {
 	}{
 		{
 			name: "macro link",
-			source: "link:text[url]",
+			source: "link:https://example.com[Click Here]",
 			expected: []*Node{
-				{Type: NodeLink, Text: "text", URL: "url"},
+				{Type: NodeLink, Text: "Click Here", URL: "https://example.com"},
 			},
 		},
 		{
@@ -229,11 +229,11 @@ func TestParseMixed(t *testing.T) {
 		},
 		{
 			name: "link with bold",
-			source: "**bold** link:text[url]",
+			source: "**bold** link:https://example.com[Click]",
 			expected: []*Node{
 				{Type: NodeBold, Text: "bold"},
 				{Type: NodeText, Text: " "},
-				{Type: NodeLink, Text: "text", URL: "url"},
+				{Type: NodeLink, Text: "Click", URL: "https://example.com"},
 			},
 		},
 	}

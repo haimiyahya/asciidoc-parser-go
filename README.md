@@ -425,7 +425,7 @@ Source Text
 - [x] Phase 12: EPUB Backend
 - [x] Phase 13: LSP Server
 
-See [ROADMAP.md](ROADMAP.md) for details.
+All core phases complete! See [ROADMAP.md](ROADMAP.md) for future enhancements.
 
 ## Development
 

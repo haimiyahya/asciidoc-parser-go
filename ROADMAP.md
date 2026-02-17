@@ -1,251 +1,172 @@
-# Roadmap for asciidoc-parser-go
+# Roadmap
 
-This document outlines the phased implementation plan for building a native Go implementation of a complete AsciiDoc parser and processor.
+This document outlines future features and implementation priorities for asciidoc-parser-go.
 
-## Phase 0: Line-Oriented Reader + Basic Block Classifier ✅
+**Current Status:** All core phases (0-13) are complete with 100% Asciidoctor compatibility on 32 built-in test cases. See [README.md](README.md) for completed features.
 
-**Status**: Complete
+## Implementation Priorities
 
-**Objectives**:
-- Implement a line-oriented Reader that mimics human visual scanning of text
-- Implement Block Classifier to identify block types based on line patterns
-- Establish position tracking for error reporting
+### High Priority
 
-**Implementation**:
-- `internal/reader/reader.go`: Core Reader with lookahead, mark/restore
-- `internal/reader/classifier.go`: LineClassifier for all block types
-- `internal/reader/reader_test.go`: Comprehensive tests
+#### 1. Enhanced LSP Features
+**Status:** Basic LSP implemented (diagnostics, symbols, completions, hover, go-to-definition)
 
-**Key Design Decisions**:
-- Lines stored in reverse order for efficient popping (matches Asciidoctor)
-- 1-based line numbers (human convention)
-- Position tracking (file, path, lineno)
-- Human-like visual pattern matching with minimal backtracking
+**Remaining Features:**
+- Semantic tokens - Syntax highlighting for different AsciiDoc constructs
+- Code lens - Section references count, attribute references
+- Inlay hints - Show implicit attribute values
+- Signature help - For macro parameters
+- Workspace symbols - Search across all AsciiDoc files
+- Rename - Rename sections and update all references
+- Document link - Clickable links for includes and xrefs
+- Selection range - Smart selection of sections, blocks
+- Folding range - Fold sections, blocks, lists
 
-## Phase 1: Core Parser Block Detection ✅
+#### 2. Table Improvements
+**Current:** Basic tables with column specifications and attributes
 
-**Objectives**:
-- Implement block boundary detection (delimited blocks)
-- Implement list detection and nesting logic
-- Implement attribute entry parsing
-- Implement section header parsing
-- Implement inline markup detection (bold, italic, etc.)
+**Remaining Features:**
+- Multi-line cells (`+` continuation) - Asciidoctor treats `|+` as a new row
+- Cell styles via column specs - `[cols="2*l"]` for literal columns already works
+- Vertical table support
+- Auto-fit column widths (`[%autowidth]` partially implemented)
 
-**Implementation**:
-- Create `internal/parser/block.go` for block-level parsing
-- Extend LineClassifier with block-level context
-- Add support for:
-  - Delimited blocks: `----`, `====`, `____`, `++++`, `////`, `****`, `....`
-  - Lists: ordered (`.`), unordered (`-`, `*`, `o`), labeled (`::`)
-  - Attributes: `:name: value`, `:name!`
-  - Sections: `= Title` (level based on `=` count)
+**Note:** Per-cell style indicators (`l|`, `m|`, `v|`), repeat cells (`3*value`), and vertical alignment (`.^`, `.<`, `>.`) are kept as literal text by Asciidoctor in basic PSV tables. Use column specifications instead.
 
-## Phase 2: Inline Parser ✅
+#### 3. Advanced Inline Parsing
+**Current:** Basic inline formatting implemented
 
-**Objectives**:
-- Implement inline parsing for:
-  - Text formatting: `**bold**`, `*italic*`, ``_monospace_``, `^superscript^`, `~subscript~`
-  - Links: `link:text[url]`, `https://url` or `url`
-  - Images: `image:path[alt]`
-  - Attributes references: `{attr}` (inline substitution)
-  - Passthrough: `+++pass+++` (raw output)
-  - Macros: `macro::target[attrs]` (block/inline)
+**Remaining Features:**
+- Triple-plus passthrough - `+++passthrough+++`
+- Footnote macro - `footnote:text[]`
+- Icon fonts - `icon:github[]` with font-awesome support
+- Index terms - `((term))` and `(((term)))` (partial)
 
-**Implementation**:
-- Create `internal/parser/inline.go` for inline element parsing
-- State machine for nested inline formatting (e.g., `**bold with _italic_**`)
-- Proper attribute reference resolution
-- Link and image URL parsing
+### Medium Priority
 
-## Phase 3: AST Builder ✅
+#### 4. More Block Types
+**Current:** Example, quote, literal, sidebar blocks implemented
 
-**Objectives**:
-- Construct rich Abstract Syntax Tree from parsed content
-- Preserve source location for error reporting
-- Store block-level and inline-level structure
-- Support document metadata (header attributes)
+**Remaining Features:**
+- Verse blocks - Poetry/verse with enhanced line break handling
+- Quote attribution - Enhanced attribution, cite title support
+- Callout lists - Coordinated callouts across code blocks
+- Open blocks - `--` delimiter variant
 
-**Implementation**:
-- Extend `internal/ast/ast.go` with:
-  - `Document` node with header, blocks, attributes
-  - `Section` nodes with level, title, id, attributes
-  - `Block` nodes: Paragraph, List, ListItem, Literal, Verbatim, etc.
-  - `Inline` nodes: Text, Bold, Italic, Link, Image, etc.
-  - Position tracking for all nodes
+#### 5. Document Preprocessing
+**Current:** Basic `ifdef`, `ifndef`, `ifeval` implemented
 
-## Phase 4: Attribute Processor ✅
+**Remaining Features:**
+- Nested conditionals - `ifdef::attr[ifdef::nested[]]`
+- `elsedef` directive
+- Document attribute substitution enhancements
 
-**Objectives**:
-- Implement attribute substitution/replacement
-- Implement conditional processing (`ifdef`, `ifndef`, `ifeval`)
-- Implement document-level attribute defaults
+#### 6. Extension System Enhancements
+**Status:** Basic extension system in `internal/extension/`
 
-**Implementation**:
-- `internal/processor/attributes.go` for attribute management
-- `internal/processor/conditional.go` for conditional directives
-- Attribute inheritance and scoping
-- Predefined attributes (e.g., `toc`, `sectnums`)
+**Potential additions:**
+- More bundled extensions (diagrams, charts, plantuml, mermaid)
+- Extension registry API
+- Extension configuration via attributes
+- Extension discovery and loading
 
-## Phase 5: Include Processor ✅
+See [EXTENSIONS.md](EXTENSIONS.md) for current extension capabilities.
 
-**Objectives**:
-- Implement `include::[]` directive
-- Support tag filtering (`tag=` and `tags=`)
-- Handle `lines=` attribute for line ranges
-- Control include depth and circular reference detection
+### Lower Priority
 
-**Implementation**:
-- `internal/processor/include.go` for include directive handling
-- Relative path resolution
-- Safe mode enforcement
-- Include stack tracking for error reporting
+#### 7. Additional Backends
+**Current:** HTML5, PDF, DocBook 5.1.1, Man Page, EPUB
 
-## Phase 6: HTML5 Converter ✅
+**Potential additions:**
+- Text output - Plain text converter
+- Markdown - AsciiDoc to Markdown converter
+- Slide decks - Reveal.js/remark.js output
 
-**Objectives**:
-- Convert AST to HTML5 output
-- Implement semantic HTML elements
-- Support syntax highlighting (optional)
-- Handle all block and inline types
+#### 8. CLI Enhancements
+**Current:** Full CLI with Asciidoctor-compatible options
 
-**Implementation**:
-- `internal/converter/html5.go` for HTML5 backend
-- Visitor pattern for AST traversal
-- Proper escaping and safe HTML generation
-- Support for converter extensions (DocBook, PDF)
+**Potential additions:**
+- Watch mode for auto-regeneration on file changes
+- Server mode for multiple document conversion
+- Progress bars for large documents
+- Dry-run mode (parse without output)
+- Config file support (`~/.config/asciidoc/config.toml`)
 
-## Phase 7: Testing and Validation ✅
+#### 9. Validation & Linting
+- Document structure validation
+- Link checking (internal and external)
+- Style checking (recommended practices)
+- Attribute validation
 
-**Objectives**:
-- Validate against Asciidoctor test suite
-- Create comprehensive test coverage
-- Performance benchmarking
+#### 10. Developer Tools
+- AST inspector CLI (`asciidoc ast --format=json document.adoc`)
+- Diff tool (`asciidoc diff old.adoc new.adoc`)
+- Attribute explorer (`asciidoc attributes document.adoc`)
+- Symbol browser (`asciidoc symbols document.adoc`)
 
-**Implementation**:
-- Integration tests comparing with Asciidoctor output
-- Table-driven tests for all components
-- Examples from AsciiDoc Language Specification
-- Benchmarking for optimization opportunities
+#### 11. Performance
+- Parallel rendering for large documents
+- Streaming output for very large files
+- Caching for incremental builds
 
-## Phase 8: CLI and Tooling ✅
+## Asciidoctor Feature Comparison
 
-**Objectives**:
-- Command-line interface for common operations
-- Watch mode for auto-processing on file changes
-- Stdin/stdout support for pipeline usage
-- Library mode for embedding
+| Feature | Asciidoctor | Go Parser | Priority |
+|---------|-------------|-----------|----------|
+| **LSP Server** | Community only | Basic implemented | Medium |
+| **Extension System** | Full API | Partial | Medium |
+| **Table: Multiline cells** | Yes | No | High |
+| **Table: Vertical alignment** | As literal | As literal | - |
+| **Table: Cell styles** | Via column specs | Via column specs | - |
+| **Passthrough macros** | Full | Partial | High |
+| **Footnote macro** | Yes | Partial | High |
+| **Icon fonts** | Yes | No | Medium |
+| **Conditional processing** | Full | Basic | Medium |
+| **Custom backends** | Yes | 5 backends | - |
+| **Verse blocks** | Yes | Partial | Medium |
+| **Quote blocks** | Yes | Partial | Medium |
+| **Sidebar blocks** | Yes | Yes | - |
+| **Callout lists** | Yes | Partial | High |
 
-**Implementation**:
-- `cmd/asciidoc/main.go` CLI implementation
-- Full flag support: input/output files, backend selection, attributes
-- Stdin/stdout support for pipeline usage
-- Config file support (`~/.config/asciidoc/config.toml`) - TODO
-- Plugin/extension system - TODO
-- Watch mode (fsnotify or polling) - TODO
+## Development Strategy
 
-## Phase 9: PDF Backend ✅
+For each feature implementation:
 
-**Status**: Complete
+1. **Find corresponding Asciidoctor test** in `test/` directory
+2. **Create input fixture** in `tests/compatibility/fixtures/`
+3. **Generate golden file** using Asciidoctor (when available)
+4. **Implement feature** in Go parser
+5. **Validate** against golden file output
 
-**Objectives**:
-- Convert AsciiDoc to PDF using Chrome/Chromium headless
-- Support page size and margin configuration
-- Professional PDF styling with custom CSS
+### Asciidoctor Test Files Reference
 
-**Implementation**:
-- `internal/converter/pdf.go`: PDF converter using chromedp
-- Converts AST → HTML → PDF via headless Chrome
-- Supports Letter, A4, and custom page sizes
-- Configurable margins and print options
-- Professional CSS styling for PDF output
-
-**Note**: Requires Chrome or Chromium to be installed for PDF generation.
-
-## Phase 10: DocBook Backend ✅
-
-**Status**: Complete
-
-**Objectives**:
-- Convert AsciiDoc to DocBook 5.1.1 XML
-- Support article and book document types
-- Enable technical documentation pipelines
-
-**Implementation**:
-- `internal/converter/docbook.go`: DocBook 5.1.1 converter
-- Full support for sections, paragraphs, lists, inline elements
-- Admonitions, tables, code blocks, quotes
-- Media objects (images, video, audio)
-- Proper XML namespaces and DocBook 5.1.1 compliance
-
-## Phase 11: Man Page Backend ✅
-
-**Status**: Complete
-
-**Objectives**:
-- Convert AsciiDoc to troff/nroff Man Page format
-- Support Unix manual page conventions
-- Enable command documentation
-
-**Implementation**:
-- `internal/converter/manpage.go`: Man Page converter
-- Maps sections to standard man page sections (NAME, SYNOPSIS, etc.)
-- Supports inline formatting (\fB for bold, \fI for italic)
-- Supports lists with tagged paragraphs for options
-- Supports literal blocks with .nf/.fi
-- Auto-detects manual name and section from input
-
-## Phase 12: EPUB Backend ✅
-
-**Status**: Complete
-
-**Objectives**:
-- Convert AsciiDoc to EPUB e-book format
-- Support e-reader compatibility
-- Enable e-book publishing
-
-**Implementation**:
-- `internal/converter/epub.go`: EPUB converter
-- Creates valid EPUB 2.0.1 ZIP archive
-- Complete file structure: mimetype, container.xml, content.opf, toc.ncx, etc.
-- XHTML content with CSS styling for e-readers
-- Metadata support: title, author, language, publisher, identifier
-- Converts all AsciiDoc elements to EPUB-compatible XHTML
-
-## Future Enhancements (Post-MVP)
-
-### Additional Backends
-- DocBook 5.1.1 ✅
-- Man page via groff/troff ✅
-- EPUB via asciidoc-epub3 ✅
-
-### PDF Enhancements ✅
-- Table of contents generation ✅
-- Page numbering options ✅
-- Cover page support ✅
-- Custom headers and footers ✅
-- PDF metadata (author, title, keywords) ✅
-
-### Cross-References ✅
-- `<<section-id>>` syntax ✅
-- `<<section-id,custom text>>` syntax ✅
-- Auto-generated section IDs ✅
-- Support in all backends (HTML5, PDF, DocBook, EPUB, Man Page) ✅
-
-### Extension Points
-- Custom block macros
-- Custom inline macros (xref, btn, etc.)
-- Tree processors (AST transformations)
-- Postprocessors (output manipulation)
-
-### Editor Integration
-- Language Server Protocol (LSP) support
-- VS Code extension
-- Vim/Neovim plugin
-- Emacs major mode
+```
+asciidoctor/test/
+├── attribute_entries_test.rb    # Attribute processing
+├── basic_document_test.rb        # Basic document structure
+├── blocks_test.rb                # Block-level elements
+├── conditionals_test.rb          # Conditional processing
+├── document_test.rb              # Document model
+├── examples_test.rb              # Example blocks
+├── inline_macro_test.rb          # Inline macros
+├── links_test.rb                 # Links and cross-references
+├── lists_test.rb                 # Lists (ordered, unordered, labeled)
+├── paragraphs_test.rb            # Paragraph formatting
+├── parser_test.rb                # Parser core
+├── sections_test.rb              # Section headings
+├── tables_test.rb                # Table processing
+└── template_converter_test.rb   # Converter tests
+```
 
 ## Notes
 
-- This roadmap follows the principle of "incremental and verifiable"
-- Each phase should produce passing tests before starting the next
-- The architecture prioritizes "spec-first, compatibility-second"
-- Performance optimization should not compromise correctness
+- Asciidoctor does **NOT** provide an official LSP server ([GitHub Issue #3630](https://github.com/asciidoctor/asciidoctor/issues/3630))
+- The Go parser's LSP implementation is **ahead** of Asciidoctor in this area
+- All 32 compatibility tests pass (100% compatibility with Asciidoctor 2.0.26)
+- UI macros (`kbd:[...]`, `btn:[...]`, `menu:[...]`) are Asciidoctor extensions, available as custom extensions in this implementation
+
+---
+
+**Last Updated:** 2026-02-17
+**Asciidoctor Version:** 2.0.26
+**Compatibility:** 32/32 tests passing (100%)

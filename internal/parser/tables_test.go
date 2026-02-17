@@ -328,3 +328,130 @@ func TestTableNoHeaderWithoutOption(t *testing.T) {
 	assert.Equal(t, ast.TableRowBody, table.Rows[1].Kind)
 	assert.Equal(t, "C", table.Rows[1].Cells[0].Text)
 }
+
+func TestTableFrameAttribute(t *testing.T) {
+	// Test frame attribute
+	source := `[frame="sides"]
+|===
+| A | B
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Check frame attribute
+	assert.Equal(t, ast.FrameSides, table.GetFrame())
+	assert.Equal(t, "sides", table.Attributes["frame"])
+}
+
+func TestTableGridAttribute(t *testing.T) {
+	// Test grid attribute
+	source := `[grid="rows"]
+|===
+| A | B
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Check grid attribute
+	assert.Equal(t, ast.GridRows, table.GetGrid())
+	assert.Equal(t, "rows", table.Attributes["grid"])
+}
+
+func TestTableStripesAttribute(t *testing.T) {
+	// Test stripes attribute
+	source := `[stripes="even"]
+|===
+| A | B
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Check stripes attribute
+	assert.Equal(t, "even", table.GetStripes())
+	assert.Equal(t, "even", table.Attributes["stripes"])
+}
+
+func TestTableAutowidthAttribute(t *testing.T) {
+	// Test %autowidth positional attribute
+	source := `[%autowidth]
+|===
+| A | B
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Check autowidth attribute
+	assert.Equal(t, "true", table.Attributes["autowidth"])
+}
+
+func TestTableCaptionAttribute(t *testing.T) {
+	// Test caption attribute
+	source := `[caption="Table Title"]
+|===
+| A | B
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Check caption
+	assert.Equal(t, "Table Title", table.Caption)
+	assert.Equal(t, "Table Title", table.Attributes["caption"])
+}
+
+func TestTableMultipleAttributes(t *testing.T) {
+	// Test multiple attributes combined
+	source := `[frame="topbot",grid="cols",%autowidth,caption="My Table"]
+|===
+| A | B
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Check all attributes
+	assert.Equal(t, ast.FrameTopbot, table.GetFrame())
+	assert.Equal(t, ast.GridCols, table.GetGrid())
+	assert.Equal(t, "true", table.Attributes["autowidth"])
+	assert.Equal(t, "My Table", table.Caption)
+}

@@ -419,3 +419,252 @@ func TestHTML5ConverterPrettyPrint(t *testing.T) {
 	// Check indentation
 	assert.Contains(t, output, "  <p>")
 }
+
+func TestHTML5ConverterTableWithHeader(t *testing.T) {
+	// Test table with options="header" renders thead and th
+	doc := &ast.NodeDocument{
+		Blocks: []ast.Node{
+			&ast.Table{
+				Rows: []ast.TableRow{
+					{
+						Kind: ast.TableRowHeader,
+						Cells: []ast.TableCell{
+							{Text: "Name"},
+							{Text: "Age"},
+						},
+					},
+					{
+						Kind: ast.TableRowBody,
+						Cells: []ast.TableCell{
+							{Text: "Alice"},
+							{Text: "30"},
+						},
+					},
+				},
+				Attributes: map[string]string{
+					"options": "header",
+				},
+				HeaderRowIndex: 0,
+			},
+		},
+	}
+
+	converter := NewHTML5Converter()
+	var buf bytes.Buffer
+	err := converter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "<thead>")
+	assert.Contains(t, output, "<th")
+	assert.Contains(t, output, "<tbody>")
+	assert.Contains(t, output, "<td")
+}
+
+func TestHTML5ConverterTableWithoutHeader(t *testing.T) {
+	// Test table without options="header" doesn't render thead
+	doc := &ast.NodeDocument{
+		Blocks: []ast.Node{
+			&ast.Table{
+				Rows: []ast.TableRow{
+					{
+						Kind: ast.TableRowBody,
+						Cells: []ast.TableCell{
+							{Text: "A"},
+							{Text: "B"},
+						},
+					},
+				},
+				HeaderRowIndex: -1,
+			},
+		},
+	}
+
+	converter := NewHTML5Converter()
+	var buf bytes.Buffer
+	err := converter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.NotContains(t, output, "<thead>")
+	assert.Contains(t, output, "<tbody>")
+}
+
+func TestHTML5ConverterTableFrameClasses(t *testing.T) {
+	// Test that frame attribute is rendered as CSS class
+	testCases := []struct {
+		frame     ast.TableFrame
+		classSubstr string
+	}{
+		{ast.FrameAll, "frame-all"},
+		{ast.FrameSides, "frame-sides"},
+		{ast.FrameTopbot, "frame-topbot"},
+		{ast.FrameNone, "frame-none"},
+	}
+
+	for _, tc := range testCases {
+		doc := &ast.NodeDocument{
+			Blocks: []ast.Node{
+				&ast.Table{
+					Rows: []ast.TableRow{
+						{
+							Cells: []ast.TableCell{{Text: "A"}},
+						},
+					},
+					Attributes: map[string]string{},
+				},
+			},
+		}
+		// Set the frame by accessing internal state
+		if table, ok := doc.Blocks[0].(*ast.Table); ok {
+			table.Attributes["frame"] = string(tc.frame)
+		}
+
+		converter := NewHTML5Converter()
+		var buf bytes.Buffer
+		err := converter.Convert(doc, &buf)
+		require.NoError(t, err)
+
+		output := buf.String()
+		assert.Contains(t, output, tc.classSubstr, "Frame class not found for "+string(tc.frame))
+	}
+}
+
+func TestHTML5ConverterTableGridClasses(t *testing.T) {
+	// Test that grid attribute is rendered as CSS class
+	testCases := []struct {
+		grid       ast.TableGrid
+		classSubstr string
+	}{
+		{ast.GridAll, "grid-all"},
+		{ast.GridRows, "grid-rows"},
+		{ast.GridCols, "grid-cols"},
+		{ast.GridNone, "grid-none"},
+	}
+
+	for _, tc := range testCases {
+		doc := &ast.NodeDocument{
+			Blocks: []ast.Node{
+				&ast.Table{
+					Rows: []ast.TableRow{
+						{
+							Cells: []ast.TableCell{{Text: "A"}},
+						},
+					},
+					Attributes: map[string]string{},
+				},
+			},
+		}
+		if table, ok := doc.Blocks[0].(*ast.Table); ok {
+			table.Attributes["grid"] = string(tc.grid)
+		}
+
+		converter := NewHTML5Converter()
+		var buf bytes.Buffer
+		err := converter.Convert(doc, &buf)
+		require.NoError(t, err)
+
+		output := buf.String()
+		assert.Contains(t, output, tc.classSubstr, "Grid class not found for "+string(tc.grid))
+	}
+}
+
+func TestHTML5ConverterTableStripes(t *testing.T) {
+	// Test that stripes attribute is rendered as CSS class
+	doc := &ast.NodeDocument{
+		Blocks: []ast.Node{
+			&ast.Table{
+				Rows: []ast.TableRow{
+					{
+						Cells: []ast.TableCell{{Text: "A"}},
+					},
+				},
+				Attributes: map[string]string{
+					"stripes": "even",
+				},
+			},
+		},
+	}
+
+	converter := NewHTML5Converter()
+	var buf bytes.Buffer
+	err := converter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "stripes-even")
+}
+
+func TestHTML5ConverterTableCaption(t *testing.T) {
+	// Test that caption is rendered
+	doc := &ast.NodeDocument{
+		Blocks: []ast.Node{
+			&ast.Table{
+				Rows: []ast.TableRow{
+					{
+						Cells: []ast.TableCell{{Text: "A"}},
+					},
+				},
+				Caption: "My Caption",
+			},
+		},
+	}
+
+	converter := NewHTML5Converter()
+	var buf bytes.Buffer
+	err := converter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "<caption>My Caption</caption>")
+}
+
+func TestHTML5ConverterTableAutowidth(t *testing.T) {
+	// Test that %autowidth suppresses colgroup
+	doc := &ast.NodeDocument{
+		Blocks: []ast.Node{
+			&ast.Table{
+				Rows: []ast.TableRow{
+					{
+						Cells: []ast.TableCell{{Text: "A"}},
+					},
+				},
+				Attributes: map[string]string{
+					"autowidth": "true",
+				},
+			},
+		},
+	}
+
+	converter := NewHTML5Converter()
+	var buf bytes.Buffer
+	err := converter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.NotContains(t, output, "<colgroup>", "colgroup should not be present with autowidth")
+}
+
+func TestHTML5ConverterTableNoAutowidth(t *testing.T) {
+	// Test that colgroup is rendered when autowidth is not set
+	doc := &ast.NodeDocument{
+		Blocks: []ast.Node{
+			&ast.Table{
+				Rows: []ast.TableRow{
+					{
+						Cells: []ast.TableCell{{Text: "A"}},
+					},
+				},
+				Attributes: map[string]string{},
+			},
+		},
+	}
+
+	converter := NewHTML5Converter()
+	var buf bytes.Buffer
+	err := converter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	assert.Contains(t, output, "<colgroup>", "colgroup should be present without autowidth")
+}

@@ -466,8 +466,42 @@ func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 			fmt.Fprintln(w)
 		}
 		c.writeOpenTag("html", w)
+
+		// Write head section with meta tags for proper Reader Mode support
+		fmt.Fprint(w, "<head>")
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		fmt.Fprint(w, `<meta charset="utf-8">`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		fmt.Fprint(w, `<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		// Write title
+		title := "AsciiDoc Document"
+		if doc.Header != nil && doc.Header.Title != "" {
+			title = doc.Header.Title
+		}
+		fmt.Fprintf(w, "<title>%s</title>", c.escape(title))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+		// Write CSS
 		c.writeCSS(w)
+		fmt.Fprint(w, "</head>")
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+
 		c.writeOpenTag("body", w)
+		// Wrap main content in <article> for Reader Mode support
+		fmt.Fprint(w, "<article>")
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
 	}
 
 	// Convert document header if present
@@ -481,6 +515,10 @@ func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 	}
 
 	if !c.suppressHeaderFooter {
+		fmt.Fprint(w, "</article>")
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
 		// Close HTML
 		c.writeCloseTag("body", w)
 		c.writeCloseTag("html", w)

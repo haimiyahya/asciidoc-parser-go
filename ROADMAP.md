@@ -8,7 +8,31 @@ This document outlines future features and implementation priorities for asciido
 
 ### High Priority
 
-#### 1. Enhanced LSP Features
+#### 1. Attribute Substitution
+**Status:** Not implemented
+
+**Description:** Replace attribute references with their values throughout the document.
+
+**Required Features:**
+- Document attribute definitions - `:name: value`
+- Attribute references - `{name}` substituted with value
+- Inline attribute setters - `{set:name}value{set}`
+- Predefined attributes - `{toc}`, `{sectnums}`, `{revdate}`, etc.
+- Attribute unset - `:name!`
+- Conditional attribute evaluation - `ifdef::name[]`
+- Attribute chaining and dependencies
+
+**Examples:**
+```asciidoc
+:author: John Doe
+:version: 1.0
+
+Written by {author}, version {version}
+{set:product}My Product{set}
+Using {product}...
+```
+
+#### 2. Enhanced LSP Features
 **Status:** Basic LSP implemented (diagnostics, symbols, completions, hover, go-to-definition)
 
 **Remaining Features:**
@@ -22,7 +46,7 @@ This document outlines future features and implementation priorities for asciido
 - Selection range - Smart selection of sections, blocks
 - Folding range - Fold sections, blocks, lists
 
-#### 2. Table Improvements
+#### 3. Table Improvements
 **Current:** Basic tables with column specifications and attributes
 
 **Remaining Features:**
@@ -33,18 +57,24 @@ This document outlines future features and implementation priorities for asciido
 
 **Note:** Per-cell style indicators (`l|`, `m|`, `v|`), repeat cells (`3*value`), and vertical alignment (`.^`, `.<`, `>.`) are kept as literal text by Asciidoctor in basic PSV tables. Use column specifications instead.
 
-#### 3. Advanced Inline Parsing
+#### 4. Advanced Inline Parsing
 **Current:** Basic inline formatting implemented
 
 **Remaining Features:**
 - Triple-plus passthrough - `+++passthrough+++`
-- Footnote macro - `footnote:text[]`
+- Footnotes - `footnote:id[text]` with note list at bottom
 - Icon fonts - `icon:github[]` with font-awesome support
 - Index terms - `((term))` and `(((term)))` (partial)
 
+**Footnotes Details:**
+- Footnote references - `footnote:note-id[Note text]` or `footnote:note-id[]`
+- Numbered footnotes - Automatic numbering and reference list
+- Footnote reuse - `footnote:note-id[]` to reference existing note
+- Footnote list rendering at document bottom
+
 ### Medium Priority
 
-#### 4. More Block Types
+#### 5. More Block Types
 **Current:** Example, quote, literal, sidebar blocks implemented
 
 **Remaining Features:**

@@ -173,6 +173,8 @@ type NodeLiteral struct {
 	Callouts []*CalloutNode
 	// LineComment is the custom line comment prefix (e.g., "%", "//", etc.)
 	LineComment string
+	// Caption is the block title/caption (e.g., from ".Title" before the block).
+	Caption string
 	// Pos is the location in the source.
 	Pos Position
 }
@@ -189,6 +191,8 @@ type NodeBlock struct {
 	Style string
 	// Attributes are block-level attributes.
 	Attributes map[string]string
+	// Caption is the block title/caption (e.g., from ".Title" before the block).
+	Caption string
 	// Pos is the location in the source.
 	Pos Position
 }

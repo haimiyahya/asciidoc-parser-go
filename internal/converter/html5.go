@@ -798,6 +798,33 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			// No registry - output as-is
 			c.writeRawString(c.escape(node.Text), w)
 		}
+	case inline.NodeMenu:
+		// UI menu path: menu:[File > New > Document]
+		// Split by " > " and create spans with proper separators
+		class := c.getClassAttr(node.Roles)
+		classAttr := ""
+		if class != "" {
+			classAttr = fmt.Sprintf(` class="%s"`, class)
+		}
+		fmt.Fprintf(w, `<span class="menuseq"%s>`, classAttr)
+
+		// Split the menu path by " > "
+		parts := strings.Split(node.Text, " > ")
+		for i, part := range parts {
+			if i > 0 {
+				fmt.Fprintf(w, `<span class="menusep">&#160;&#9656;</span>`)
+			}
+			fmt.Fprintf(w, `<span class="menu">%s</span>`, c.escape(part))
+		}
+		fmt.Fprintf(w, `</span>`)
+	case inline.NodeButton:
+		// UI button: btn:[OK]
+		class := c.getClassAttr(node.Roles)
+		classAttr := "button"
+		if class != "" {
+			classAttr = fmt.Sprintf("%s %s", class, "button")
+		}
+		fmt.Fprintf(w, `<b class="%s">%s</b>`, classAttr, c.escape(node.Text))
 	}
 }
 

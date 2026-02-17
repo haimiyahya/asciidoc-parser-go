@@ -1,5 +1,8 @@
 = AsciiDoc Parser Go - Feature Showcase
-v0.1.0
+v0.2.0
+:author: <Your Name>
+:email: <your.email@example.com>
+:revdate: 2026-02-17
 :toc:
 :toclevels: 3
 :sectnums:
@@ -7,11 +10,6 @@ v0.1.0
 :table-caption: Table
 :example-caption: Example
 :imagesdir: https://picsum.photos
-
-// Document attributes demonstrate attribute substitution
-{author}: <Your Name>
-{email}: <your.email@example.com>
-{revdate}: 2026-02-17
 
 abstract::
 This document showcases all features implemented in asciidoc-parser-go, a native Go implementation of an AsciiDoc parser and processor. Each section demonstrates specific AsciiDoc syntax and capabilities.
@@ -430,7 +428,7 @@ const getUsers = async () => {
 ----
 {
   "name": "asciidoc-parser-go",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Native Go AsciiDoc parser and processor",
   "author": {
     "name": "Project Team",
@@ -463,7 +461,7 @@ const getUsers = async () => {
 # Application Configuration
 app:
   name: asciidoc-parser-go
-  version: 0.1.0
+  version: 0.2.0
   environment: development
 
 server:
@@ -891,31 +889,14 @@ This text has a highlight background.
 :id-anchor:
 Paragraphs can have IDs for direct linking.
 
-== Attributes and Substitution
-
-=== Attribute References
-
-Document attributes: `{toc}`, `{sectnums}`, `{revdate}` show predefined attributes.
-
-=== Attribute Substitution
-
-:my-var: Custom Value
-
-The value of my-var is: {my-var}.
-
-=== Inline Attributes
-
-You can set attributes inline: {set:product-name}My Product{set}.
-
-Now {product-name} is available throughout the document.
+// Attribute Substitution (Not Yet Implemented)
+// Attribute references like {name} and inline setters like {set:name}value{set}
+// are planned for a future release. See ROADMAP.md for details.
 
 == Extensions and Macros
 
-=== Footnotes
-
-This is a paragraph with a footnote.reference:footnote[This is the footnote text.]
-
-You can reference the same footnote again footnote:footnote[].
+// Footnotes (Not Yet Implemented)
+// footnote:reference[text] syntax and footnote rendering are planned for a future release.
 
 === Image with Attributes
 
@@ -945,9 +926,9 @@ Chemical formulas:
 [cols="2*"]
 |===
 |Document Title |AsciiDoc Parser Go - Feature Showcase
-|Version |{revnumber}
-|Date |{revdate}
-|Generator |asciidoc-parser-go v0.1.0
+|Version |v0.2.0
+|Date |2026-02-18
+|Generator |asciidoc-parser-go v0.2.0
 |Backends |HTML5, PDF, DocBook, Man Page, EPUB
 |Compatibility |100% Asciidoctor compatible
 |===

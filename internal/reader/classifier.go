@@ -606,6 +606,8 @@ func (lc *LineClassifier) checkDelimitedBlock(line string) BlockType {
 		return BlockCommentBlock
 	case '.':
 		return BlockLiteral
+	case '~':
+		return BlockLiteral
 	case '|':
 		return BlockTable
 	default:
@@ -616,7 +618,7 @@ func (lc *LineClassifier) checkDelimitedBlock(line string) BlockType {
 // isDelimiterChar returns true if the character is used for block delimiters.
 func isDelimiterChar(c byte) bool {
 	return c == '-' || c == '=' || c == '_' || c == '+' ||
-		c == '*' || c == '/' || c == '.' || c == '|'
+		c == '*' || c == '/' || c == '.' || c == '|' || c == '~'
 }
 
 // isAllEquals returns true if the string contains only '=' characters.

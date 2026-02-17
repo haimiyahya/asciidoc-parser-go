@@ -55,6 +55,12 @@ const (
 	// NodeRawPassThrough is raw inline passthrough (+++text+++).
 	// The content is passed through WITHOUT any substitutions.
 	NodeRawPassThrough
+
+	// NodeMenu is a menu path (menu:File > New).
+	NodeMenu
+
+	// NodeButton is a UI button (btn:OK).
+	NodeButton
 )
 
 // String returns the string representation of NodeType.
@@ -69,10 +75,12 @@ func (nt NodeType) String() string {
 		NodeLink:       "Link",
 		NodeImage:      "Image",
 		NodeCrossRef:   "CrossRef",
-		NodeIndexTerm:  "IndexTerm",
+		NodeIndexTerm:   "IndexTerm",
 		NodeCustomMacro: "CustomMacro",
 		NodePassThrough:    "PassThrough",
 		NodeRawPassThrough: "RawPassThrough",
+		NodeMenu:            "Menu",
+		NodeButton:          "Button",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -168,6 +176,10 @@ func (n *Node) String() string {
 	case NodeCustomMacro:
 		// Format: macroname:target[attr1,val1]
 		return fmt.Sprintf("%s:%s", n.MacroName, n.MacroTarget)
+	case NodeMenu:
+		return fmt.Sprintf("menu:[%s]", n.Text)
+	case NodeButton:
+		return fmt.Sprintf("btn:[%s]", n.Text)
 	default:
 		return n.Text
 	}
@@ -224,6 +236,16 @@ func (p *Parser) Parse() []*Node {
 			p.pos = newPos
 			continue
 		}
+
+		// Check for UI macros (menu:, btn:, kbd:) before other constructs
+		if node, newPos := p.tryUIMacro(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
 
 		if node, newPos := p.tryImage(); node != nil {
 			p.applyRoles(node, pendingRoles)
@@ -331,6 +353,9 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "<<") ||
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
+				strings.HasPrefix(remaining, "menu:[") ||
+				strings.HasPrefix(remaining, "btn:[") ||
+				strings.HasPrefix(remaining, "kbd:[") ||
 				isValidBoldStart(p.text, i) ||
 				isValidItalicStart(p.text, i) ||
 				isValidMonospaceStart(p.text, i) ||
@@ -1043,3 +1068,48 @@ func DebugTestInline() {
     }
 }
 
+
+// tryUIMacro tries to parse UI macros like menu:[path], btn:[label], kbd:[key].
+// Pattern: macro:[content] where macro is menu, btn, or kbd.
+func (p *Parser) tryUIMacro() (*Node, int) {
+	s := p.text[p.pos:]
+
+	// Need at least "macro:x]" where macro is at least 3 chars
+	if len(s) < 7 {
+		return nil, p.pos
+	}
+
+	// Check for pattern: macro:[...]
+	// Valid macros: menu, btn, kbd
+	validMacros := map[string]NodeType{
+		"menu": NodeMenu,
+		"btn":  NodeButton,
+		"kbd":  NodeMonospace, // kbd uses monospace styling
+	}
+
+	for macroName, nodeType := range validMacros {
+		prefix := macroName + ":["
+		if !strings.HasPrefix(s, prefix) {
+			continue
+		}
+
+		// Find the closing bracket
+		closeIndex := strings.Index(s[len(prefix):], "]")
+		if closeIndex == -1 {
+			return nil, p.pos
+		}
+
+		// Extract content between [ and ]
+		content := s[len(prefix):len(prefix)+closeIndex]
+		endPos := p.pos + len(prefix) + closeIndex + 1
+
+		return &Node{
+			Type:     nodeType,
+			Text:     content,
+			StartPos: p.pos,
+			Position: endPos,
+		}, endPos
+	}
+
+	return nil, p.pos
+}

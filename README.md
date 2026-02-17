@@ -350,7 +350,7 @@ Syntax:
 - `(((primary, secondary, tertiary)))` - Multi-level index entry
 - `(((term, "comma, in term")))` - Quoted terms with commas
 
-Note: The HTML5 converter marks index terms with `data-indexterm` attributes but does not generate an index. Use PDF or DocBook converters for full index generation.
+Note: The HTML5 converter renders flow index terms as visible text and concealed index terms produce no output (matching Asciidoctor behavior). Use PDF or DocBook converters for full index generation.
 
 ## CLI Options
 
@@ -454,7 +454,7 @@ go test ./tests/compatibility/...
 go test ./tests/compatibility/... -run TestCompatibility_AsciidoctorAvailable -v
 ```
 
-**Current Status: 29/32 tests passing (90.6% compatibility)**
+**Current Status: 32/32 tests passing (100% compatibility)**
 
 The compatibility framework supports:
 - **Golden file testing**: Pre-captured expected HTML files for regression testing
@@ -462,8 +462,7 @@ The compatibility framework supports:
 - **Detailed diff reporting**: Shows exact differences between expected and actual output
 - **32 built-in test cases**: Covering basic syntax, lists, inline markup, admonitions, blocks, tables, index terms, bibliography, roles, and passthrough
 
-**Known Differences (Custom Extensions):**
-- `kbd:[...]`, `btn:[...]`, `menu:[...]` UI macros are custom extensions not supported by default Asciidoctor
+**Note:** UI macros (`kbd:[...]`, `btn:[...]`, `menu:[...]`) are Asciidoctor extensions not part of the core AsciiDoc specification. These are available as custom extensions in our implementation.
 
 #### Using Asciidoctor for Expected Output
 
@@ -512,7 +511,7 @@ GENERATE_GOLDEN=1 go test ./tests/compatibility/... -run TestCompatibility_Gener
 | Conditional Processing | ✅ Complete | ifdef, ifndef, ifeval |
 | Bibliography | ✅ Complete | Citation processing with [[[label]]] syntax |
 | Index Terms | ✅ Complete | (((term))) indexing with flow and concealed terms |
-| Compatibility Testing | ✅ Complete | 29/32 tests passing (90.6%) vs Asciidoctor |
+| Compatibility Testing | ✅ Complete | 32/32 tests passing (100%) vs Asciidoctor |
 | CLI | ✅ Complete | Full Asciidoctor-compatible options |
 | LSP Server | ✅ Complete | Diagnostics, symbols, completion, hover, go-to-definition |
 

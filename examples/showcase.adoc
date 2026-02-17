@@ -219,7 +219,7 @@ All markup is passed through as-is.
 
 == Code Blocks with Callouts
 
-=== Go Example
+*Go Example*
 
 [source,go]
 ----
@@ -231,7 +231,7 @@ func main() {
 <1> Variable declaration
 <2> Formatted output
 
-=== Bash Example
+*Bash Example*
 
 [source,bash]
 ----
@@ -248,7 +248,7 @@ echo "Build complete!" # <3>
 
 The parser supports syntax highlighting for multiple programming languages using Chroma.
 
-=== Go (Golang)
+*Go (Golang)*
 
 [source,go]
 ----
@@ -277,7 +277,7 @@ func main() {
 }
 ----
 
-=== SQL
+*SQL*
 
 [source,sql]
 ----
@@ -305,7 +305,7 @@ HAVING COUNT(o.id) > 0
 ORDER BY order_count DESC;
 ----
 
-=== C\#
+*C#*
 
 [source,csharp]
 ----
@@ -348,7 +348,7 @@ namespace AsciiDocParser
 }
 ----
 
-=== JavaScript/TypeScript
+*JavaScript/TypeScript*
 
 [source,javascript]
 ----
@@ -389,7 +389,7 @@ const getUsers = async () => {
 };
 ----
 
-=== XML
+*XML*
 
 [source,xml]
 ----
@@ -424,7 +424,7 @@ const getUsers = async () => {
 </configuration>
 ----
 
-=== JSON
+*JSON*
 
 [source,json]
 ----
@@ -456,7 +456,7 @@ const getUsers = async () => {
 }
 ----
 
-=== YAML
+*YAML*
 
 [source,yaml]
 ----
@@ -490,7 +490,7 @@ features:
   lsp_support: true
 ----
 
-=== Python
+*Python*
 
 [source,python]
 ----
@@ -547,7 +547,7 @@ class UserService:
         return User(**result)
 ----
 
-=== Rust
+*Rust*
 
 [source,rust]
 ----
@@ -631,7 +631,7 @@ fn main() {
 }
 ----
 
-=== CSS
+*CSS*
 
 [source,css]
 ----
@@ -708,7 +708,7 @@ table tbody tr:hover {
 }
 ----
 
-=== HTML
+*HTML*
 
 [source,html]
 ----

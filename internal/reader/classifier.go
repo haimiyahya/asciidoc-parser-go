@@ -1121,7 +1121,12 @@ func (lc *LineClassifier) isUnorderedListItem(line string, info *ListInfo) bool 
 	}
 
 	// Set the level based on marker count (starts at 1)
-	info.Level = markerCount
+	// But preserve indentation-based level if it's greater
+	// This allows indentation-based nesting (e.g., "  - item" at level 2)
+	markerLevel := markerCount
+	if markerLevel > info.Level {
+		info.Level = markerLevel
+	}
 	info.Type = BlockListUnordered
 	info.Marker = string(first)
 	info.Text = strings.TrimSpace(line[markerCount:])

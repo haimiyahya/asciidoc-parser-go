@@ -237,15 +237,15 @@ func (p *Parser) Parse() []*Node {
 			continue
 		}
 
-		// Check for UI macros (menu:, btn:, kbd:) before other constructs
-		if node, newPos := p.tryUIMacro(); node != nil {
+		// Check for inline macros (pass:[], menu:[], btn:[], kbd:[])
+		// Must be checked before other constructs that use brackets
+		if node, newPos := p.tryInlineMacro(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
 		}
-
 
 		if node, newPos := p.tryImage(); node != nil {
 			p.applyRoles(node, pendingRoles)
@@ -359,6 +359,7 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "<<") ||
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
+				strings.HasPrefix(remaining, "pass:[") || // Inline passthrough macro
 				strings.HasPrefix(remaining, "menu:[") ||
 				strings.HasPrefix(remaining, "btn:[") ||
 				strings.HasPrefix(remaining, "kbd:[") ||
@@ -1122,19 +1123,20 @@ func DebugTestInline() {
 }
 
 
-// tryUIMacro tries to parse UI macros like menu:[path], btn:[label], kbd:[key].
-// Pattern: macro:[content] where macro is menu, btn, or kbd.
-func (p *Parser) tryUIMacro() (*Node, int) {
+// tryInlineMacro tries to parse inline macros of the form macro:[content].
+// Handles: pass:[content], menu:[path], btn:[label], kbd:[key]
+func (p *Parser) tryInlineMacro() (*Node, int) {
 	s := p.text[p.pos:]
 
-	// Need at least "macro:x]" where macro is at least 3 chars
-	if len(s) < 7 {
+	// Need at least "mac:x]" where macro is at least 3 chars
+	if len(s) < 6 {
 		return nil, p.pos
 	}
 
 	// Check for pattern: macro:[...]
-	// Valid macros: menu, btn, kbd
+	// Valid macros: pass (passthrough), menu, btn, kbd
 	validMacros := map[string]NodeType{
+		"pass": NodeRawPassThrough, // pass:[...] passes through content without substitutions
 		"menu": NodeMenu,
 		"btn":  NodeButton,
 		"kbd":  NodeMonospace, // kbd uses monospace styling

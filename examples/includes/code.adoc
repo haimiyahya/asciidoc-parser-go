@@ -1,4 +1,4 @@
-.Code Snippet Example
+pass:[.Code Snippet Example]
 [source,go]
 ----
 package main

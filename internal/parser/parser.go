@@ -211,25 +211,53 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			// Continue to normal processing
 		}
 
-		// Handle caption lines before tables (e.g., .Table Title before |===)
+		// Handle caption lines before tables and listing blocks (e.g., .Title before |=== or ----)
 		// Must come after attribute line check since captions can follow attributes
 		trimmedLine := strings.TrimSpace(line)
 		if strings.HasPrefix(trimmedLine, ".") && !strings.HasPrefix(trimmedLine, "..") &&
 			!strings.HasPrefix(trimmedLine, ".#") && !inDelimitedBlock &&
 			pendingCaptionLine == "" {
-			// This might be a table caption - save and check if next line is table
+			// This might be a caption - save and check if followed by a block
 			savedLine := line
 			p.reader.Advance()
 			if p.reader.HasMoreLines() {
 				nextLine := p.reader.PeekLine()
 				nextClass := p.classifier.ClassifyLine(nextLine)
-				if nextClass.Type == reader.BlockTable {
-					// This caption line belongs to a table
+
+				// Check if directly followed by a delimited block
+				isDelimitedBlockFollowed := nextClass.Type == reader.BlockTable ||
+					nextClass.Type == reader.BlockLiteral ||
+					nextClass.Type == reader.BlockVerbatim
+
+				// Check if followed by styled block (which might be followed by delimited block)
+				isStyledBlockFollowed := nextClass.Style != nil
+
+				if isDelimitedBlockFollowed {
+					// This caption line belongs to the following block
 					pendingCaptionLine = savedLine
 					continue
 				}
+
+				if isStyledBlockFollowed {
+					// Check if line after styled block is a delimited block
+					p.reader.Advance() // Consume the styled block line
+					if p.reader.HasMoreLines() {
+						thirdLine := p.reader.PeekLine()
+						thirdClass := p.classifier.ClassifyLine(thirdLine)
+						if thirdClass.Type == reader.BlockLiteral ||
+							thirdClass.Type == reader.BlockVerbatim {
+							// This caption line belongs to the styled+delimited block
+							pendingCaptionLine = savedLine
+							// Put the styled block line back (it will be processed normally)
+							p.reader.UnshiftLine(nextLine)
+							continue
+						}
+					}
+					// Not followed by delimited block, put both lines back
+					p.reader.UnshiftLine(nextLine)
+				}
 			}
-			// Not followed by a table - restore it
+			// Not followed by a supported block - restore it
 			p.reader.UnshiftLine(savedLine)
 			// Continue to normal processing
 		}
@@ -263,7 +291,15 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				if classification.Type == delimitedBlockType {
 					// Close the delimited block
 					p.reader.Advance()
-					block := p.createDelimitedBlock(delimitedBlockType, delimitedBlockLines, delimitedBlockLineno)
+
+					// Extract caption for non-table blocks before creating the block
+					var blockCaption string
+					if classification.Type != reader.BlockTable && pendingCaptionLine != "" {
+						blockCaption = pendingCaptionLine
+						pendingCaptionLine = ""
+					}
+
+					block := p.createDelimitedBlock(delimitedBlockType, delimitedBlockLines, delimitedBlockLineno, blockCaption)
 					if block != nil {
 						// Add to current section if exists, otherwise to doc.Blocks
 						p.addBlockToCurrentSection(doc, block)
@@ -1135,7 +1171,8 @@ func (p *Parser) createStyledBlock(styleBlock *reader.StyleBlockInfo, lineno int
 }
 
 // createDelimitedBlock creates a delimited block node.
-func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string, lineno int) ast.Node {
+// The caption parameter is the optional block title (e.g., from ".Title" before the block).
+func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string, lineno int, caption string) ast.Node {
 	content := strings.Join(lines, "\n")
 
 	// Check if this is a source/listing block with pending style
@@ -1164,6 +1201,7 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 			Content:    cleanedContent,
 			Attributes: attrs,
 			Callouts:   callouts,
+			Caption:    p.parseCaption(caption),
 			Pos:        ast.Position{Line: lineno},
 		}
 	}
@@ -1178,6 +1216,7 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		return &ast.NodeLiteral{
 			Lines:     cleanedLines,
 			Callouts:  callouts,
+			Caption:   p.parseCaption(caption),
 			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockVerbatim:
@@ -1189,6 +1228,7 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		return &ast.NodeLiteral{
 			Lines:     cleanedLines,
 			Callouts:  callouts,
+			Caption:   p.parseCaption(caption),
 			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockExample:
@@ -1789,6 +1829,18 @@ func (p *Parser) evaluateIfeval(expr string, doc *ast.NodeDocument) bool {
 	}
 
 	return false
+}
+
+// parseCaption extracts the caption text from a caption line (e.g., ".Title" -> "Title").
+func (p *Parser) parseCaption(captionLine string) string {
+	if captionLine == "" {
+		return ""
+	}
+	trimmed := strings.TrimSpace(captionLine)
+	if strings.HasPrefix(trimmed, ".") {
+		return strings.TrimSpace(trimmed[1:])
+	}
+	return trimmed
 }
 
 // extractAttrName extracts the attribute name from expressions like {attr} or "{attr}"

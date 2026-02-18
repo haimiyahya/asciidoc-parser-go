@@ -379,6 +379,17 @@ func (c *HTML5Converter) convertSourceBlock(block *ast.StyledBlockNode, w io.Wri
 		c.indent += "  "
 	}
 
+	// Write caption if present
+	if block.Caption != "" {
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprintf(w, `<div class="title">%s</div>`, c.escape(block.Caption))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	}
+
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
 	}
@@ -1315,6 +1326,13 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 	// Always add newlines for Asciidoctor compatibility
 	fmt.Fprintf(w, `<div class="literalblock">`)
 	fmt.Fprint(w, "\n")
+
+	// Write caption if present
+	if literal.Caption != "" {
+		fmt.Fprintf(w, `<div class="title">%s</div>`, c.escape(literal.Caption))
+		fmt.Fprint(w, "\n")
+	}
+
 	fmt.Fprintf(w, `<div class="content">`)
 	fmt.Fprint(w, "\n")
 

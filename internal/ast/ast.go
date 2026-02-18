@@ -236,6 +236,8 @@ type StyledBlockNode struct {
 	Attributes map[string]string
 	// Callouts are callout annotations found in this block (for source/listing blocks).
 	Callouts []*CalloutNode
+	// Caption is the block title/caption (e.g., from ".Title" before the block).
+	Caption string
 	// Pos is the location in the source.
 	Pos Position
 }

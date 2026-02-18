@@ -1168,10 +1168,19 @@ func (c *HTML5Converter) listTag(item ast.Node) string {
 		switch li.Marker {
 		case "-", "*", "o":
 			return "ul" // Unordered list
-		case ".":
-			return "ol" // Ordered list
-		case "::":
+		case ".", "..", "...", "....", ".....", "......", ".......":
+			return "ol" // Ordered list (including nested)
+		case ";", ";;", ";;;", ";;;;":
+			return "ol" // Ordered list variant (semicolon-style)
+		case "::", ":::", "::::", ";;;;:":
 			return "dl" // Labeled/definition list
+		}
+	}
+	// Check for multi-character ordered list markers (e.g. "..", ";;", "::")
+	if li, ok := item.(*ast.NodeListItem); ok {
+		marker := li.Marker
+		if len(marker) > 0 && (marker[0] == '.' || marker[0] == ';') {
+			return "ol" // Multi-dot or multi-semicolon is ordered list
 		}
 	}
 	return "ul" // Default

@@ -1161,6 +1161,20 @@ func (lc *LineClassifier) isOrderedListItem(line string, info *ListInfo) bool {
 		}
 	}
 
+	// Special case: "..." followed by space and letters is an ellipsis, not a list item
+	// For example: "... Nested ordered list:" should be plain text, not a list item
+	if first == '.' && markerCount == 3 {
+		// Check if the text after markers starts with a letter (ellipsis)
+		rest := strings.TrimLeft(line[markerCount:], " \t")
+		if len(rest) > 0 && rest[0] >= 'a' && rest[0] <= 'z' {
+			return false // This is an ellipsis, not a list item
+		}
+		// Also check for uppercase
+		if len(rest) > 0 && rest[0] >= 'A' && rest[0] <= 'Z' {
+			return false // This is an ellipsis, not a list item
+		}
+	}
+
 	if first == '.' {
 		info.Type = BlockListOrdered
 	} else {

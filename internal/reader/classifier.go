@@ -1092,29 +1092,40 @@ func (lc *LineClassifier) checkListItem(line string, indent int) *ListInfo {
 
 // isUnorderedListItem checks for unordered list markers.
 func (lc *LineClassifier) isUnorderedListItem(line string, info *ListInfo) bool {
-	// Patterns: " - ", " * ", " o " (with space after)
-	if len(line) < 3 {
+	// Patterns: "*", "**", "***" (with space after), same for "-" and "o"
+	// The count of markers determines the nesting level
+	if len(line) < 2 {
 		return false
 	}
 
 	markers := map[rune]bool{'-': true, '*': true, 'o': true}
-
 	first := rune(line[0])
-	second := line[1]
 
-	// Must have space after marker
-	if second != ' ' && second != '\t' {
+	if !markers[first] {
 		return false
 	}
 
-	if markers[first] {
-		info.Type = BlockListUnordered
-		info.Marker = string(first)
-		info.Text = strings.TrimSpace(line[2:])
-		return true
+	// Count the markers to determine nesting level
+	markerCount := 0
+	for _, c := range line {
+		if c == first {
+			markerCount++
+		} else {
+			break
+		}
 	}
 
-	return false
+	// Must have space (or tab) after markers
+	if markerCount >= len(line) || (line[markerCount] != ' ' && line[markerCount] != '\t') {
+		return false
+	}
+
+	// Set the level based on marker count (starts at 1)
+	info.Level = markerCount
+	info.Type = BlockListUnordered
+	info.Marker = string(first)
+	info.Text = strings.TrimSpace(line[markerCount:])
+	return true
 }
 
 // isOrderedListItem checks for ordered list markers.

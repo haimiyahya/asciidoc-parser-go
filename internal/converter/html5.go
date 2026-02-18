@@ -1317,6 +1317,167 @@ func (c *HTML5Converter) renderCalloutList(literal *ast.NodeLiteral, w io.Writer
 	c.writeCloseTag("div", w)
 }
 
+// convertBlockContent converts block content to HTML, detecting and rendering lists.
+// Supports unordered (*) and ordered (.) lists within block content.
+func (c *HTML5Converter) convertBlockContent(lines []string, w io.Writer) {
+	type segmentType int
+	const (
+		segParagraph segmentType = iota
+		segList
+	)
+
+	type segment struct {
+		segType segmentType
+		content string
+		marker  string // for lists
+	}
+
+	var segments []segment
+	var currentPara []string
+	var currentList []string
+	var inList bool
+	var listMarker string
+
+	for _, line := range lines {
+		trimmed := strings.TrimLeft(line, " \t")
+		isEmpty := strings.TrimRight(line, " \t") == ""
+
+		// Check if line starts a list item
+		isListItem := strings.HasPrefix(trimmed, "* ") ||
+			strings.HasPrefix(trimmed, "- ") ||
+			strings.HasPrefix(trimmed, ". ")
+
+		if isListItem {
+			// Flush any pending paragraph
+			if len(currentPara) > 0 {
+				segments = append(segments, segment{
+					segType: segParagraph,
+					content: strings.Join(currentPara, " "),
+				})
+				currentPara = nil
+			}
+
+			marker := string(trimmed[0])
+			if !inList {
+				// Start a new list
+				inList = true
+				listMarker = marker
+				currentList = []string{line}
+			} else if marker == listMarker {
+				// Continuation of same list
+				currentList = append(currentList, line)
+			} else {
+				// Different list type - flush current list and start new
+				segments = append(segments, segment{
+					segType: segList,
+					content: c.convertListToHTML(currentList, listMarker),
+				})
+				listMarker = marker
+				currentList = []string{line}
+			}
+		} else if inList {
+			// Check if this is a continuation (indentation) or end of list
+			if isEmpty || strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+				// Continuation of current list item
+				if len(currentList) > 0 {
+					currentList[len(currentList)-1] += "\n" + line
+				}
+			} else {
+				// End of list - flush and start new paragraph
+				segments = append(segments, segment{
+					segType: segList,
+					content: c.convertListToHTML(currentList, listMarker),
+				})
+				currentList = nil
+				inList = false
+				currentPara = []string{line}
+			}
+		} else {
+			// Regular text line
+			if isEmpty {
+				// Flush any pending paragraph on blank line
+				if len(currentPara) > 0 {
+					segments = append(segments, segment{
+						segType: segParagraph,
+						content: strings.Join(currentPara, " "),
+					})
+					currentPara = nil
+				}
+			} else {
+				currentPara = append(currentPara, line)
+			}
+		}
+	}
+
+	// Flush any pending paragraph
+	if len(currentPara) > 0 {
+		segments = append(segments, segment{
+			segType: segParagraph,
+			content: strings.Join(currentPara, " "),
+		})
+	}
+
+	// Flush any remaining list
+	if inList && len(currentList) > 0 {
+		segments = append(segments, segment{
+			segType: segList,
+			content: c.convertListToHTML(currentList, listMarker),
+		})
+	}
+
+	// Convert segments to HTML
+	for _, seg := range segments {
+		if seg.segType == segList {
+			fmt.Fprint(w, seg.content)
+		} else if seg.content != "" {
+			fmt.Fprintf(w, `<div class="paragraph">`+"\n")
+			fmt.Fprintf(w, `<p>%s</p>`+"\n", c.escape(seg.content))
+			fmt.Fprintf(w, `</div>`+"\n")
+		}
+	}
+}
+
+// convertListToHTML converts a list of raw list items to HTML.
+func (c *HTML5Converter) convertListToHTML(items []string, marker string) string {
+	if len(items) == 0 {
+		return ""
+	}
+
+	var tag string
+	switch marker {
+	case "*", "-":
+		tag = "ul"
+	case ".":
+		tag = "ol"
+	default:
+		tag = "ul"
+	}
+
+	var sb strings.Builder
+	fmt.Fprintf(&sb, `<div class="ulist">`+"\n")
+	fmt.Fprintf(&sb, `<%s>`+"\n", tag)
+
+	for _, item := range items {
+		// Extract the content after the marker
+		trimmed := strings.TrimLeft(item, " \t")
+		if len(trimmed) >= 2 && (trimmed[1] == ' ' || trimmed[1] == '\t') {
+			trimmed = trimmed[2:]
+		}
+		// Remove any trailing newline content
+		trimmed = strings.ReplaceAll(trimmed, "\n", " ")
+		trimmed = strings.TrimSpace(trimmed)
+
+		fmt.Fprintf(&sb, `<li>`+"\n")
+		fmt.Fprintf(&sb, `<p>%s</p>`, c.escape(trimmed))
+		fmt.Fprintf(&sb, `</li>`+"\n")
+	}
+
+	fmt.Fprintf(&sb, `</%s>`+"\n", tag)
+	fmt.Fprintf(&sb, `</div>`+"\n")
+
+	return sb.String()
+}
+
 // convertBlock converts a delimited block to HTML.
 func (c *HTML5Converter) convertBlock(block *ast.NodeBlock, w io.Writer) {
 	// Determine block class from delimiter (Asciidoctor compatibility)
@@ -1345,33 +1506,23 @@ func (c *HTML5Converter) convertBlock(block *ast.NodeBlock, w io.Writer) {
 		fmt.Fprintf(w, `</div>`)
 		fmt.Fprint(w, "\n")
 	} else if block.Delimiter == "=" {
-		// Example block - wrap in paragraph div
+		// Example block - support nested content (lists, paragraphs)
 		fmt.Fprintf(w, `<div class="%s">`, class)
 		fmt.Fprint(w, "\n")
 		fmt.Fprintf(w, `<div class="content">`)
 		fmt.Fprint(w, "\n")
-		fmt.Fprintf(w, `<div class="paragraph">`)
-		fmt.Fprint(w, "\n")
-		fmt.Fprintf(w, `<p>%s</p>`, c.escape(content))
-		fmt.Fprint(w, "\n")
-		fmt.Fprintf(w, `</div>`)
-		fmt.Fprint(w, "\n")
+		c.convertBlockContent(block.Lines, w)
 		fmt.Fprintf(w, `</div>`)
 		fmt.Fprint(w, "\n")
 		fmt.Fprintf(w, `</div>`)
 		fmt.Fprint(w, "\n")
 	} else if block.Delimiter == "*" {
-		// Sidebar block - wrap in paragraph div
+		// Sidebar block - support nested content (lists, paragraphs)
 		fmt.Fprintf(w, `<div class="%s">`, class)
 		fmt.Fprint(w, "\n")
 		fmt.Fprintf(w, `<div class="content">`)
 		fmt.Fprint(w, "\n")
-		fmt.Fprintf(w, `<div class="paragraph">`)
-		fmt.Fprint(w, "\n")
-		fmt.Fprintf(w, `<p>%s</p>`, c.escape(content))
-		fmt.Fprint(w, "\n")
-		fmt.Fprintf(w, `</div>`)
-		fmt.Fprint(w, "\n")
+		c.convertBlockContent(block.Lines, w)
 		fmt.Fprintf(w, `</div>`)
 		fmt.Fprint(w, "\n")
 		fmt.Fprintf(w, `</div>`)

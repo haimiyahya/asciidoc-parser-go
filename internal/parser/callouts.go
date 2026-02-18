@@ -2,7 +2,6 @@
 package parser
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -122,24 +121,28 @@ func (p *CalloutParser) extractCallouts(line string, lineIdx int) (string, []*as
 				callouts = append(callouts, callout)
 			}
 
-			// Replace callout marker with Unicode circled number
-			// Use Unicode chars: ①, ②, ③, etc. (U+2460 to U+2473)
-			// Fallback to (1), (2) etc. for numbers > 20
+			// Remove the callout marker completely from the cleaned line
+			// The Unicode circled number will be added during HTML rendering
 			beforeCallout := line[:match[0]]
 			afterCallout := line[match[1]:]
-
-			var refMarker string
-			if num >= 1 && num <= 20 {
-				refMarker = string(rune(0x2460 + num - 1)) // ① is U+2460
-			} else {
-				refMarker = fmt.Sprintf("<sup>%d</sup>", num)
-			}
-			cleanedLine = beforeCallout + refMarker + afterCallout
+			cleanedLine = beforeCallout + afterCallout
 		}
 	}
 
 	// Clean up any trailing whitespace
 	cleanedLine = strings.TrimRight(cleanedLine, " \t")
+
+	// Clean up any trailing comment delimiters that are now empty
+	// e.g., "line // " becomes "line" instead of "line //"
+	if commentPrefix != "" {
+		// Check if the line ends with the comment prefix (possibly with whitespace before it)
+		trimmedLine := strings.TrimRight(cleanedLine, " \t")
+		if strings.HasSuffix(trimmedLine, commentPrefix) {
+			cleanedLine = strings.TrimRight(trimmedLine[:len(trimmedLine)-len(commentPrefix)], " \t")
+		} else if strings.HasSuffix(trimmedLine, commentPrefix+" ") {
+			cleanedLine = strings.TrimRight(trimmedLine[:len(trimmedLine)-len(commentPrefix)-1], " \t")
+		}
+	}
 
 	return cleanedLine, callouts
 }

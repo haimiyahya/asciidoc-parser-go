@@ -1171,6 +1171,13 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 			Lines:    strings.Split(content, "\n"),
 			Pos:       ast.Position{Line: lineno},
 		}
+	case reader.BlockPassthrough:
+		p.pendingBlockStyle = ""       // Consume the pending style
+		p.pendingBlockStyleAttrs = nil // Clear attributes
+		return &ast.PassThroughNode{
+			Content: content,
+			Pos:     ast.Position{Line: lineno},
+		}
 	case reader.BlockTable:
 		return p.createTable(lines, lineno)
 	default:

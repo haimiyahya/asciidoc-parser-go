@@ -1690,11 +1690,13 @@ func (c *HTML5Converter) convertSidebar(sidebar *ast.SidebarNode, w io.Writer) {
 // convertPassThrough converts a passthrough block to HTML.
 // Passthrough content is output as-is without escaping.
 func (c *HTML5Converter) convertPassThrough(pass *ast.PassThroughNode, w io.Writer) {
+	// Wrap in passblock div for Asciidoctor compatibility
+	fmt.Fprintf(w, `<div class="passblock">`+"\n")
+	fmt.Fprintf(w, `<div class="content">`+"\n")
 	// Passthrough content is written directly without HTML escaping
 	c.writeRawString(pass.Content, w)
-	if c.pretty && !strings.HasSuffix(pass.Content, "\n") {
-		fmt.Fprintln(w)
-	}
+	fmt.Fprintf(w, `</div>`+"\n")
+	fmt.Fprintf(w, `</div>`+"\n")
 }
 
 // convertVerse converts a verse block to HTML.

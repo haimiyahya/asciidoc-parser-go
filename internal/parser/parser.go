@@ -457,13 +457,13 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				} else if itemInfo.Level > p.currentListLevel {
 					// Nested list - add as child of current list item
 					p.addNestedList(classification, lineno, doc)
-				} else if itemInfo.Level < p.currentListLevel && sameType {
+				} else if itemInfo.Level < p.currentListLevel {
 					// Going back up the hierarchy - pop from stack until we find the right level
 					p.popListStackToLevel(itemInfo.Level)
 					// After popping, add the item to the now-current list
 					p.addListItemToList(classification, lineno)
 				} else {
-					// Different list type - close current and start new
+					// Different list type at same level - close current and start new
 					p.closeCurrentList(doc)
 					if classification.List != nil {
 						p.startNewList(classification, lineno, doc)
@@ -1249,12 +1249,24 @@ func (p *Parser) createTable(lines []string, lineno int) ast.Node {
 
 // closeCurrentList closes the current open list if any.
 func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
-	if p.currentList != nil {
+	// If there are items on the stack, we have nested lists.
+	// Add the outermost (first) list on the stack to the document.
+	// The nested lists are already attached via NestedList pointers.
+	if len(p.listStack) > 0 {
+		// Get the outermost list (first item pushed)
+		outermostEntry := p.listStack[0]
+		p.addBlockToCurrentSection(doc, outermostEntry.list)
+		p.currentList = nil
+		p.currentListBlockType = 0
+		p.currentListLevel = 0
+		p.listStack = nil
+	} else if p.currentList != nil {
+		// No nested lists, just add the current list
 		p.addBlockToCurrentSection(doc, p.currentList)
 		p.currentList = nil
 		p.currentListBlockType = 0
 		p.currentListLevel = 0
-		p.listStack = nil // Clear the stack when closing the outermost list
+		p.listStack = nil
 	}
 }
 

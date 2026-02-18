@@ -94,13 +94,13 @@ Term 3:: Definition with *inline formatting* and `code`.
 === Mixed Nested Lists
 
 * Main item 1
-. Numbered sub-item
-. Another numbered item
+.. Numbered sub-item
+.. Another numbered item
 * Main item 2
 ** Bullet sub-item
 ** Nested bullet
-. Numbered under bullet
-. Another number
+... Numbered under bullet
+... Another number
 
 == Admonitions
 

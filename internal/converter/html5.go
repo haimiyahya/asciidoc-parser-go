@@ -183,6 +183,34 @@ table.tableblock.grid-all th:first-child {
 	padding: 1em;
 	margin: 1em 0;
 }
+.colist {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+.colist.arabic {
+	list-style-type: none;
+}
+.colist.arabic .li {
+	padding-left: 2em;
+	position: relative;
+}
+.colist.arabic .conum {
+	display: inline-block;
+	width: 1.8em;
+	height: 1.8em;
+	line-height: 1.8em;
+	text-align: center;
+	border-radius: 50%;
+	background-color: #2196F3;
+	color: white;
+	font-weight: bold;
+	font-size: 0.9em;
+	position: absolute;
+	left: 0;
+}
+.colist.arabic .conum:before {
+	content: attr(data-value);
+}
 .sect1 {
 	margin-bottom: 2em;
 }

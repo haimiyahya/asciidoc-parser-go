@@ -1198,6 +1198,15 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockQuote:
+		// Check if this quote block has a verse style
+		if p.pendingBlockStyle == "verse" {
+			p.pendingBlockStyle = ""       // Consume the pending style
+			p.pendingBlockStyleAttrs = nil // Clear attributes
+			return &ast.VerseNode{
+				Content: content,
+				Pos:     ast.Position{Line: lineno},
+			}
+		}
 		return &ast.NodeBlock{
 			Delimiter: "_",
 			Lines:    strings.Split(content, "\n"),

@@ -1840,19 +1840,14 @@ func (c *HTML5Converter) convertPassThrough(pass *ast.PassThroughNode, w io.Writ
 func (c *HTML5Converter) convertVerse(verse *ast.VerseNode, w io.Writer) {
 	c.writeOpenTagWithClass("div", "verseblock", w)
 
-	// Write content with line breaks preserved
-	lines := strings.Split(strings.TrimSpace(verse.Content), "\n")
-	for i, line := range lines {
-		if c.pretty {
-			fmt.Fprint(w, c.indent)
-		}
-		fmt.Fprint(w, c.escape(line))
-		if i < len(lines)-1 {
-			fmt.Fprint(w, "<br>")
-		}
-		if c.pretty {
-			fmt.Fprintln(w)
-		}
+	// Use <pre class="content"> like Asciidoctor
+	// This preserves whitespace and line breaks
+	fmt.Fprint(w, c.indent)
+	fmt.Fprint(w, `<pre class="content">`)
+	fmt.Fprint(w, c.escape(verse.Content))
+	fmt.Fprint(w, `</pre>`)
+	if c.pretty {
+		fmt.Fprintln(w)
 	}
 
 	c.writeCloseTag("div", w)

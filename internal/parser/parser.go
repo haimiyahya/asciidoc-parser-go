@@ -1113,10 +1113,14 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 
 	// Check if this is a source/listing block with pending style
 	isSourceBlock := (p.pendingBlockStyle == "source" || p.pendingBlockStyle == "listing")
+
 	if isSourceBlock && (blockType == reader.BlockLiteral || blockType == reader.BlockVerbatim) {
 		// Parse callouts in source blocks
 		calloutParser := NewCalloutParser()
 		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
+
+		// Use cleaned content (callouts removed from comments)
+		cleanedContent := strings.Join(cleanedLines, "\n")
 
 		// Create a StyledBlockNode for syntax highlighting
 		attrs := make(map[string]string)
@@ -1128,8 +1132,6 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		p.pendingBlockStyle = ""       // Consume the pending style
 		p.pendingBlockStyleAttrs = nil // Clear attributes
 
-		// Use cleaned content (callouts replaced with placeholders)
-		cleanedContent := strings.Join(cleanedLines, "\n")
 		return &ast.StyledBlockNode{
 			Style:      "source",
 			Content:    cleanedContent,

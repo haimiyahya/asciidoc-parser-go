@@ -395,6 +395,11 @@ func (c *HTML5Converter) convertSourceBlock(block *ast.StyledBlockNode, w io.Wri
 	if c.pretty {
 		fmt.Fprintln(w)
 	}
+
+	// Render callout descriptions if present
+	if len(block.Callouts) > 0 {
+		c.renderCalloutListForStyled(block, w)
+	}
 }
 
 // writeElement writes a simple HTML element with content (inline).
@@ -1278,6 +1283,51 @@ func (c *HTML5Converter) renderCalloutList(literal *ast.NodeLiteral, w io.Writer
 	var numberedCallouts []*ast.CalloutNode
 	maxNumber := 0
 	for _, co := range literal.Callouts {
+		if co.Description != "" {
+			numberedCallouts = append(numberedCallouts, co)
+			if co.Number > maxNumber {
+				maxNumber = co.Number
+			}
+		}
+	}
+
+	if len(numberedCallouts) == 0 {
+		return
+	}
+
+	// Create a map for easy lookup
+	calloutMap := make(map[int]*ast.CalloutNode)
+	for _, co := range numberedCallouts {
+		calloutMap[co.Number] = co
+	}
+
+	c.writeOpenTagWithClass("div", "colist arabic", w)
+
+	// Render callouts in numerical order
+	for i := 1; i <= maxNumber; i++ {
+		if co, exists := calloutMap[i]; exists {
+			if c.pretty {
+				fmt.Fprint(w, c.indent)
+			}
+			fmt.Fprintf(w, `<div class="li">`)
+			fmt.Fprintf(w, `<b class="conum" data-value="%d"></b> `, i)
+			fmt.Fprintf(w, `<span>%s</span>`, c.escape(co.Description))
+			fmt.Fprintf(w, `</div>`)
+			if c.pretty {
+				fmt.Fprintln(w)
+			}
+		}
+	}
+
+	c.writeCloseTag("div", w)
+}
+
+// renderCalloutListForStyled renders callout descriptions as an HTML list for styled blocks.
+func (c *HTML5Converter) renderCalloutListForStyled(styled *ast.StyledBlockNode, w io.Writer) {
+	// Collect callouts that have descriptions
+	var numberedCallouts []*ast.CalloutNode
+	maxNumber := 0
+	for _, co := range styled.Callouts {
 		if co.Description != "" {
 			numberedCallouts = append(numberedCallouts, co)
 			if co.Number > maxNumber {

@@ -206,3 +206,23 @@ func (p *CalloutParser) MergeCalloutDescriptions(literal *ast.NodeLiteral, callo
 		}
 	}
 }
+
+// MergeCalloutDescriptionsForStyled merges callout descriptions into styled block's callouts.
+func (p *CalloutParser) MergeCalloutDescriptionsForStyled(styled *ast.StyledBlockNode, calloutList *ast.CalloutListNode) {
+	if calloutList == nil || styled.Callouts == nil {
+		return
+	}
+
+	// Create a map of callouts by number for easy lookup
+	calloutMap := make(map[int]*ast.CalloutNode)
+	for _, co := range styled.Callouts {
+		calloutMap[co.Number] = co
+	}
+
+	// Merge descriptions from the callout list
+	for num, descCallout := range calloutList.Items {
+		if co, exists := calloutMap[num]; exists {
+			co.Description = descCallout.Description
+		}
+	}
+}

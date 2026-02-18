@@ -232,6 +232,8 @@ type StyledBlockNode struct {
 	Content string
 	// Attributes are block-level attributes.
 	Attributes map[string]string
+	// Callouts are callout annotations found in this block (for source/listing blocks).
+	Callouts []*CalloutNode
 	// Pos is the location in the source.
 	Pos Position
 }

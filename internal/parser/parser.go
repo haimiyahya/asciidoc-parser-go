@@ -260,9 +260,11 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 						// Add to current section if exists, otherwise to doc.Blocks
 						p.addBlockToCurrentSection(doc, block)
 
-						// Parse callout list after literal/verbatim blocks
+						// Parse callout list after literal/verbatim/source blocks
 						if literal, ok := block.(*ast.NodeLiteral); ok && len(literal.Callouts) > 0 {
 							p.parseCalloutList(literal)
+						} else if styled, ok := block.(*ast.StyledBlockNode); ok && (styled.Style == "source" || styled.Style == "listing") && len(styled.Callouts) > 0 {
+							p.parseCalloutListForStyled(styled)
 						}
 					}
 					inDelimitedBlock = false
@@ -1112,6 +1114,10 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 	// Check if this is a source/listing block with pending style
 	isSourceBlock := (p.pendingBlockStyle == "source" || p.pendingBlockStyle == "listing")
 	if isSourceBlock && (blockType == reader.BlockLiteral || blockType == reader.BlockVerbatim) {
+		// Parse callouts in source blocks
+		calloutParser := NewCalloutParser()
+		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
+
 		// Create a StyledBlockNode for syntax highlighting
 		attrs := make(map[string]string)
 		if p.pendingBlockStyleAttrs != nil {
@@ -1122,10 +1128,13 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		p.pendingBlockStyle = ""       // Consume the pending style
 		p.pendingBlockStyleAttrs = nil // Clear attributes
 
+		// Use cleaned content (callouts replaced with placeholders)
+		cleanedContent := strings.Join(cleanedLines, "\n")
 		return &ast.StyledBlockNode{
 			Style:      "source",
-			Content:    content,
+			Content:    cleanedContent,
 			Attributes: attrs,
+			Callouts:   callouts,
 			Pos:        ast.Position{Line: lineno},
 		}
 	}
@@ -1252,6 +1261,50 @@ func (p *Parser) parseCalloutList(literal *ast.NodeLiteral) {
 
 	// Merge descriptions into the literal block's callouts
 	calloutParser.MergeCalloutDescriptions(literal, calloutList)
+}
+
+// parseCalloutListForStyled parses callout descriptions that follow a styled source block.
+// Callout list items have the format: <1> Description here
+func (p *Parser) parseCalloutListForStyled(styled *ast.StyledBlockNode) {
+	calloutParser := NewCalloutParser()
+	calloutList := &ast.CalloutListNode{
+		Items: make(map[int]*ast.CalloutNode),
+	}
+
+	// Look ahead for callout list items
+	// They must immediately follow the styled block
+	for p.reader.HasMoreLines() {
+		line := p.reader.PeekLine()
+		lineno := p.reader.GetLineno()
+
+		// Stop if we hit a blank line or non-callout content
+		if strings.TrimSpace(line) == "" {
+			break
+		}
+
+		// Check if this is a callout list item
+		if !calloutParser.IsCalloutListLine(line) {
+			// Not a callout list, stop parsing
+			// But don't consume the line - it belongs to the next block
+			break
+		}
+
+		// Parse the callout list item
+		num, desc := calloutParser.ParseCalloutList(line)
+		if num > 0 {
+			calloutList.Items[num] = &ast.CalloutNode{
+				Number:      num,
+				Description: desc,
+				Pos:         ast.Position{Line: lineno},
+			}
+		}
+
+		// Consume the callout list line
+		p.reader.Advance()
+	}
+
+	// Merge descriptions into the styled block's callouts
+	calloutParser.MergeCalloutDescriptionsForStyled(styled, calloutList)
 }
 
 // startNewList starts a new list with the given item as its first element.

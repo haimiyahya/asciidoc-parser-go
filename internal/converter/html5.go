@@ -127,6 +127,48 @@ table.tableblock thead th {
 table.tableblock.frame-all {
 	border: 1px solid #ddd;
 }
+table.tableblock.frame-topbot {
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
+}
+table.tableblock.frame-sides {
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+}
+table.tableblock.frame-none {
+	border: none;
+}
+/* Frame-specific cell border overrides */
+table.tableblock.frame-topbot th,
+table.tableblock.frame-topbot td {
+	border-left: none;
+	border-right: none;
+}
+table.tableblock.frame-topbot.grid-all th,
+table.tableblock.frame-topbot.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-topbot.grid-all th:first-child,
+table.tableblock.frame-topbot.grid-all td:first-child {
+	border-left: none;
+}
+table.tableblock.frame-sides th,
+table.tableblock.frame-sides td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.frame-none th,
+table.tableblock.frame-none td {
+	border: none;
+}
+table.tableblock.frame-none.grid-all th,
+table.tableblock.frame-none.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-none.grid-all th:first-child,
+table.tableblock.frame-none.grid-all td:first-child {
+	border-left: none;
+}
 table.tableblock.grid-all td,
 table.tableblock.grid-all th {
 	border-left: 1px solid #ddd;
@@ -134,6 +176,60 @@ table.tableblock.grid-all th {
 table.tableblock.grid-all td:first-child,
 table.tableblock.grid-all th:first-child {
 	border-left: none;
+}
+/* Grid rows: only horizontal borders (between rows) */
+table.tableblock.grid-rows th,
+table.tableblock.grid-rows td {
+	border-left: none;
+	border-right: none;
+}
+/* Grid cols: only vertical borders (between columns) */
+table.tableblock.grid-cols th,
+table.tableblock.grid-cols td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.grid-cols td,
+table.tableblock.grid-cols th {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.grid-cols td:first-child,
+table.tableblock.grid-cols th:first-child {
+	border-left: none;
+}
+/* Grid none: no internal borders */
+table.tableblock.grid-none th,
+table.tableblock.grid-none td {
+	border-left: none;
+	border-right: none;
+}
+/* Stripe patterns */
+table.tableblock.stripes-even tr:nth-child(even) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-odd tr:nth-child(odd) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-all tr {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-last tr:last-child {
+	background-color: #f0f0f0;
+}
+/* Auto width: columns size to content */
+table.tableblock.autowidth {
+	width: auto;
+	table-layout: auto;
+}
+/* Horizontal alignment */
+table.tableblock .halign-left {
+	text-align: left;
+}
+table.tableblock .halign-right {
+	text-align: right;
+}
+table.tableblock .halign-center {
+	text-align: center;
 }
 .admonitionblock {
 	margin: 1em 0;
@@ -1922,6 +2018,18 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 		classes = append(classes, "stripes-"+stripes)
 	}
 
+	// Add autowidth class and remove stretch if %autowidth is set
+	if table.Attributes["autowidth"] == "true" {
+		classes = append(classes, "autowidth")
+		// Remove stretch class as it conflicts with autowidth
+		for i, cls := range classes {
+			if cls == "stretch" {
+				classes = append(classes[:i], classes[i+1:]...)
+				break
+			}
+		}
+	}
+
 	// Write opening table tag with classes and attributes
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
@@ -1945,16 +2053,52 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 		c.writeOpenTag("colgroup", w)
 		numCols := table.ColumnCount()
 		if numCols > 0 {
-			colWidth := 100.0 / float64(numCols)
-			// Track the sum of floored widths for accurate last column calculation
+			// Calculate column widths based on column specs or equal distribution
+			var widths []float64
+
+			// Check if we have column width specifications
+			if len(table.Columns) > 0 {
+				hasWidthSpecs := false
+				totalWidth := 0.0
+				for _, col := range table.Columns {
+					if col.Width != "" && col.Width != "0" {
+						hasWidthSpecs = true
+						// Parse width as a number
+						var w float64
+						fmt.Sscanf(col.Width, "%f", &w)
+						totalWidth += w
+						widths = append(widths, w)
+					} else {
+						widths = append(widths, 1.0) // Default equal weight
+						totalWidth += 1.0
+					}
+				}
+				// If we found actual width specs (not all defaulted), use them
+				if hasWidthSpecs {
+					// Convert ratios to percentages
+					for i := range widths {
+						widths[i] = (widths[i] / totalWidth) * 100.0
+					}
+				} else {
+					// All equal, reset to equal distribution
+					for i := range widths {
+						widths[i] = 100.0 / float64(numCols)
+					}
+				}
+			} else {
+				// No column specs, equal distribution
+				equalWidth := 100.0 / float64(numCols)
+				for i := 0; i < numCols; i++ {
+					widths = append(widths, equalWidth)
+				}
+			}
+
+			// Write <col> tags with calculated widths
 			sumFloored := 0.0
-			for i := 0; i < numCols; i++ {
-				var width float64
+			for i, width := range widths {
 				if i == numCols-1 {
 					// Last column gets the remainder based on actual floored values
 					width = 100.0 - sumFloored
-				} else {
-					width = colWidth
 				}
 				if c.pretty {
 					fmt.Fprint(w, c.indent)
@@ -1992,7 +2136,7 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 	if table.HasHeader() {
 		c.writeOpenTag("thead", w)
 		headerRow := table.HeaderRow()
-		c.writeTableRow(headerRow, "th", w)
+		c.writeTableRowWithColAlign(headerRow, "th", table.Columns, w)
 		c.writeCloseTag("thead", w)
 	}
 
@@ -2003,9 +2147,21 @@ func (c *HTML5Converter) convertTable(table *ast.Table, w io.Writer) {
 		if table.HasHeader() && row.Kind == ast.TableRowHeader {
 			continue
 		}
-		c.writeTableRow(&row, "td", w)
+		// Skip footer row (will be rendered in tfoot)
+		if row.Kind == ast.TableRowFooter {
+			continue
+		}
+		c.writeTableRowWithColAlign(&row, "td", table.Columns, w)
 	}
 	c.writeCloseTag("tbody", w)
+
+	// Write tfoot if table has a footer row
+	if table.HasFooter() {
+		c.writeOpenTag("tfoot", w)
+		footerRow := table.FooterRow()
+		c.writeTableRowWithColAlign(footerRow, "td", table.Columns, w)
+		c.writeCloseTag("tfoot", w)
+	}
 
 	c.writeCloseTag("table", w)
 }
@@ -2019,14 +2175,29 @@ func (c *HTML5Converter) writeTableRow(row *ast.TableRow, cellTag string, w io.W
 	c.writeOpenTag("tr", w)
 
 	for _, cell := range row.Cells {
-		c.writeTableCell(&cell, cellTag, w)
+		c.writeTableCell(&cell, cellTag, nil, -1, w)
+	}
+
+	c.writeCloseTag("tr", w)
+}
+
+// writeTableRowWithColAlign writes a single table row with column alignment fallback.
+func (c *HTML5Converter) writeTableRowWithColAlign(row *ast.TableRow, cellTag string, columns []ast.TableColumnSpec, w io.Writer) {
+	if row == nil {
+		return
+	}
+
+	c.writeOpenTag("tr", w)
+
+	for i, cell := range row.Cells {
+		c.writeTableCell(&cell, cellTag, columns, i, w)
 	}
 
 	c.writeCloseTag("tr", w)
 }
 
 // writeTableCell writes a single table cell.
-func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Writer) {
+func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, columns []ast.TableColumnSpec, cellIndex int, w io.Writer) {
 	if c.pretty {
 		fmt.Fprint(w, c.indent)
 	}
@@ -2038,8 +2209,15 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 
 	// Add horizontal alignment class
 	align := cell.HorizontalAlign
+	// Fall back to column alignment if cell doesn't have explicit alignment
+	if align == "" && columns != nil && cellIndex >= 0 && cellIndex < len(columns) {
+		align = columns[cellIndex].HorizontalAlign
+	}
 	if align == "" && tag == "th" {
 		align = "center" // Default for headers
+	}
+	if align == "" {
+		align = "left" // Default for all cells
 	}
 	switch align {
 	case "left":

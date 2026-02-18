@@ -2,6 +2,7 @@
 package parser
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -297,14 +298,14 @@ func (p *TableParser) splitByCommas(s string) []string {
 }
 
 // parseColumnSpecs parses the cols attribute into column specifications.
-// Example: "1,2,3" or "<,>,^" or "h,l,l"
+// Example: "1,2,3" or "<,>,^" or "h,l,l" or "3*" (3 equal columns) or "2*,1*" (2 equal + 1)
 func (p *TableParser) parseColumnSpecs(spec string) []ast.TableColumnSpec {
 	// Remove any surrounding quotes
 	spec = strings.Trim(spec, "\"'")
 
 	// Split by comma
 	parts := strings.Split(spec, ",")
-	cols := make([]ast.TableColumnSpec, 0, len(parts))
+	allCols := make([]ast.TableColumnSpec, 0, len(parts))
 
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
@@ -312,12 +313,32 @@ func (p *TableParser) parseColumnSpecs(spec string) []ast.TableColumnSpec {
 			continue
 		}
 
+		// Check for repeat operator (e.g., "3*" means 3 columns, "2*" means 2 columns)
+		repeatCount := 1
+		specPart := part
+		if strings.HasSuffix(part, "*") {
+			// Extract the number before *
+			starIndex := strings.LastIndex(part, "*")
+			numStr := part[:starIndex]
+			if numStr != "" {
+				// Parse the repeat count
+				var count int
+				fmt.Sscanf(numStr, "%d", &count)
+				if count > 0 {
+					repeatCount = count
+				}
+			}
+			// For "N*" or just "*", create auto-width columns
+			specPart = "" // Empty spec means auto-width with default alignment
+		}
+
+		// Create the column spec
 		col := ast.TableColumnSpec{
 			AutoWidth: true,
 		}
 
-		// Parse each part
-		for _, r := range part {
+		// Parse the spec characters (if any)
+		for _, r := range specPart {
 			switch r {
 			case '<':
 				col.HorizontalAlign = "left"
@@ -348,10 +369,13 @@ func (p *TableParser) parseColumnSpecs(spec string) []ast.TableColumnSpec {
 			}
 		}
 
-		cols = append(cols, col)
+		// Add the column spec repeatCount times
+		for i := 0; i < repeatCount; i++ {
+			allCols = append(allCols, col)
+		}
 	}
 
-	return cols
+	return allCols
 }
 
 // parseRow parses a single table row.

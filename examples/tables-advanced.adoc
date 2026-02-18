@@ -1,0 +1,522 @@
+= Advanced Table Features Showcase
+v0.3.1
+:toc:
+:table-caption: Table
+
+This document demonstrates advanced table features supported by asciidoc-parser-go.
+
+== Table Attributes and Styling
+
+=== Frame Control
+
+The frame attribute controls which sides of the table have borders.
+
+[frame="all"]
+.Frame All (default)
+|===
+| Cell 1 | Cell 2
+| Cell 3 | Cell 4
+|===
+
+[frame="topbot"]
+.Frame Top and Bottom Only
+|===
+| Cell 1 | Cell 2
+| Cell 3 | Cell 4
+|===
+
+[frame="sides"]
+.Frame Sides Only
+|===
+| Cell 1 | Cell 2
+| Cell 3 | Cell 4
+|===
+
+[frame="none"]
+.Frame None (grid still shows internal borders)
+|===
+| Cell 1 | Cell 2
+| Cell 3 | Cell 4
+|===
+
+[frame="none",grid="none"]
+.Completely Borderless (frame + grid none)
+|===
+| Cell 1 | Cell 2
+| Cell 3 | Cell 4
+|===
+
+=== Grid Control
+
+The grid attribute controls which internal cell borders are displayed.
+
+[grid="all"]
+.Grid All (default)
+|===
+| Cell 1 | Cell 2 | Cell 3
+| Cell 4 | Cell 5 | Cell 6
+|===
+
+[grid="rows"]
+.Grid Rows Only
+|===
+| Cell 1 | Cell 2 | Cell 3
+| Cell 4 | Cell 5 | Cell 6
+|===
+
+[grid="cols"]
+.Grid Columns Only
+|===
+| Cell 1 | Cell 2 | Cell 3
+| Cell 4 | Cell 5 | Cell 6
+|===
+
+[grid="none"]
+.Grid None
+|===
+| Cell 1 | Cell 2 | Cell 3
+| Cell 4 | Cell 5 | Cell 6
+|===
+
+=== Stripe Styling
+
+Stripes add alternating visual patterns to table rows.
+
+[stripes="even"]
+.Even Rows Striped
+|===
+| Row 1, Cell 1 | Row 1, Cell 2
+| Row 2, Cell 1 | Row 2, Cell 2
+| Row 3, Cell 1 | Row 3, Cell 2
+| Row 4, Cell 1 | Row 4, Cell 2
+|===
+
+[stripes="odd"]
+.Odd Rows Striped
+|===
+| Row 1, Cell 1 | Row 1, Cell 2
+| Row 2, Cell 1 | Row 2, Cell 2
+| Row 3, Cell 1 | Row 3, Cell 2
+| Row 4, Cell 1 | Row 4, Cell 2
+|===
+
+[stripes="all"]
+.All Rows Striped
+|===
+| Row 1, Cell 1 | Row 1, Cell 2
+| Row 2, Cell 1 | Row 2, Cell 2
+| Row 3, Cell 1 | Row 3, Cell 2
+|===
+
+[stripes="last"]
+.Last Row Highlighted
+|===
+| Row 1, Cell 1 | Row 1, Cell 2
+| Row 2, Cell 1 | Row 2, Cell 2
+| Row 3, Cell 1 | Row 3, Cell 2
+|===
+
+== Column Specifications
+
+=== Basic Column Widths
+
+[cols="1,2,3"]
+.Relative Column Widths (1:2:3 ratio)
+|===
+| Narrow | Medium | Wide
+| A | B | C
+|===
+
+[cols="20%,30%,50%"]
+.Percentage Column Widths
+|===
+| 20% | 30% | 50%
+| A | B | C
+|===
+
+[cols="100em,200em,300em"]
+.Fixed Column Widths (in em units)
+|===
+| 100em | 200em | 300em
+| A | B | C
+|===
+
+=== Auto Width
+
+[%autowidth]
+.Auto Width Columns
+|===
+| Column content determines width
+| This column will expand to fit its content
+|===
+
+[cols="3*"]
+.Equal Width Columns (three columns of equal width)
+|===
+| Equal | Equal | Equal
+| A | B | C
+|===
+
+=== Column Alignment
+
+[cols="<,<,<"]
+.Left Aligned Columns
+|===
+| Left | Left | Left
+| Data 1 | Data 2 | Data 3
+|===
+
+[cols=">,>,>"]
+.Right Aligned Columns
+|===
+| Right | Right | Right
+| Data 1 | Data 2 | Data 3
+|===
+
+[cols="^,^,^"]
+.Center Aligned Columns
+|===
+| Center | Center | Center
+| Data 1 | Data 2 | Data 3
+|===
+
+[cols="<,>,^"]
+.Mixed Alignment
+|===
+| Left | Right | Center
+| Alpha | 100 | Middle
+|===
+
+=== Column Styles
+
+[cols="h,l,m"]
+.Column Styles (header, literal, monospace)
+|===
+| Header | `Literal` | Monospace
+| Data | Code | `mono`
+|===
+
+[cols="e,s,a"]
+.Column Styles (emphasis, strong, asciidoc)
+|===
+| _Italic_ | *Bold* | `Code`
+| Emphasis | Strong | AsciiDoc
+|===
+
+== Header and Footer Rows
+
+=== Explicit Header Option
+
+[cols="2*",options="header"]
+.Table with Header
+|===
+| Name | Value
+| Alice | 100
+| Bob | 200
+|===
+
+=== Header and Footer
+
+[cols="3*",options="header,footer"]
+.Table with Header and Footer
+|===
+| Metric | Q1 | Q2
+| Revenue | $1M | $1.2M
+| Expenses | $800K | $900K
+| Profit | $200K | $300K
+|_ Total | $1M | $1.2M
+|===
+
+=== Static Header Row (Column Spec)
+
+[cols="h,h,h"]
+.Static Header via Column Spec
+|===
+| Column 1 | Column 2 | Column 3
+| Data 1 | Data 2 | Data 3
+|===
+
+== Table Captions
+
+=== Caption from Attribute
+
+[caption="Product Inventory"]
+.Table with Attribute Caption
+|===
+| Item | Quantity
+| Widgets | 42
+| Gadgets | 17
+|===
+
+=== Inline Caption
+
+[cols="2*"]
+.Inventory Status
+|===
+| Item | Quantity
+| Widgets | 42
+| Gadgets | 17
+|===
+
+== Cell Content
+
+=== Inline Formatting in Cells
+
+[cols="2*",options="header"]
+.Inline Formatting
+|===
+| Description | Example
+| Bold text | **important**
+| Italic text | _emphasis_
+| Monospace | `code()`
+| Link | link:https://example.com[Example]
+| Combined | **_bold & italic_**
+|===
+
+=== Multi-line Cell Content
+
+[cols="2*",options="header"]
+.Multi-line Cells
+|===
+| Description | Content
+| Paragraph | This cell contains
+multiple lines of text
+that are preserved.
+|===
+
+=== Lists in Cells
+
+[cols="2*",options="header"]
+.Lists in Table Cells
+|===
+| Category | Items
+* Fruit
+** Apple
+** Banana
+** Orange
+| Vegetables
+** Carrot
+** Broccoli
+|===
+
+=== Empty Cells
+
+[cols="3*",options="header"]
+.Empty Cells
+|===
+| A | B | C
+| Data 1 | | Data 3
+| | Data 5 | Data 6
+| Data 7 | |
+|===
+
+=== Cell Content with Inline Parser
+
+[cols="2*",options="header"]
+.Advanced Inline Content
+|===
+| Feature | Syntax
+| Bold | **text**
+| Italic | _text_
+| Monospace | `text`
+| Combined | **_bold italic_** `code`
+| Links | link:https://example.com[text]
+|===
+
+== Complex Table Examples
+
+=== Comparison Table
+
+[cols="2,2,2a",options="header"]
+.Feature Comparison Matrix
+|===
+| Feature | Basic | Pro
+| Users | 5 | Unlimited
+| Storage | 1GB | 100GB
+| Support | Email | 24/7 Phone
+| API Access | | icon:check[]
+| Custom Domain | | icon:check[]
+| SSO | | icon:check[]
+|===
+
+=== Pricing Table
+
+[cols="<,2,>,^",options="header"]
+.Pricing Plans
+|===
+| Plan | Features | Price | Select
+| Basic | * 5 users
+* 1GB storage
+* Email support
+ | $9/mo | btn:[Choose]
+| Pro | * 50 users
+* 100GB storage
+* Priority support
+* API access
+ | $49/mo | btn:[Choose]
+| Enterprise | * Unlimited users
+* Unlimited storage
+* 24/7 phone support
+* Custom integrations
+* SSO
+ | Contact | btn:[Contact]
+|===
+
+=== Data Grid
+
+[cols="^,<,>,>,>,>",options="header",stripes="even"]
+.Quarterly Sales Data
+|===
+| Region | Q1 | Q2 | Q3 | Q4 | Total
+| North | $120K | $135K | $142K | $158K | $555K
+| South | $98K | $105K | $112K | $125K | $440K
+| East | $145K | $152K | $168K | $175K | $640K
+| West | $110K | $118K | $125K | $132K | $485K
+| **Total** | **$473K** | **$510K** | **$547K** | **$590K** | **$2.12M**
+|===
+
+=== Specification Table
+
+[cols="<1,3h,2,2",options="header",grid="rows"]
+.API Specification
+|===
+| Method | Endpoint | Description | Status
+| GET | /api/users | Retrieve all users | Stable
+| POST | /api/users | Create a new user | Stable
+| GET | /api/users/{id} | Get user by ID | Stable
+| PUT | /api/users/{id} | Update user | Stable
+| DELETE | /api/users/{id} | Delete user | Stable
+| GET | /api/users/{id}/posts | Get user posts | Beta
+| POST | /api/users/{id}/posts | Create post | Beta
+|===
+
+=== Status Dashboard
+
+[cols="^,1,1,1",options="header"]
+.System Status
+|===
+| Service | Status | Uptime | Response
+| Web Server | icon:check[role=green] | 99.9% | 45ms
+| Database | icon:check[role=green] | 99.95% | 12ms
+| Cache | icon:check[role=green] | 99.9% | 8ms
+| API | icon:check[role=green] | 99.85% | 85ms
+| CDN | icon:warning[role=yellow] | 98.5% | 120ms
+|===
+
+== Multiple Attribute Combinations
+
+=== Compact Table
+
+[frame="none",grid="none",%autowidth]
+.Compact Table Style
+|===
+| Name | Value
+| Key | Data
+|===
+
+=== Full Featured Table
+
+[cols="20%,20%,30%,30%",options="header",frame="all",grid="all",stripes="even",caption="Employee Directory"]
+.Employee Directory
+|===
+| Name | Department | Email | Location
+| Alice Johnson | Engineering | alice@example.com | New York
+| Bob Smith | Sales | bob@example.com | Chicago
+| Carol Williams | Marketing | carol@example.com | Los Angeles
+| David Brown | Engineering | david@example.com | Seattle
+|===
+
+=== Minimalist Table
+
+[frame="topbot",grid="cols",%autowidth]
+.Minimalist Design
+|===
+| Product | Q1 | Q2 | Q3 | Q4
+| Alpha | 100 | 120 | 115 | 130
+| Beta | 85 | 90 | 95 | 105
+| Gamma | 70 | 75 | 80 | 85
+|===
+
+== Technical Documentation Tables
+
+=== Command Reference
+
+[cols="<,1,2a",options="header"]
+.Command Reference
+|===
+| Option | Argument | Description
+| `-h, --help` | | Display help information
+| `-v, --version` | | Show version number
+| `-o, --output` | file | Specify output file path
+| `-c, --config` | file | Load configuration from file
+| `--verbose` | | Enable verbose output
+| `--quiet` | | Suppress non-error messages
+|===
+
+=== Configuration Options
+
+[cols="2,1,3",options="header",stripes="odd"]
+.Configuration Options
+|===
+| Option | Type | Description
+| `server.port` | integer | The port number for the server to listen on. Default: 8080
+| `server.host` | string | The hostname or IP address to bind to. Default: localhost
+| `database.url` | string | JDBC URL for database connection. Required
+| `database.pool` | integer | Maximum connection pool size. Default: 10
+| `log.level` | string | Logging level: DEBUG, INFO, WARN, ERROR. Default: INFO
+| `log.format` | string | Log format: json or text. Default: text
+|===
+
+== Best Practices
+
+=== When to Use Tables
+
+Tables are ideal for:
+
+* *Tabular data* - Information that naturally fits in a grid
+* *Comparisons* - Side-by-side feature or price comparisons
+* *Reference material* - Command options, configuration keys, APIs
+* *Specifications* - Technical details with consistent structure
+
+Avoid tables for:
+* Simple lists (use unordered or ordered lists instead)
+* Layout purposes (tables should convey semantic data relationships)
+
+=== Table Design Guidelines
+
+.Guidelines for Effective Tables
+[cols="2*",options="header"]
+|===
+| Practice | Recommendation
+| Headers | Always use `options="header"` for data tables
+| Alignment | Left-align text, right-align numbers
+| Widths | Use `cols="*"` for equal or `cols="<,>,^"` for alignment
+| Captions | Provide captions for context and accessibility
+| Stripes | Use `stripes="even"` for wide tables to aid readability
+| Frames | Use `frame="all"` for standalone, `frame="topbot"` for inline
+|===
+
+=== Accessibility Considerations
+
+When creating tables, consider:
+
+. *Always provide headers* using `options="header"`
+. *Use descriptive captions* to explain table purpose
+. *Keep tables simple* - avoid excessive nesting
+. *Specify column widths* for predictable rendering
+. *Use appropriate alignment* for data types
+
+== Summary
+
+This showcase demonstrates the comprehensive table support in asciidoc-parser-go, including:
+
+* Frame and grid styling
+* Column specifications and alignment
+* Header and footer rows
+* Captions and titles
+* Cell content with inline formatting
+* Multi-line cells and embedded lists
+* Complex data presentations
+* Technical documentation patterns
+
+For more information, see the link:https://docs.asciidoctor.org/asciidoc/latest/tables/[AsciiDoc table documentation].

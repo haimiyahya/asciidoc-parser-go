@@ -153,6 +153,8 @@ type NodeListItem struct {
 	Text string
 	// Definition is the definition text for labeled lists (item.Definition).
 	Definition string
+	// DefinitionNodes contains inline markup nodes for the definition text.
+	DefinitionNodes []interface{}
 	// Term is the term text for labeled lists (item.Term).
 	Term string
 	// NestedList contains a nested list within this list item.

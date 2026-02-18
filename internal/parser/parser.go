@@ -941,16 +941,30 @@ func (p *Parser) createListItem(info *reader.ListInfo, lineno int) ast.Node {
 		}
 	}
 
+	// For labeled lists, also parse inline markup in the definition
+	var definitionNodes []interface{}
+	if info.Type == reader.BlockListLabeled && info.Text != "" {
+		defParser := inline.NewParser(info.Text)
+		defNodes := defParser.Parse()
+		definitionNodes = make([]interface{}, 0, len(defNodes))
+		for _, node := range defNodes {
+			if node.Type != inline.NodeText {
+				definitionNodes = append(definitionNodes, node)
+			}
+		}
+	}
+
 	return &ast.NodeListItem{
-		Kind:        ast.TypeListItem,
-		Marker:       info.Marker,
-		Level:        info.Level,
-		Ordinal:      info.Ordinal,
-		Text:         text,
-		Term:          info.Term,
-		Definition:    info.Text, // For labeled lists, Text contains the definition
-		InlineNodes:   nodes,
-		Pos:          ast.Position{Line: lineno},
+		Kind:           ast.TypeListItem,
+		Marker:          info.Marker,
+		Level:           info.Level,
+		Ordinal:         info.Ordinal,
+		Text:            text,
+		Term:            info.Term,
+		Definition:      info.Text, // For labeled lists, Text contains the definition
+		DefinitionNodes: definitionNodes,
+		InlineNodes:     nodes,
+		Pos:             ast.Position{Line: lineno},
 	}
 }
 

@@ -1229,14 +1229,26 @@ func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 	if item.Marker == "::" {
 		// Labeled list: dt and dd (Asciidoctor compatibility)
 		fmt.Fprint(w, `<dt class="hdlist1">`)
-		fmt.Fprint(w, c.escape(item.Term))
+		// Check if term has inline nodes
+		if len(item.InlineNodes) == 0 {
+			fmt.Fprint(w, c.escape(item.Term))
+		} else {
+			// Render term with inline formatting
+			c.renderInlineText(item.Term, item.InlineNodes, w)
+		}
 		fmt.Fprint(w, `</dt>
 `)
 		// Write dd with p-wrapped content
 		fmt.Fprint(w, `<dd>
 `)
 		fmt.Fprint(w, `<p>`)
-		fmt.Fprint(w, c.escape(item.Definition))
+		// Check if definition has inline nodes
+		if len(item.DefinitionNodes) == 0 {
+			fmt.Fprint(w, c.escape(item.Definition))
+		} else {
+			// Render definition with inline formatting
+			c.renderInlineText(item.Definition, item.DefinitionNodes, w)
+		}
 		fmt.Fprint(w, `</p>
 `)
 		fmt.Fprint(w, `</dd>

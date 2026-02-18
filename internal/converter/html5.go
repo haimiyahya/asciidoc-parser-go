@@ -2202,7 +2202,16 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, columns
 		fmt.Fprint(w, c.indent)
 	}
 
-	fmt.Fprint(w, "<"+tag)
+	// Check if column has header style - if so, use 'th' tag regardless of row position
+	// This implements Asciidoctor's behavior where 'h' in cols makes the entire column a header column
+	actualTag := tag
+	if columns != nil && cellIndex >= 0 && cellIndex < len(columns) {
+		if columns[cellIndex].Style == "header" {
+			actualTag = "th"
+		}
+	}
+
+	fmt.Fprint(w, "<"+actualTag)
 
 	// Add tableblock class and alignment classes (Asciidoctor compatibility)
 	fmt.Fprint(w, ` class="tableblock`)
@@ -2213,7 +2222,7 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, columns
 	if align == "" && columns != nil && cellIndex >= 0 && cellIndex < len(columns) {
 		align = columns[cellIndex].HorizontalAlign
 	}
-	if align == "" && tag == "th" {
+	if align == "" && actualTag == "th" {
 		align = "center" // Default for headers
 	}
 	if align == "" {
@@ -2357,7 +2366,7 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, columns
 			fmt.Fprintf(w, `</%s>`, contentWrapper)
 		}
 	}
-	fmt.Fprintf(w, "</%s>", tag)
+	fmt.Fprintf(w, "</%s>", actualTag)
 	if c.pretty {
 		fmt.Fprintln(w)
 	}

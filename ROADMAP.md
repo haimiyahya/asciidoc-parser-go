@@ -50,12 +50,13 @@ Using {product}...
 **Current:** Basic tables with column specifications and attributes
 
 **Remaining Features:**
-- Multi-line cells (`+` continuation) - Asciidoctor treats `|+` as a new row
+- **Multi-line cells (`+` continuation)** - Lines ending with `+` should continue in same cell with newline separator
+  - Example: `| Line 1 +` followed by `| Line 2` should become one cell with "Line 1\nLine 2"
+  - The `+` character should be removed from output
+  - This requires changes to the table row parser to detect and collect continuation lines
 - Cell styles via column specs - `[cols="2*l"]` for literal columns already works
 - Vertical table support
-- Auto-fit column widths (`[%autowidth]` partially implemented)
-
-**Note:** Per-cell style indicators (`l|`, `m|`, `v|`), repeat cells (`3*value`), and vertical alignment (`.^`, `.<`, `>.`) are kept as literal text by Asciidoctor in basic PSV tables. Use column specifications instead.
+- Auto-fit column widths (`[%autowidth]` implemented)`
 
 #### 4. Advanced Inline Parsing
 **Current:** Basic inline formatting implemented
@@ -145,7 +146,8 @@ See [EXTENSIONS.md](EXTENSIONS.md) for current extension capabilities.
 |---------|-------------|-----------|----------|
 | **LSP Server** | Community only | Basic implemented | Medium |
 | **Extension System** | Full API | Partial | Medium |
-| **Table: Multiline cells** | Yes | No | High |
+| **Table: Multiline cells (+ continuation)** | Yes | No | High |
+| **Table: Column repeat (3*)** | Yes | Yes | - |
 | **Table: Vertical alignment** | As literal | As literal | - |
 | **Table: Cell styles** | Via column specs | Via column specs | - |
 | **Passthrough macros** | Full | Partial | High |
@@ -197,6 +199,6 @@ asciidoctor/test/
 
 ---
 
-**Last Updated:** 2026-02-17
+**Last Updated:** 2026-02-19
 **Asciidoctor Version:** 2.0.26
 **Compatibility:** 32/32 tests passing (100%)

@@ -230,10 +230,19 @@ Stripes add alternating visual patterns to table rows.
 === Static Header Row (Column Spec)
 
 [cols="h,h,h"]
-.Static Header via Column Spec
+.Static Header via Column Spec (all columns are headers)
 |===
 | Column 1 | Column 2 | Column 3
 | Data 1 | Data 2 | Data 3
+|===
+
+[cols="h,<,<"]
+.Row Header Column (first column is header for row labels)
+|===
+| Product | Q1 Sales | Q2 Sales
+| Widgets | 1,234 | 1,567
+| Gadgets | 987 | 1,123
+| Doohickeys | 456 | 789
 |===
 
 == Table Captions
@@ -279,9 +288,9 @@ Stripes add alternating visual patterns to table rows.
 .Multi-line Cells
 |===
 | Description | Content
-| Paragraph | This cell contains
-multiple lines of text
-that are preserved.
+| Paragraph | This cell contains a single line of text
+| Currently | Multi-line cells with + continuation are not yet supported
+| Workaround | Use single-line content or block elements
 |===
 
 === Lists in Cells

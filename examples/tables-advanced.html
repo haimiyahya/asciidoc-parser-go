@@ -847,7 +847,7 @@ em, i {
 </thead>
 <tbody>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Data</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Data</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Code</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock"><code>mono</code></p></td>
   </tr>
@@ -955,7 +955,7 @@ em, i {
   <col style="width: 33.3333%;">
   <col style="width: 33.3334%;">
 </colgroup>
-<caption>Static Header via Column Spec</caption>
+<caption>Static Header via Column Spec (all columns are headers)</caption>
 <thead>
   <tr>
     <th class="tableblock halign-center valign-top"><p class="tableblock">Column 1</p></th>
@@ -965,9 +965,41 @@ em, i {
 </thead>
 <tbody>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Data 1</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Data 2</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Data 3</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Data 1</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Data 2</p></th>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Data 3</p></th>
+  </tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3334%;">
+</colgroup>
+<caption>Row Header Column (first column is header for row labels)</caption>
+<thead>
+  <tr>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Product</p></th>
+    <th class="tableblock halign-left valign-top"><p class="tableblock">Q1 Sales</p></th>
+    <th class="tableblock halign-left valign-top"><p class="tableblock">Q2 Sales</p></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Widgets</p></th>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">1,234</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">1,567</p></td>
+  </tr>
+  <tr>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Gadgets</p></th>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">987</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">1,123</p></td>
+  </tr>
+  <tr>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">Doohickeys</p></th>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">456</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">789</p></td>
   </tr>
 </tbody>
 </table>
@@ -1085,13 +1117,15 @@ em, i {
 <tbody>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Paragraph</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">This cell contains</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">This cell contains a single line of text</p></td>
   </tr>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">multiple lines of text</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Currently</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Multi-line cells with + continuation are not yet supported</p></td>
   </tr>
   <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">that are preserved.</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Workaround</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Use single-line content or block elements</p></td>
   </tr>
 </tbody>
 </table>
@@ -1492,43 +1526,43 @@ em, i {
 <tbody>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">GET</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">/api/users</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">/api/users</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Retrieve all users</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Stable</p></td>
   </tr>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">POST</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">/api/users</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">/api/users</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Create a new user</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Stable</p></td>
   </tr>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">GET</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">/api/users/{id}</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">/api/users/{id}</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Get user by ID</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Stable</p></td>
   </tr>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">PUT</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">/api/users/{id}</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">/api/users/{id}</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Update user</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Stable</p></td>
   </tr>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">DELETE</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">/api/users/{id}</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">/api/users/{id}</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Delete user</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Stable</p></td>
   </tr>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">GET</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">/api/users/{id}/posts</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">/api/users/{id}/posts</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Get user posts</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Beta</p></td>
   </tr>
   <tr>
     <td class="tableblock halign-left valign-top"><p class="tableblock">POST</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">/api/users/{id}/posts</p></td>
+    <th class="tableblock halign-center valign-top"><p class="tableblock">/api/users/{id}/posts</p></th>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Create post</p></td>
     <td class="tableblock halign-left valign-top"><p class="tableblock">Beta</p></td>
   </tr>

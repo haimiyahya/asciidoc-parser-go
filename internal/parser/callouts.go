@@ -2,6 +2,7 @@
 package parser
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -103,10 +104,15 @@ func (p *CalloutParser) extractCallouts(line string, lineIdx int) (string, []*as
 	// Handle standard line comment style callouts
 	// Look for patterns like: comment <1>, comment<1>, or just <1>
 	matches := calloutRegex.FindAllStringSubmatchIndex(line, -1)
-	for _, match := range matches {
+
+	// Process matches in reverse order to maintain correct positions
+	for i := len(matches) - 1; i >= 0; i-- {
+		match := matches[i]
 		if len(match) >= 4 {
 			numStr := line[match[2]:match[3]]
-			if num, err := strconv.Atoi(numStr); err == nil {
+			num := 0
+			if n, err := strconv.Atoi(numStr); err == nil {
+				num = n
 				callout := &ast.CalloutNode{
 					Number:     num,
 					LineIndex:  lineIdx,
@@ -116,33 +122,19 @@ func (p *CalloutParser) extractCallouts(line string, lineIdx int) (string, []*as
 				callouts = append(callouts, callout)
 			}
 
-			// Check if there's a line comment prefix before the callout
+			// Replace callout marker with Unicode circled number
+			// Use Unicode chars: ①, ②, ③, etc. (U+2460 to U+2473)
+			// Fallback to (1), (2) etc. for numbers > 20
 			beforeCallout := line[:match[0]]
 			afterCallout := line[match[1]:]
 
-			if commentPrefix != "" {
-				// Remove the comment prefix and space if present before the callout
-				trimmedBefore := strings.TrimSpace(beforeCallout)
-				if strings.HasSuffix(trimmedBefore, commentPrefix) ||
-					strings.HasSuffix(beforeCallout, commentPrefix+" ") ||
-					strings.HasSuffix(beforeCallout, commentPrefix) {
-					// Find where the comment starts
-					commentStart := strings.LastIndex(beforeCallout, commentPrefix)
-					if commentStart >= 0 {
-						// Rebuild the line without the comment and callout
-						prefix := line[:commentStart]
-						// Check if there's content before the comment
-						prefix = strings.TrimRight(prefix, " \t")
-						cleanedLine = prefix + afterCallout
-					}
-				} else {
-					// Just remove the callout, keep the rest
-					cleanedLine = beforeCallout + afterCallout
-				}
+			var refMarker string
+			if num >= 1 && num <= 20 {
+				refMarker = string(rune(0x2460 + num - 1)) // ① is U+2460
 			} else {
-				// No comment prefix, just remove the callout
-				cleanedLine = beforeCallout + afterCallout
+				refMarker = fmt.Sprintf("<sup>%d</sup>", num)
 			}
+			cleanedLine = beforeCallout + refMarker + afterCallout
 		}
 	}
 

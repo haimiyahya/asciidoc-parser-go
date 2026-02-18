@@ -334,9 +334,15 @@ func (p *Parser) Parse() []*Node {
 		if len(pendingRoles) > 0 {
 			// Roles were not consumed - emit as text and consume at least one character
 			// Emit the role markup as plain text
-			roleText := p.text[p.pos:min(p.pos+1, len(p.text))]
-			nodes = append(nodes, &Node{Type: NodeText, Text: roleText})
+			oldPos := p.pos
 			p.pos = min(p.pos+1, len(p.text))
+			roleText := p.text[oldPos:p.pos]
+			nodes = append(nodes, &Node{
+				Type:     NodeText,
+				Text:     roleText,
+				StartPos: oldPos,
+				Position: p.pos,
+			})
 			pendingRoles = nil
 			skipRole = true // Skip role parsing in next iteration to avoid infinite loop
 			continue
@@ -374,12 +380,24 @@ func (p *Parser) Parse() []*Node {
 		}
 
 		if p.pos < nextInlinePos {
-			nodes = append(nodes, &Node{Type: NodeText, Text: p.text[p.pos:nextInlinePos]})
+			text := p.text[p.pos:nextInlinePos]
+			nodes = append(nodes, &Node{
+				Type:     NodeText,
+				Text:     text,
+				StartPos: p.pos,
+				Position: nextInlinePos,
+			})
 			p.pos = nextInlinePos
 		} else {
 			// No more inline constructs found, consume remaining text and exit
 			if p.pos < len(p.text) {
-				nodes = append(nodes, &Node{Type: NodeText, Text: p.text[p.pos:]})
+				text := p.text[p.pos:]
+				nodes = append(nodes, &Node{
+					Type:     NodeText,
+					Text:     text,
+					StartPos: p.pos,
+					Position: len(p.text),
+				})
 				p.pos = len(p.text)
 			}
 		}
@@ -713,17 +731,52 @@ func (p *Parser) tryItalic() (*Node, int) {
 func (p *Parser) tryMonospace() (*Node, int) {
 	remaining := p.text[p.pos:]
 
-	// Check for backtick monospace: `text`
+	// Check for triple backticks: ```text```
+	// In AsciiDoc, triple backticks show the content with single backticks as literal
+	// e.g., ``` `text` ``` renders as `text` (showing the backticks)
+	if strings.HasPrefix(remaining, "```") {
+		// Find the closing triple backticks
+		closeIndex := strings.Index(remaining[3:], "```")
+		if closeIndex != -1 {
+			innerContent := remaining[3 : closeIndex+3]
+			// Output the inner content with single backticks added as monospace
+			// This shows `innerContent` literally
+			return &Node{
+				Type:     NodeMonospace,
+				Text:     "`" + innerContent + "`",
+				Children: nil,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 6,
+			}, p.pos + closeIndex + 6
+		}
+	}
+
+	// Check for double backticks: ``text``
+	// In AsciiDoc, double backticks are also used for showing literal single backticks
+	if strings.HasPrefix(remaining, "``") {
+		closeIndex := strings.Index(remaining[2:], "``")
+		if closeIndex != -1 {
+			innerContent := remaining[2 : closeIndex+2]
+			return &Node{
+				Type:     NodeMonospace,
+				Text:     "`" + innerContent + "`",
+				Children: nil,
+				StartPos:  p.pos,
+				Position:  p.pos + closeIndex + 4,
+			}, p.pos + closeIndex + 4
+		}
+	}
+
+	// Check for single backtick monospace: `text`
 	if strings.HasPrefix(remaining, "`") {
 		closeIndex := strings.Index(remaining[1:], "`")
 		if closeIndex != -1 {
 			text := remaining[1 : closeIndex+1]
-			// Recursively parse inner content for nested inline markup
-			children := NewParser(text).Parse()
+			// Monospace content is literal - don't parse inner content for inline markup
 			return &Node{
 				Type:     NodeMonospace,
 				Text:     text,
-				Children:  children,
+				Children: nil, // No children - monospace is literal
 				StartPos:  p.pos,
 				Position:  p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2

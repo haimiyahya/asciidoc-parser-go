@@ -79,10 +79,16 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 		}
 	}
 
-	// Parse rows
+	// Parse rows with support for multi-line cell content
+	// In AsciiDoc, lines that don't start with | are continuation of the previous cell
 	firstRow := true
+	var pendingRowIndex int = -1
+	var pendingCellIndex int = -1
+	var pendingContent []string
+
 	for i := lineIdx; i < len(lines); i++ {
-		line := strings.TrimSpace(lines[i])
+		originalLine := lines[i]
+		line := strings.TrimSpace(originalLine)
 
 		// Skip empty lines
 		if line == "" {
@@ -91,51 +97,94 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 
 		// Check for row separator
 		if strings.HasPrefix(line, "|===") || strings.HasPrefix(line, "|+++") || strings.HasPrefix(line, "|---") {
+			// Flush any pending content before separator
+			if pendingRowIndex >= 0 && pendingCellIndex >= 0 && len(pendingContent) > 0 {
+				p.flushPendingContent(&table.Rows[pendingRowIndex], pendingCellIndex, pendingContent)
+				pendingContent = nil
+				pendingCellIndex = -1
+			}
+			pendingRowIndex = -1
 			continue
 		}
 
-		// Determine row kind for this specific row
-		rowKind := ast.TableRowBody
+		// Check if this is a row line (starts with |) or continuation (doesn't start with |)
+		if strings.HasPrefix(line, "|") || strings.HasPrefix(line, "|_") {
+			// This is a new row - flush any pending content from previous row
+			if pendingRowIndex >= 0 && pendingCellIndex >= 0 && len(pendingContent) > 0 {
+				p.flushPendingContent(&table.Rows[pendingRowIndex], pendingCellIndex, pendingContent)
+				pendingContent = nil
+				pendingCellIndex = -1
+			}
 
-		// Note: In AsciiDoc, |= is a per-cell header indicator, not a row indicator.
-		// For basic table compatibility, we treat all rows as body rows.
-		// The |= prefix is kept as literal text in the cell.
+			// Determine row kind for this specific row
+			rowKind := ast.TableRowBody
 
-		// Check for footer row specification
-		if strings.HasPrefix(line, "|_") {
-			rowKind = ast.TableRowFooter
-			line = strings.TrimPrefix(line, "|_")
-			line = strings.TrimLeft(line, "_")
+			// Check for footer row specification
+			if strings.HasPrefix(line, "|_") {
+				rowKind = ast.TableRowFooter
+				line = strings.TrimPrefix(line, "|_")
+				line = strings.TrimLeft(line, "_")
+			}
+
+			// Mark first row as header if option is set
+			isHeaderRow := hasHeaderOption && firstRow
+
+			// Parse the row
+			format := table.GetFormat()
+			row := p.parseRow(line, format, isHeaderRow)
+
+			// Set row kind (footer takes precedence, otherwise use parsed header status or default to body)
+			if rowKind == ast.TableRowFooter {
+				row.Kind = rowKind
+			} else if !isHeaderRow {
+				row.Kind = rowKind
+			}
+
+			// Track header row index
+			if row.Kind == ast.TableRowHeader && table.HeaderRowIndex < 0 {
+				table.HeaderRowIndex = len(table.Rows)
+			}
+
+			// Track footer row index
+			if row.Kind == ast.TableRowFooter {
+				table.FooterRowIndex = len(table.Rows)
+			}
+
+			table.Rows = append(table.Rows, row)
+			pendingRowIndex = len(table.Rows) - 1
+
+			// If the last cell in this row is empty, it can accept continuation content
+			if len(row.Cells) > 0 {
+				lastCell := &row.Cells[len(row.Cells)-1]
+				if lastCell.Text == "" {
+					pendingCellIndex = len(row.Cells) - 1
+				}
+			}
+
+			// Clear first row flag after processing
+			firstRow = false
+		} else {
+			// This is a continuation line - add to pending content
+			// Preserve the original line (without trimming leading whitespace for code)
+			if pendingRowIndex >= 0 && pendingCellIndex >= 0 {
+				pendingContent = append(pendingContent, originalLine)
+			} else {
+				// No pending cell to accept this content - create a new single-cell row
+				format := table.GetFormat()
+				row := p.parseRow("|", format, false)
+				if len(row.Cells) > 0 {
+					// Set the content directly
+					row.Cells[0].Text = originalLine
+					row.Cells[0].Blocks = p.parseListContent([]string{originalLine})
+				}
+				table.Rows = append(table.Rows, row)
+			}
 		}
+	}
 
-		// Mark first row as header if option is set
-		isHeaderRow := hasHeaderOption && firstRow
-
-		// Parse the row
-		format := table.GetFormat()
-		row := p.parseRow(line, format, isHeaderRow)
-
-		// Set row kind (footer takes precedence, otherwise use parsed header status or default to body)
-		if rowKind == ast.TableRowFooter {
-			row.Kind = rowKind
-		} else if !isHeaderRow {
-			row.Kind = rowKind
-		}
-
-		// Track header row index
-		if row.Kind == ast.TableRowHeader && table.HeaderRowIndex < 0 {
-			table.HeaderRowIndex = len(table.Rows)
-		}
-
-		// Track footer row index
-		if row.Kind == ast.TableRowFooter {
-			table.FooterRowIndex = len(table.Rows)
-		}
-
-		table.Rows = append(table.Rows, row)
-
-		// Clear first row flag after processing
-		firstRow = false
+	// Flush any remaining pending content at end of table
+	if pendingRowIndex >= 0 && pendingCellIndex >= 0 && len(pendingContent) > 0 {
+		p.flushPendingContent(&table.Rows[pendingRowIndex], pendingCellIndex, pendingContent)
 	}
 
 	// If no explicit header but columns specified, first row might be header
@@ -345,12 +394,37 @@ func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell
 	// Trim leading |
 	line = strings.TrimLeft(line, "|")
 
+	// Special case: if line is empty after trimming |, create one empty cell
+	// This handles the case of "|" (single pipe) which should create an empty cell
+	if line == "" {
+		cell := ast.TableCell{
+			Text:       "",
+			ColSpan:    1,
+			RowSpan:    1,
+			Attributes: make(map[string]string),
+			InlineNodes: make([]interface{}, 0),
+		}
+		return []ast.TableCell{cell}
+	}
+
 	// Split by |, but handle || as empty cell with colspan
 	parts := strings.Split(line, "|")
 
 	// Remove trailing empty string if line ends with |
 	if len(parts) > 0 && parts[len(parts)-1] == "" {
 		parts = parts[:len(parts)-1]
+	}
+
+	// If all parts were removed, we still need at least one cell
+	if len(parts) == 0 {
+		cell := ast.TableCell{
+			Text:       "",
+			ColSpan:    1,
+			RowSpan:    1,
+			Attributes: make(map[string]string),
+			InlineNodes: make([]interface{}, 0),
+		}
+		return []ast.TableCell{cell}
 	}
 
 	for _, part := range parts {
@@ -381,6 +455,8 @@ func (p *TableParser) parsePSVRow(line string, isHeaderRow bool) []ast.TableCell
 					cell.InlineNodes = append(cell.InlineNodes, node)
 				}
 			}
+		} else {
+			cell.InlineNodes = make([]interface{}, 0)
 		}
 
 		cells = append(cells, cell)
@@ -543,4 +619,156 @@ func IsTableLine(line string) bool {
 		strings.HasPrefix(line, "[") ||
 		strings.HasPrefix(line, "|=") ||
 		strings.HasPrefix(line, "|_")
+}
+
+// flushPendingContent flushes accumulated content lines to a table cell.
+func (p *TableParser) flushPendingContent(row *ast.TableRow, cellIndex int, content []string) {
+	if row == nil || cellIndex < 0 || cellIndex >= len(row.Cells) {
+		return
+	}
+
+	cell := &row.Cells[cellIndex]
+	fullContent := strings.Join(content, "\n")
+
+	// Set the text content
+	cell.Text = fullContent
+
+	// Parse and set any block content (lists, etc.)
+	cell.Blocks = p.parseListContent(content)
+}
+
+// parseListContent checks if content lines contain a list and parses it.
+// Returns a slice of block nodes if list(s) are found, nil otherwise.
+func (p *TableParser) parseListContent(lines []string) []ast.Node {
+	if len(lines) == 0 {
+		return nil
+	}
+
+	// Check if content starts with list markers
+	hasListMarkers := false
+	listMarkerPatterns := []string{
+		"* ",   // Unordered
+		"- ",   // Unordered alt
+		"** ",  // Nested
+		"*** ", // Triple nested
+		". ",   // Ordered
+		".. ",  // Nested ordered
+	}
+
+	// Check first non-empty line
+	for _, line := range lines {
+		trimmed := strings.TrimLeft(line, " \t")
+		if trimmed == "" {
+			continue
+		}
+		for _, pattern := range listMarkerPatterns {
+			if strings.HasPrefix(trimmed, pattern) {
+				hasListMarkers = true
+				break
+			}
+		}
+		if hasListMarkers {
+			break
+		}
+	}
+
+	if !hasListMarkers {
+		return nil
+	}
+
+	// Parse the content as a list
+	return p.parseSimpleList(lines)
+}
+
+// parseSimpleList parses simple list content from lines.
+// Handles unordered lists with nested items.
+func (p *TableParser) parseSimpleList(lines []string) []ast.Node {
+	var lists []ast.Node
+	var currentList *ast.NodeList
+	var lastItem *ast.NodeListItem
+	var lastLevel int
+
+	for _, line := range lines {
+		trimmed := strings.TrimLeft(line, " \t")
+		if trimmed == "" {
+			continue
+		}
+
+		// Check for list item marker
+		level := 0
+		restOfLine := trimmed
+
+		// Count nesting level by * prefix (only * followed by space or end of line)
+		// We need to be careful not to consume ** from bold markup
+		for strings.HasPrefix(restOfLine, "*") && (len(restOfLine) == 1 || restOfLine[1] == ' ' || restOfLine[1] == '\t') {
+			level++
+			restOfLine = strings.TrimPrefix(restOfLine, "*")
+			restOfLine = strings.TrimLeft(restOfLine, " \t")
+		}
+
+		// Check for - marker as alternative
+		if level == 0 && strings.HasPrefix(trimmed, "- ") {
+			level = 1
+			restOfLine = strings.TrimLeft(trimmed[1:], " \t")
+		}
+
+		// Check for . ordered marker
+		if level == 0 && strings.HasPrefix(trimmed, ". ") {
+			level = 1
+			restOfLine = strings.TrimLeft(trimmed[1:], " \t")
+		}
+
+		if level > 0 && restOfLine != trimmed {
+			// This is a list item
+			if currentList == nil {
+				currentList = &ast.NodeList{
+					Kind: ast.TypeList,
+					Pos:  ast.Position{Line: 1},
+				}
+				lists = append(lists, currentList)
+			}
+
+			// Parse inline content for the item
+			item := &ast.NodeListItem{
+				Kind:   ast.TypeListItem,
+				Marker: "*",
+				Level:  level,
+				Text:   restOfLine,
+				Pos:    ast.Position{Line: 1},
+			}
+
+			// Parse inline formatting
+			if restOfLine != "" {
+				inlineParser := inline.NewParser(restOfLine)
+				inlineNodes := inlineParser.Parse()
+				item.InlineNodes = make([]interface{}, 0)
+				for _, node := range inlineNodes {
+					if node.Type != inline.NodeText {
+						item.InlineNodes = append(item.InlineNodes, node)
+					}
+				}
+			}
+
+			// Handle nesting
+			if level > lastLevel && lastItem != nil {
+				// Create nested list
+				nestedList := &ast.NodeList{
+					Kind: ast.TypeList,
+					Pos:  ast.Position{Line: 1},
+				}
+				lastItem.NestedList = nestedList
+				currentList = nestedList
+			} else if level < lastLevel {
+				// Need to go back up - for simplicity, just add to main list
+				// A proper implementation would track the list hierarchy
+				currentList = lists[len(lists)-1].(*ast.NodeList)
+			}
+
+			currentList.Items = append(currentList.Items, item)
+			lastItem = item
+			lastLevel = level
+		}
+	}
+
+	return lists
 }

@@ -876,18 +876,18 @@ func (c *HTML5Converter) renderInlineChildren(node *inline.Node, w io.Writer) {
 	if len(node.Children) > 0 {
 		lastEnd := 0
 		for _, child := range node.Children {
-			end := child.Position
+			start := child.StartPos
 			// Write any text before this child node (only if child is after lastEnd)
-			if end > lastEnd {
-				text := node.Text[lastEnd:end]
+			if start > lastEnd {
+				text := node.Text[lastEnd:start]
 				c.writeRawString(c.escape(text), w)
 			}
-			lastEnd = end
+			lastEnd = child.Position
 			// Render the child node
 			c.convertInlineNode(child, w)
 		}
 		// Write any remaining text after last child
-		if lastEnd > 0 && lastEnd < len(node.Text) {
+		if lastEnd < len(node.Text) {
 			text := node.Text[lastEnd:]
 			c.writeRawString(c.escape(text), w)
 		}
@@ -2030,60 +2030,26 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 		contentWrapper = "p"     // <p> for normal content
 	}
 
-	// Write opening content wrapper tag
-	if contentWrapper != "" {
-		fmt.Fprintf(w, `<%s class="tableblock">`, contentWrapper)
-	}
-
-	// Check if cell has multi-line content
-	cellText := cell.Text
-	hasMultiLine := strings.Contains(cellText, "\n")
-
-	if len(cell.InlineNodes) == 0 {
-		if hasMultiLine {
-			// For multi-line cells, replace newlines with <br> tags
-			lines := strings.Split(cellText, "\n")
-			for i, line := range lines {
-				c.writeRawString(c.escape(line), w)
-				if i < len(lines)-1 {
-					c.writeRawString(`<br>`, w)
-				}
-			}
-		} else {
-			c.writeRawString(c.escape(cell.Text), w)
+	// Check if cell has block content (lists, etc.)
+	if len(cell.Blocks) > 0 {
+		// Render block content (no content wrapper needed)
+		for _, block := range cell.Blocks {
+			c.convertNode(block, w)
 		}
 	} else {
-		// Render inline nodes
-		lastEnd := 0
-		for _, node := range cell.InlineNodes {
-			if inlineNode, ok := node.(*inline.Node); ok {
-				startPos := inlineNode.StartPos
-				// Write any text before this inline node
-				if startPos > lastEnd {
-					text := cell.Text[lastEnd:startPos]
-					// Handle multi-line text between inline nodes
-					if strings.Contains(text, "\n") {
-						lines := strings.Split(text, "\n")
-						for i, line := range lines {
-							c.writeRawString(c.escape(line), w)
-							if i < len(lines)-1 {
-								c.writeRawString(`<br>`, w)
-							}
-						}
-					} else {
-						c.writeRawString(c.escape(text), w)
-					}
-				}
-				lastEnd = inlineNode.Position
-				// Render the inline node
-				c.convertInlineNode(inlineNode, w)
-			}
+		// Write opening content wrapper tag
+		if contentWrapper != "" {
+			fmt.Fprintf(w, `<%s class="tableblock">`, contentWrapper)
 		}
-		// Write any remaining text
-		if lastEnd < len(cell.Text) {
-			text := cell.Text[lastEnd:]
-			if strings.Contains(text, "\n") {
-				lines := strings.Split(text, "\n")
+
+		// Check if cell has multi-line content
+		cellText := cell.Text
+		hasMultiLine := strings.Contains(cellText, "\n")
+
+		if len(cell.InlineNodes) == 0 {
+			if hasMultiLine {
+				// For multi-line cells, replace newlines with <br> tags
+				lines := strings.Split(cellText, "\n")
 				for i, line := range lines {
 					c.writeRawString(c.escape(line), w)
 					if i < len(lines)-1 {
@@ -2091,14 +2057,56 @@ func (c *HTML5Converter) writeTableCell(cell *ast.TableCell, tag string, w io.Wr
 					}
 				}
 			} else {
-				c.writeRawString(c.escape(text), w)
+				c.writeRawString(c.escape(cell.Text), w)
+			}
+		} else {
+			// Render inline nodes
+			lastEnd := 0
+			for _, node := range cell.InlineNodes {
+				if inlineNode, ok := node.(*inline.Node); ok {
+					startPos := inlineNode.StartPos
+					// Write any text before this inline node
+					if startPos > lastEnd {
+						text := cell.Text[lastEnd:startPos]
+						// Handle multi-line text between inline nodes
+						if strings.Contains(text, "\n") {
+							lines := strings.Split(text, "\n")
+							for i, line := range lines {
+								c.writeRawString(c.escape(line), w)
+								if i < len(lines)-1 {
+									c.writeRawString(`<br>`, w)
+								}
+							}
+						} else {
+							c.writeRawString(c.escape(text), w)
+						}
+					}
+					lastEnd = inlineNode.Position
+					// Render the inline node
+					c.convertInlineNode(inlineNode, w)
+				}
+			}
+			// Write any remaining text
+			if lastEnd < len(cell.Text) {
+				text := cell.Text[lastEnd:]
+				if strings.Contains(text, "\n") {
+					lines := strings.Split(text, "\n")
+					for i, line := range lines {
+						c.writeRawString(c.escape(line), w)
+						if i < len(lines)-1 {
+							c.writeRawString(`<br>`, w)
+						}
+					}
+				} else {
+					c.writeRawString(c.escape(text), w)
+				}
 			}
 		}
-	}
 
-	// Close the content wrapper tag
-	if contentWrapper != "" {
-		fmt.Fprintf(w, `</%s>`, contentWrapper)
+		// Close the content wrapper tag
+		if contentWrapper != "" {
+			fmt.Fprintf(w, `</%s>`, contentWrapper)
+		}
 	}
 	fmt.Fprintf(w, "</%s>", tag)
 	if c.pretty {

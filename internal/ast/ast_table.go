@@ -80,6 +80,9 @@ type TableCell struct {
 	// InlineNodes contains inline markup nodes within the cell
 	InlineNodes []interface{}
 
+	// Blocks contains block-level content (lists, etc.) within the cell
+	Blocks []Node
+
 	// ColSpan is the number of columns this cell spans (default: 1)
 	ColSpan int
 

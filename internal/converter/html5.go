@@ -175,13 +175,6 @@ table.tableblock.grid-all th:first-child {
 	border-radius: 4px;
 	padding: 1em;
 	margin: 1.5em 0;
-	box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.sidebarblock .title {
-	color: #1976D2;
-	font-weight: 600;
-	margin-bottom: 0.5em;
-	font-size: 1.1em;
 }
 .exampleblock {
 	background-color: #f8f8f8;
@@ -189,11 +182,6 @@ table.tableblock.grid-all th:first-child {
 	border-radius: 4px;
 	padding: 1em;
 	margin: 1em 0;
-}
-.exampleblock .title {
-	color: #333;
-	font-weight: 600;
-	margin-bottom: 0.5em;
 }
 .sect1 {
 	margin-bottom: 2em;

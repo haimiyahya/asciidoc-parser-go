@@ -299,13 +299,9 @@ Stripes add alternating visual patterns to table rows.
 .Lists in Table Cells
 |===
 | Category | Items
-* Fruit
-** Apple
-** Banana
-** Orange
-| Vegetables
-** Carrot
-** Broccoli
+| Fruits | Apple, Banana, Orange
+| Vegetables | Carrot, Broccoli
+| Note | Multi-line lists in cells are not yet supported
 |===
 
 === Empty Cells
@@ -316,7 +312,7 @@ Stripes add alternating visual patterns to table rows.
 | A | B | C
 | Data 1 | | Data 3
 | | Data 5 | Data 6
-| Data 7 | |
+| Data 7 | | |
 |===
 
 === Cell Content with Inline Parser
@@ -343,9 +339,9 @@ Stripes add alternating visual patterns to table rows.
 | Users | 5 | Unlimited
 | Storage | 1GB | 100GB
 | Support | Email | 24/7 Phone
-| API Access | | icon:check[]
-| Custom Domain | | icon:check[]
-| SSO | | icon:check[]
+| API Access | | ✓
+| Custom Domain | | ✓
+| SSO | | ✓
 |===
 
 === Pricing Table
@@ -354,21 +350,9 @@ Stripes add alternating visual patterns to table rows.
 .Pricing Plans
 |===
 | Plan | Features | Price | Select
-| Basic | * 5 users
-* 1GB storage
-* Email support
- | $9/mo | btn:[Choose]
-| Pro | * 50 users
-* 100GB storage
-* Priority support
-* API access
- | $49/mo | btn:[Choose]
-| Enterprise | * Unlimited users
-* Unlimited storage
-* 24/7 phone support
-* Custom integrations
-* SSO
- | Contact | btn:[Contact]
+| Basic | 5 users, 1GB storage, Email support | $9/mo | btn:[Choose]
+| Pro | 50 users, 100GB storage, Priority support, API access | $49/mo | btn:[Choose]
+| Enterprise | Unlimited users, storage, 24/7 phone support, SSO | Contact | btn:[Contact]
 |===
 
 === Data Grid
@@ -405,11 +389,11 @@ Stripes add alternating visual patterns to table rows.
 .System Status
 |===
 | Service | Status | Uptime | Response
-| Web Server | icon:check[role=green] | 99.9% | 45ms
-| Database | icon:check[role=green] | 99.95% | 12ms
-| Cache | icon:check[role=green] | 99.9% | 8ms
-| API | icon:check[role=green] | 99.85% | 85ms
-| CDN | icon:warning[role=yellow] | 98.5% | 120ms
+| Web Server | ✓ | 99.9% | 45ms
+| Database | ✓ | 99.95% | 12ms
+| Cache | ✓ | 99.9% | 8ms
+| API | ✓ | 99.85% | 85ms
+| CDN | ⚠ | 98.5% | 120ms
 |===
 
 == Multiple Attribute Combinations

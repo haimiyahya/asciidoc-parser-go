@@ -15,6 +15,13 @@ import (
 	"github.com/haimiyahya/asciidoc-parser-go/internal/reader"
 )
 
+// listStackEntry tracks a list in the nesting stack along with its level and type.
+type listStackEntry struct {
+	list      *ast.NodeList
+	level     int
+	blockType reader.BlockType
+}
+
 // Parser parses AsciiDoc source into an AST.
 type Parser struct {
 	// reader is the source reader.
@@ -31,6 +38,7 @@ type Parser struct {
 	currentSection *ast.NodeSection
 
 	// List tracking state
+	listStack         []listStackEntry
 	currentList      *ast.NodeList
 	currentListBlockType reader.BlockType
 	currentListLevel int
@@ -449,8 +457,13 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				} else if itemInfo.Level > p.currentListLevel {
 					// Nested list - add as child of current list item
 					p.addNestedList(classification, lineno, doc)
+				} else if itemInfo.Level < p.currentListLevel && sameType {
+					// Going back up the hierarchy - pop from stack until we find the right level
+					p.popListStackToLevel(itemInfo.Level)
+					// After popping, add the item to the now-current list
+					p.addListItemToList(classification, lineno)
 				} else {
-					// Different list - close current and start new
+					// Different list type - close current and start new
 					p.closeCurrentList(doc)
 					if classification.List != nil {
 						p.startNewList(classification, lineno, doc)
@@ -1218,6 +1231,39 @@ func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
 		p.currentList = nil
 		p.currentListBlockType = 0
 		p.currentListLevel = 0
+		p.listStack = nil // Clear the stack when closing the outermost list
+	}
+}
+
+// popListStackToLevel pops lists from the stack until we reach the target level.
+// This is used when we encounter an item at a higher level (closer to root) than
+// the current nested list.
+func (p *Parser) popListStackToLevel(targetLevel int) {
+	// Pop from stack until we find a list at or above the target level
+	for len(p.listStack) > 0 {
+		// Peek at the top of the stack
+		topEntry := p.listStack[len(p.listStack)-1]
+
+		if topEntry.level <= targetLevel {
+			// Found a list at or above the target level
+			// Restore the context from this entry
+			p.currentList = topEntry.list
+			p.currentListLevel = topEntry.level
+			p.currentListBlockType = topEntry.blockType
+			// Don't pop yet - we'll pop after processing
+			return
+		}
+
+		// This list is deeper than target, pop it
+		p.listStack = p.listStack[:len(p.listStack)-1]
+	}
+
+	// If we emptied the stack but didn't find a matching level,
+	// we're back at the outermost list (level 1 or similar)
+	// The currentList should already be set by the last pop
+	if len(p.listStack) == 0 && p.currentList == nil {
+		// This shouldn't happen in valid markup, but handle gracefully
+		p.currentListLevel = 1
 	}
 }
 
@@ -1385,6 +1431,7 @@ func (p *Parser) addListItemToList(classification *reader.Classification, lineno
 }
 
 // addNestedList adds a nested list as a child of the current list's last item.
+// It also updates the current list context so subsequent items are added to the nested list.
 func (p *Parser) addNestedList(classification *reader.Classification, lineno int, doc *ast.NodeDocument) {
 	info := classification.List
 	if info == nil || p.currentList == nil {
@@ -1408,9 +1455,20 @@ func (p *Parser) addNestedList(classification *reader.Classification, lineno int
 
 	if item.NestedList != nil {
 		// Add new item to existing nested list
+		// Also update the current list context to point to this nested list
 		listItem := p.createListItem(info, lineno)
 		if listItem != nil {
 			item.NestedList.Items = append(item.NestedList.Items, listItem)
+
+			// Push current list onto stack and update to nested list
+			p.listStack = append(p.listStack, listStackEntry{
+				list:      p.currentList,
+				level:     p.currentListLevel,
+				blockType: p.currentListBlockType,
+			})
+			p.currentList = item.NestedList
+			p.currentListLevel = info.Level
+			p.currentListBlockType = info.Type
 		}
 		return
 	}
@@ -1430,6 +1488,16 @@ func (p *Parser) addNestedList(classification *reader.Classification, lineno int
 
 	// Attach the nested list to the parent list item
 	item.NestedList = nestedList
+
+	// Push current list onto stack and update to nested list
+	p.listStack = append(p.listStack, listStackEntry{
+		list:      p.currentList,
+		level:     p.currentListLevel,
+		blockType: p.currentListBlockType,
+	})
+	p.currentList = nestedList
+	p.currentListLevel = info.Level
+	p.currentListBlockType = info.Type
 }
 
 // Advance is a helper that consumes the next line.

@@ -75,11 +75,6 @@ table.tableblock.grid-all td:first-child,
 table.tableblock.grid-all th:first-child {
 	border-left: none;
 }
-/* Table stripes for alternating row colors */
-table.tableblock.stripes-even tbody tr:nth-child(even),
-table.tableblock.stripes-odd tbody tr:nth-child(odd) {
-	background-color: #f9f9f9;
-}
 .admonitionblock {
 	margin: 1em 0;
 	padding: 1em;
@@ -115,11 +110,11 @@ table.tableblock.stripes-odd tbody tr:nth-child(odd) {
 	margin: 0;
 }
 .sidebarblock {
-	background-color: #f8f8f8;
-	border: 1px solid #ddd;
+	background-color: #f0f7ff;
+	border-left: 4px solid #2196F3;
 	border-radius: 4px;
 	padding: 1em;
-	margin: 1em 0;
+	margin: 1.5em 0;
 }
 .exampleblock {
 	background-color: #f8f8f8;
@@ -127,6 +122,34 @@ table.tableblock.stripes-odd tbody tr:nth-child(odd) {
 	border-radius: 4px;
 	padding: 1em;
 	margin: 1em 0;
+}
+.colist {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+.colist.arabic {
+	list-style-type: none;
+}
+.colist.arabic .li {
+	padding-left: 2em;
+	position: relative;
+}
+.colist.arabic .conum {
+	display: inline-block;
+	width: 1.8em;
+	height: 1.8em;
+	line-height: 1.8em;
+	text-align: center;
+	border-radius: 50%;
+	background-color: #2196F3;
+	color: white;
+	font-weight: bold;
+	font-size: 0.9em;
+	position: absolute;
+	left: 0;
+}
+.colist.arabic .conum:before {
+	content: attr(data-value);
 }
 .sect1 {
 	margin-bottom: 2em;
@@ -235,78 +258,6 @@ em, i {
 .chroma .gr { color: #cf222e; } /* Generic error */
 .chroma .gt { color: #cf222e; } /* Generic traceback */
 .chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
-/* Callout markers */
-b.conum {
-	display: inline-block;
-	background-color: #1a73e8;
-	color: #fff;
-	border-radius: 50%;
-	width: 1.2em;
-	height: 1.2em;
-	line-height: 1.2em;
-	text-align: center;
-	font-size: 0.75em;
-	font-weight: bold;
-	margin-left: 0.5em;
-	font-family: sans-serif;
-}
-b.conum::before {
-	content: attr(data-value);
-}
-.colist {
-	display: flex;
-	align-items: baseline;
-	margin: 0.5em 0;
-	padding-left: 2em;
-}
-.colist i.conum {
-	background-color: #1a73e8;
-	color: #fff;
-	border-radius: 50%;
-	width: 1.2em;
-	height: 1.2em;
-	line-height: 1.2em;
-	text-align: center;
-	font-size: 0.75em;
-	font-weight: bold;
-	display: inline-block;
-	margin-left: -2em;
-	margin-right: 0.5em;
-}
-.colist i.conum::before {
-	content: attr(data-value);
-}
-.colist b {
-	display: none;
-}
-.colist p {
-	margin: 0;
-}
-/* UI macros */
-.menuseq {
-	display: inline-flex;
-	align-items: center;
-}
-.menu {
-	color: #fff;
-	background-color: #6c757d;
-	padding: 0.1em 0.4em;
-	border-radius: 3px;
-	font-size: 0.85em;
-}
-.menuseparator {
-	color: #6c757d;
-	margin: 0 0.3em;
-	font-size: 0.8em;
-}
-b.button {
-	background-color: #007bff;
-	color: #fff;
-	padding: 0.2em 0.6em;
-	border-radius: 4px;
-	font-size: 0.85em;
-	font-weight: normal;
-}
 </style>
 
 </head>
@@ -363,30 +314,40 @@ b.button {
 </div>
     <table class="tableblock frame-all grid-all stretch">
     <colgroup>
-      <col style="width: 100.00%;">
+      <col style="width: 100%;">
     </colgroup>
     <tbody>
       <tr>
+        <td class="tableblock halign-left valign-top"><div class="ulist">
+<ul>
+<li>
+<p><strong>Bold</strong> uses <code>**text**</code></p>
+</li>
+<li>
+<p><em>Italic</em> uses <code>_text_</code></p>
+</li>
+<li>
+<p><code>Monospace</code> uses <code>`text`</code></p>
+</li>
+</ul>
+</div>
+</td>
       </tr>
       <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* <strong>Bold</strong> uses <code>**text**<strong>text</strong></code></p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* <em>Italic</em> uses <code>_text_<em>text</em></code></p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* <code>Monospace</code> uses <code></code> <code>text</code> ``</p></td>
-      </tr>
-      <tr>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* <sup>Superscript</sup> uses <code>^text^<sup>text</sup></code></p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* <sub>Subscript</sub> uses <code>~text~<sub>text</sub></code></p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* <code>+Passthrough+Passthrough</code> uses <code>+text+text</code></p></td>
+        <td class="tableblock halign-left valign-top"><div class="ulist">
+<ul>
+<li>
+<p><sup>Superscript</sup> uses <code>^text^</code></p>
+</li>
+<li>
+<p><sub>Subscript</sub> uses <code>~text~</code></p>
+</li>
+<li>
+<p><code>+Passthrough+</code> uses <code>+text+</code></p>
+</li>
+</ul>
+</div>
+</td>
       </tr>
     </tbody>
   </table>
@@ -422,9 +383,6 @@ b.button {
 <div class="paragraph">
 <p>Bullet points use asterisks, dashes, or hyphens:</p>
 </div>
-<div class="paragraph">
-<p><strong> Nested item </strong> Another nested item</p>
-</div>
 <div class="ulist">
 <ul>
 <li>
@@ -432,6 +390,16 @@ b.button {
 </li>
 <li>
 <p>Second item</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Nested item</p>
+</li>
+<li>
+<p>Another nested item</p>
+</li>
+</ul>
+</div>
 </li>
 <li>
 <p>Third item</p>
@@ -454,28 +422,24 @@ b.button {
 </li>
 <li>
 <p>Third step</p>
-</li>
-</ol>
-</div>
-<div class="ulist">
-<ul>
+<div class="olist lowerroman">
+<ol class="lowerroman">
 <li>
 <p>Nested ordered list:</p>
-</li>
-</ul>
-</div>
-<div class="ulist">
-<ul>
+<div class="olist loweralpha">
+<ol class="loweralpha">
 <li>
 <p>Sub-step A</p>
 </li>
 <li>
 <p>Sub-step B</p>
 </li>
-</ul>
+</ol>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
+</li>
+</ol>
+</div>
+</li>
 <li>
 <p>Back to main list</p>
 </li>
@@ -520,13 +484,13 @@ b.button {
 </li>
 </ol>
 </div>
-<div class="paragraph">
-<p><strong> Bullet sub-item </strong> Nested bullet</p>
-</div>
 <div class="ulist">
 <ul>
 <li>
-<p>Main item 2</p>
+<p>Bullet sub-item</p>
+</li>
+<li>
+<p>Nested bullet</p>
 </li>
 </ul>
 </div>
@@ -616,10 +580,7 @@ This is important information that the reader should pay special attention to.
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
-<p>This is an example block.
-It preserves whitespace formatting
-and is useful for code samples or
-content that needs visual distinction.</p>
+<p>This is an example block. It preserves whitespace formatting and is useful for code samples or content that needs visual distinction.</p>
 </div>
 </div>
 </div>
@@ -639,11 +600,19 @@ content that needs visual distinction.</p>
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
-<p>Sidebar blocks are useful for:
-* Callout boxes
-* Related information
-* Tangential content
-* Tips and tricks</p>
+<p>Sidebar blocks are useful for:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Callout boxes</p></li>
+<li>
+<p>Related information</p></li>
+<li>
+<p>Tangential content</p></li>
+<li>
+<p>Tips and tricks</p></li>
+</ul>
 </div>
 </div>
 </div>
@@ -671,12 +640,11 @@ All whitespace is preserved.
 </div>
 </blockquote>
 </div>
-<div class="listingblock">
+<div class="passblock">
 <div class="content">
 This is a *passthrough* block.
 All markup is passed through as-is.
-&lt;strong&gt;HTML tags work here!&lt;/strong&gt;
-</div>
+<strong>HTML tags work here!</strong></div>
 </div>
 </section>
 </div>
@@ -688,7 +656,7 @@ All markup is passed through as-is.
   <colgroup>
     <col style="width: 33.3333%;">
     <col style="width: 33.3333%;">
-    <col style="width: 33.3333%;">
+    <col style="width: 33.3334%;">
   </colgroup>
   <caption>Basic Table</caption>
   <tbody>
@@ -713,7 +681,7 @@ All markup is passed through as-is.
 <colgroup>
   <col style="width: 33.3333%;">
   <col style="width: 33.3333%;">
-  <col style="width: 33.3333%;">
+  <col style="width: 33.3334%;">
 </colgroup>
 <caption>Table with Header</caption>
 <thead>
@@ -745,7 +713,7 @@ All markup is passed through as-is.
 <colgroup>
   <col style="width: 33.3333%;">
   <col style="width: 33.3333%;">
-  <col style="width: 33.3333%;">
+  <col style="width: 33.3334%;">
 </colgroup>
 <caption>Table of Operating Systems</caption>
 <thead>
@@ -775,9 +743,9 @@ All markup is passed through as-is.
 </table>
 <table class="tableblock frame-all grid-all stretch stripes-even">
 <colgroup>
-  <col style="width: 33.33%;">
-  <col style="width: 33.33%;">
-  <col style="width: 33.33%;">
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3334%;">
 </colgroup>
 <caption>Complex Table with Styles</caption>
 <thead>
@@ -807,9 +775,9 @@ All markup is passed through as-is.
 </table>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-  <col style="width: 20%;">
-  <col style="width: 50%;">
-  <col style="width: 30%;">
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3334%;">
 </colgroup>
 <caption>Table with Column Widths</caption>
 <thead>
@@ -847,23 +815,15 @@ All markup is passed through as-is.
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-go chroma" data-lang="go">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span></span></code></pre>
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="w">    </span><span class="nx">name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&#34;AsciiDoc&#34;</span></span></span></code></pre> <b class="conum" data-value="1"></b>
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;Hello, %s!\n&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span></span></span></code></pre> <b class="conum" data-value="2"></b>
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-  </div>  <div class="colist arabic">
-    <div class="colist">
-      <i class="conum" data-value="1"></i>
-      <b>1</b>
-      <p>Variable declaration</p>
-    </div>
-    <div class="colist">
-      <i class="conum" data-value="2"></i>
-      <b>2</b>
-      <p>Formatted output</p>
-    </div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&#34;AsciiDoc&#34;</span><span class="w"> </span><span class="c1">// ①</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;Hello, %s!\n&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="c1">// ②</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
-
+</div>
+<div class="colist arabic">
+  <div class="li"><b class="conum" data-value="1"></b> <span>Variable declaration</span></div>
+  <div class="li"><b class="conum" data-value="2"></b> <span>Formatted output</span></div>
 </div>
 </section>
 <section class="sect2">
@@ -871,28 +831,16 @@ All markup is passed through as-is.
 <div class="listingblock">
   <div class="content">
     <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">#!/bin/bash</span></span></span></code></pre>
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Starting build...&#34;</span></span></span></code></pre> <b class="conum" data-value="1"></b>
-<pre class="chroma"><code><span class="line"><span class="cl">go build ./...</span></span></code></pre> <b class="conum" data-value="2"></b>
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Build complete!&#34;</span></span></span></code></pre> <b class="conum" data-value="3"></b></code></pre>
-  </div>  <div class="colist arabic">
-    <div class="colist">
-      <i class="conum" data-value="1"></i>
-      <b>1</b>
-      <p>Print start message</p>
-    </div>
-    <div class="colist">
-      <i class="conum" data-value="2"></i>
-      <b>2</b>
-      <p>Build all packages</p>
-    </div>
-    <div class="colist">
-      <i class="conum" data-value="3"></i>
-      <b>3</b>
-      <p>Print completion message</p>
-    </div>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">#!/bin/bash
+</span></span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Starting build...&#34;</span> <span class="c1"># ①</span>
+</span></span><span class="line"><span class="cl">go build ./... <span class="c1"># ②</span>
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Build complete!&#34;</span> <span class="c1"># ③</span></span></span></code></pre></code></pre>
   </div>
-
+</div>
+<div class="colist arabic">
+  <div class="li"><b class="conum" data-value="1"></b> <span>Print start message</span></div>
+  <div class="li"><b class="conum" data-value="2"></b> <span>Build all packages</span></div>
+  <div class="li"><b class="conum" data-value="3"></b> <span>Print completion message</span></div>
 </div>
 </section>
 </div>
@@ -1455,7 +1403,6 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="_include_code_snippet">Include: Code Snippet</h3>
 <div class="listingblock">
-  <div class="title">Code Snippet Example</div>
   <div class="content">
     <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
@@ -1472,19 +1419,23 @@ All markup is passed through as-is.
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
+<div class="paragraph">
+<p>.Code Snippet Example</p>
+</div>
 </section>
 <section class="sect2">
 <h3 id="_include_configuration">Include: Configuration</h3>
 <div class="exampleblock">
-<div class="title">Configuration Example</div>
 <div class="content">
 <div class="paragraph">
 <p>This is an example block using equals delimiters.</p>
 </div>
 </div>
 </div>
+<div class="paragraph">
+<p>.Configuration Example</p>
+</div>
 <div class="listingblock">
-  <div class="title">Configuration File</div>
   <div class="content">
     <pre class="highlight"><code class="language-toml chroma" data-lang="toml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="p">[</span><span class="nx">server</span><span class="p">]</span>
@@ -1498,6 +1449,9 @@ All markup is passed through as-is.
 </span></span><span class="line"><span class="cl"><span class="nx">port</span> <span class="p">=</span> <span class="mi">5432</span>
 </span></span><span class="line"><span class="cl"><span class="nx">name</span> <span class="p">=</span> <span class="s2">&#34;myapp&#34;</span></span></span></code></pre></code></pre>
   </div>
+</div>
+<div class="paragraph">
+<p>.Configuration File</p>
 </div>
 </section>
 <section class="sect2">
@@ -1532,7 +1486,7 @@ All markup is passed through as-is.
 <p>Navigation examples:</p>
 </div>
 <div class="paragraph">
-<p><span class="menuseq"><span class="menu">File</span><span class="menuseparator">‣</span><span class="menu">New</span><span class="menuseparator">‣</span><span class="menu">Document</span></span> <span class="menuseq"><span class="menu">Edit</span><span class="menuseparator">‣</span><span class="menu">Find</span><span class="menuseparator">‣</span><span class="menu">Replace</span></span> <span class="menuseq"><span class="menu">View</span><span class="menuseparator">‣</span><span class="menu">Zoom</span><span class="menuseparator">‣</span><span class="menu">Zoom In</span></span></p>
+<p><span class="menuseq"><span class="menu">File</span><span class="menusep">&#160;&#9656;</span><span class="menu">New</span><span class="menusep">&#160;&#9656;</span><span class="menu">Document</span></span> <span class="menuseq"><span class="menu">Edit</span><span class="menusep">&#160;&#9656;</span><span class="menu">Find</span><span class="menusep">&#160;&#9656;</span><span class="menu">Replace</span></span> <span class="menuseq"><span class="menu">View</span><span class="menusep">&#160;&#9656;</span><span class="menu">Zoom</span><span class="menusep">&#160;&#9656;</span><span class="menu">Zoom In</span></span></p>
 </div>
 </section>
 </div>
@@ -1606,8 +1560,7 @@ All markup is passed through as-is.
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
-<p>This note only appears when generating HTML output.
-The basebackend attribute is set to &#39;html&#39;.</p>
+<p>This note only appears when generating HTML output. The basebackend attribute is set to &#39;html&#39;.</p>
 </div>
 </div>
 </div>

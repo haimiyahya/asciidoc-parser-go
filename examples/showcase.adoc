@@ -80,10 +80,9 @@ Bullet points use asterisks, dashes, or hyphens:
 . First step
 . Second step
 . Third step
-
-... Nested ordered list:
-.. Sub-step A
-.. Sub-step B
+.. Nested ordered list:
+... Sub-step A
+... Sub-step B
 . Back to main list
 
 === Labeled (Description) Lists

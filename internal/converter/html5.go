@@ -1134,11 +1134,14 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 
 	// Determine wrapper class based on list type (Asciidoctor compatibility)
 	var wrapperClass string
+	var orderedListClass string
 	switch tag {
 	case "ul":
 		wrapperClass = "ulist"
 	case "ol":
-		wrapperClass = "olist arabic" // Add arabic for ordered lists
+		// Determine ordered list class based on marker count
+		orderedListClass = c.orderedListClass(list.Items[0])
+		wrapperClass = "olist " + orderedListClass
 	case "dl":
 		wrapperClass = "dlist"
 	}
@@ -1148,7 +1151,7 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 
 	// For ordered lists, add class attribute
 	if tag == "ol" {
-		fmt.Fprintf(w, `<ol class="arabic">`+"\n")
+		fmt.Fprintf(w, `<ol class="%s">`+"\n", orderedListClass)
 	} else {
 		fmt.Fprintf(w, `<%s>`+"\n", tag)
 	}
@@ -1184,6 +1187,40 @@ func (c *HTML5Converter) listTag(item ast.Node) string {
 		}
 	}
 	return "ul" // Default
+}
+
+// orderedListClass returns the CSS class for an ordered list based on marker count.
+// Matches Asciidoctor's behavior:
+// - 1 dot (.) = arabic (1, 2, 3)
+// - 2 dots (..) = lowerroman (i, ii, iii)
+// - 3 dots (...) = loweralpha (a, b, c)
+// - 4 dots (....) = upperalpha (A, B, C)
+// - 5+ dots cycles through the above
+func (c *HTML5Converter) orderedListClass(item ast.Node) string {
+	if li, ok := item.(*ast.NodeListItem); ok {
+		markerLen := len(li.Marker)
+		// Handle both dot (.) and semicolon (;) markers
+		if markerLen > 0 && (li.Marker[0] == '.' || li.Marker[0] == ';') {
+			// Cycle through styles based on marker count
+			switch markerLen {
+			case 1:
+				return "arabic"
+			case 2:
+				return "lowerroman"
+			case 3:
+				return "loweralpha"
+			case 4:
+				return "upperalpha"
+			case 5:
+				return "lowerroman"
+			case 6:
+				return "loweralpha"
+			default:
+				return "arabic"
+			}
+		}
+	}
+	return "arabic" // Default
 }
 
 // convertListItem converts a list item to HTML.

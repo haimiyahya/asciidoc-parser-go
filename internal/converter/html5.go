@@ -1810,6 +1810,16 @@ func (c *HTML5Converter) convertAdmonition(admonition *ast.AdmonitionNode, w io.
 	kind := strings.ToLower(admonition.Kind)
 	class := "admonitionblock " + kind
 
+	// Parse inline markup in admonition text
+	inlineParser := inline.NewParser(admonition.Text)
+	inlineNodes := inlineParser.Parse()
+
+	// Convert inline nodes to HTML
+	var contentHTML strings.Builder
+	for _, node := range inlineNodes {
+		c.convertInlineNode(node, &contentHTML)
+	}
+
 	// Always add newlines for Asciidoctor compatibility (even in embedded mode)
 	fmt.Fprintf(w, `<div class="%s">`+"\n", class)
 	fmt.Fprintf(w, `<table>`+"\n")
@@ -1818,7 +1828,7 @@ func (c *HTML5Converter) convertAdmonition(admonition *ast.AdmonitionNode, w io.
 	fmt.Fprintf(w, `<div class="title">%s</div>`+"\n", strings.ToUpper(kind[:1])+kind[1:])
 	fmt.Fprintf(w, `</td>`+"\n")
 	fmt.Fprintf(w, `<td class="content">`+"\n")
-	fmt.Fprintf(w, `%s`+"\n", c.escape(admonition.Text))
+	fmt.Fprintf(w, `<p class="tableblock">%s</p>`+"\n", contentHTML.String())
 	fmt.Fprintf(w, `</td>`+"\n")
 	fmt.Fprintf(w, `</tr>`+"\n")
 	fmt.Fprintf(w, `</table>`+"\n")

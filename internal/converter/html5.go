@@ -135,6 +135,16 @@ ul, ol {
 	margin: 0.5em 0;
 	padding-left: 2em;
 }
+/* Unordered list marker styles */
+ul.disc {
+	list-style-type: disc;
+}
+ul.circle {
+	list-style-type: circle;
+}
+ul.square {
+	list-style-type: square;
+}
 code {
 	background-color: #f4f4f4;
 	padding: 0.2em 0.4em;
@@ -1362,9 +1372,21 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 	// Determine wrapper class based on list type (Asciidoctor compatibility)
 	var wrapperClass string
 	var orderedListClass string
+	var unorderedListClass string
 	switch tag {
 	case "ul":
 		wrapperClass = "ulist"
+		// Check for unordered list style (disc, circle, square)
+		if list.Style != "" {
+			switch list.Style {
+			case "disc":
+				unorderedListClass = "disc"
+			case "circle":
+				unorderedListClass = "circle"
+			case "square":
+				unorderedListClass = "square"
+			}
+		}
 	case "ol":
 		// Determine ordered list class based on marker count
 		orderedListClass = c.orderedListClass(list.Items[0])
@@ -1379,6 +1401,9 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 	// For ordered lists, add class attribute
 	if tag == "ol" {
 		fmt.Fprintf(w, `<ol class="%s">`+"\n", orderedListClass)
+	} else if tag == "ul" && unorderedListClass != "" {
+		// Unordered list with style class
+		fmt.Fprintf(w, `<ul class="%s">`+"\n", unorderedListClass)
 	} else {
 		fmt.Fprintf(w, `<%s>`+"\n", tag)
 	}

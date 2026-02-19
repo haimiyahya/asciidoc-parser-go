@@ -455,3 +455,228 @@ func TestTableMultipleAttributes(t *testing.T) {
 	assert.Equal(t, "true", table.Attributes["autowidth"])
 	assert.Equal(t, "My Table", table.Caption)
 }
+
+func TestParseTableWithMultilineCellContinuation(t *testing.T) {
+	source := `|===
+| Cell 1 | Cell 2+
+This is a continuation
+of Cell 2
+| Cell 3
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 2 rows
+	assert.Len(t, table.Rows, 2)
+
+	// First row - Cell 2 should have multi-line content
+	assert.Len(t, table.Rows[0].Cells, 2)
+	assert.Equal(t, "Cell 1", table.Rows[0].Cells[0].Text)
+	assert.Equal(t, "Cell 2\nThis is a continuation\nof Cell 2", table.Rows[0].Cells[1].Text)
+
+	// Second row
+	assert.Len(t, table.Rows[1].Cells, 1)
+	assert.Equal(t, "Cell 3", table.Rows[1].Cells[0].Text)
+}
+
+func TestParseTableWithMultipleContinuationLines(t *testing.T) {
+	source := `|===
+| A | B+
+Line 2 of B
+Line 3 of B
+Line 4 of B
+| C | D
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 2 rows
+	assert.Len(t, table.Rows, 2)
+
+	// First row - Cell B should have 4 lines of content
+	assert.Len(t, table.Rows[0].Cells, 2)
+	assert.Equal(t, "A", table.Rows[0].Cells[0].Text)
+	assert.Equal(t, "B\nLine 2 of B\nLine 3 of B\nLine 4 of B", table.Rows[0].Cells[1].Text)
+
+	// Second row
+	assert.Equal(t, "C", table.Rows[1].Cells[0].Text)
+	assert.Equal(t, "D", table.Rows[1].Cells[1].Text)
+}
+
+func TestParseTableWithContinuationAndNewRow(t *testing.T) {
+	source := `|===
+| A | B+
+Continued line
+| C | D+
+More D
+Even more D
+| E | F
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 3 rows
+	assert.Len(t, table.Rows, 3)
+
+	// First row
+	assert.Equal(t, "A", table.Rows[0].Cells[0].Text)
+	assert.Equal(t, "B\nContinued line", table.Rows[0].Cells[1].Text)
+
+	// Second row
+	assert.Equal(t, "C", table.Rows[1].Cells[0].Text)
+	assert.Equal(t, "D\nMore D\nEven more D", table.Rows[1].Cells[1].Text)
+
+	// Third row
+	assert.Equal(t, "E", table.Rows[2].Cells[0].Text)
+	assert.Equal(t, "F", table.Rows[2].Cells[1].Text)
+}
+
+func TestParseTableWithContinuationEndingWithPlus(t *testing.T) {
+	source := `|===
+| A | B+
+Line 2 of B+
+Line 3 of B
+| C | D
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 2 rows
+	assert.Len(t, table.Rows, 2)
+
+	// First row - B should have all 3 lines
+	assert.Equal(t, "A", table.Rows[0].Cells[0].Text)
+	assert.Equal(t, "B\nLine 2 of B\nLine 3 of B", table.Rows[0].Cells[1].Text)
+
+	// Second row
+	assert.Equal(t, "C", table.Rows[1].Cells[0].Text)
+	assert.Equal(t, "D", table.Rows[1].Cells[1].Text)
+}
+
+func TestParseTableWithContinuationAcrossEmptyLines(t *testing.T) {
+	source := `|===
+| A | B+
+Line 2 of B
+
+Line 4 of B (after empty line)
+| C | D
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 2 rows
+	assert.Len(t, table.Rows, 2)
+
+	// First row - B should have content (empty lines are skipped by parser)
+	assert.Equal(t, "A", table.Rows[0].Cells[0].Text)
+	// Empty lines are currently skipped, so we only get non-empty lines
+	assert.Equal(t, "B\nLine 2 of B\nLine 4 of B (after empty line)", table.Rows[0].Cells[1].Text)
+
+	// Second row
+	assert.Equal(t, "C", table.Rows[1].Cells[0].Text)
+	assert.Equal(t, "D", table.Rows[1].Cells[1].Text)
+}
+
+func TestParseTableWithAllCellsContinuing(t *testing.T) {
+	source := `|===
+| A+
+More A
+| B+
+More B
+| C+
+More C
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Each | starts a new row in AsciiDoc, so we get 3 rows with 1 continuing cell each
+	assert.Len(t, table.Rows, 3)
+
+	// First row
+	assert.Len(t, table.Rows[0].Cells, 1)
+	assert.Equal(t, "A\nMore A", table.Rows[0].Cells[0].Text)
+
+	// Second row
+	assert.Len(t, table.Rows[1].Cells, 1)
+	assert.Equal(t, "B\nMore B", table.Rows[1].Cells[0].Text)
+
+	// Third row
+	assert.Len(t, table.Rows[2].Cells, 1)
+	assert.Equal(t, "C\nMore C", table.Rows[2].Cells[0].Text)
+}
+
+func TestParseTableWithMultipleCellsOnSameRowContinuing(t *testing.T) {
+	// Test the correct way to have multiple cells continuing on the same row
+	source := `|===
+| A | B | C+
+Continuation of C
+More of C
+| D | E | F
+|===`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	table, ok := doc.Blocks[0].(*ast.Table)
+	require.True(t, ok)
+
+	// Should have 2 rows
+	assert.Len(t, table.Rows, 2)
+
+	// First row - only cell C continues
+	assert.Len(t, table.Rows[0].Cells, 3)
+	assert.Equal(t, "A", table.Rows[0].Cells[0].Text)
+	assert.Equal(t, "B", table.Rows[0].Cells[1].Text)
+	assert.Equal(t, "C\nContinuation of C\nMore of C", table.Rows[0].Cells[2].Text)
+
+	// Second row
+	assert.Equal(t, "D", table.Rows[1].Cells[0].Text)
+	assert.Equal(t, "E", table.Rows[1].Cells[1].Text)
+	assert.Equal(t, "F", table.Rows[1].Cells[2].Text)
+}
+

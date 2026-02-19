@@ -13,7 +13,10 @@ import (
 
 // TableParser handles parsing of AsciiDoc tables.
 type TableParser struct {
-	// No state needed - inline parser is created per cell
+	// continuingRowIndex tracks which row has a continuing cell
+	continuingRowIndex int
+	// continuingCellIndex tracks which cell in the row is continuing
+	continuingCellIndex int
 }
 
 // NewTableParser creates a new table parser.
@@ -27,6 +30,10 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 	if len(lines) == 0 {
 		return nil
 	}
+
+	// Reset continuation state
+	p.continuingRowIndex = -1
+	p.continuingCellIndex = -1
 
 	table := &ast.Table{
 		Rows:           make([]ast.TableRow, 0),
@@ -84,11 +91,8 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 	}
 
 	// Parse rows with support for multi-line cell content
-	// In AsciiDoc, lines that don't start with | are continuation of the previous cell
+	// In AsciiDoc, cells ending with + continue to the next line
 	firstRow := true
-	var pendingRowIndex int = -1
-	var pendingCellIndex int = -1
-	var pendingContent []string
 
 	for i := lineIdx; i < len(lines); i++ {
 		originalLine := lines[i]
@@ -101,25 +105,80 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 
 		// Check for row separator
 		if strings.HasPrefix(line, "|===") || strings.HasPrefix(line, "|+++") || strings.HasPrefix(line, "|---") {
-			// Flush any pending content before separator
-			if pendingRowIndex >= 0 && pendingCellIndex >= 0 && len(pendingContent) > 0 {
-				p.flushPendingContent(&table.Rows[pendingRowIndex], pendingCellIndex, pendingContent)
-				pendingContent = nil
-				pendingCellIndex = -1
-			}
-			pendingRowIndex = -1
+			// Clear continuation state at separator
+			p.continuingRowIndex = -1
+			p.continuingCellIndex = -1
 			continue
 		}
 
-		// Check if this is a row line (starts with |) or continuation (doesn't start with |)
-		if strings.HasPrefix(line, "|") || strings.HasPrefix(line, "|_") {
-			// This is a new row - flush any pending content from previous row
-			if pendingRowIndex >= 0 && pendingCellIndex >= 0 && len(pendingContent) > 0 {
-				p.flushPendingContent(&table.Rows[pendingRowIndex], pendingCellIndex, pendingContent)
-				pendingContent = nil
-				pendingCellIndex = -1
-			}
+		// Check if this is a new row (starts with |)
+		isRowLine := strings.HasPrefix(line, "|") || strings.HasPrefix(line, "|_")
 
+		// If we have a continuing cell and this is NOT a new row line, continue the cell
+		// If it IS a new row line, clear continuation state and process as new row
+		if p.continuingRowIndex >= 0 && p.continuingCellIndex >= 0 {
+			if !isRowLine {
+				// This line continues the previous cell
+				if p.continuingRowIndex < len(table.Rows) {
+					row := &table.Rows[p.continuingRowIndex]
+					if p.continuingCellIndex < len(row.Cells) {
+						cell := &row.Cells[p.continuingCellIndex]
+						// Append the line with newline separator
+						if cell.Text != "" {
+							cell.Text += "\n" + originalLine
+						} else {
+							cell.Text = originalLine
+						}
+						// Re-parse inline nodes for the updated text
+						if cell.Text != "" {
+							inlineParser := inline.NewParser(cell.Text)
+							inlineNodes := inlineParser.Parse()
+							cell.InlineNodes = make([]interface{}, 0)
+							for _, node := range inlineNodes {
+								if node.Type != inline.NodeText {
+									cell.InlineNodes = append(cell.InlineNodes, node)
+								}
+							}
+						}
+						// Check if this continuation line also ends with +
+						if strings.HasSuffix(strings.TrimSpace(originalLine), "+") {
+							// Remove the + from the cell text and keep continuing
+							cell.Text = strings.TrimSuffix(cell.Text, "+")
+							cell.Text = strings.TrimRight(cell.Text, " ")
+						} else {
+							// Don't clear continuation state - keep accepting non-| lines
+							// until we see a new row starting with |
+						}
+						continue
+					}
+				}
+				// If we couldn't continue, clear the state
+				p.continuingRowIndex = -1
+				p.continuingCellIndex = -1
+			}
+			// If it's a row line, clear continuation state and fall through to process the new row
+			p.continuingRowIndex = -1
+			p.continuingCellIndex = -1
+		}
+
+		// Handle non-row lines when there's no continuation state
+		// These lines should be added to the last cell of the last row
+		if !isRowLine && len(table.Rows) > 0 {
+			// Add this line to the last cell of the last row
+			lastRow := &table.Rows[len(table.Rows)-1]
+			if len(lastRow.Cells) > 0 {
+				lastCell := &lastRow.Cells[len(lastRow.Cells)-1]
+				if lastCell.Text != "" {
+					lastCell.Text += "\n" + originalLine
+				} else {
+					lastCell.Text = originalLine
+				}
+			}
+			continue
+		}
+
+		// Check if this is a row line (starts with |)
+		if isRowLine {
 			// Determine row kind for this specific row
 			rowKind := ast.TableRowBody
 
@@ -155,40 +214,34 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 			}
 
 			table.Rows = append(table.Rows, row)
-			pendingRowIndex = len(table.Rows) - 1
+			newRowIndex := len(table.Rows) - 1
 
-			// If the last cell in this row is empty, it can accept continuation content
-			if len(row.Cells) > 0 {
-				lastCell := &row.Cells[len(row.Cells)-1]
-				if lastCell.Text == "" {
-					pendingCellIndex = len(row.Cells) - 1
+			// Check if any cell ends with + for continuation
+			for cellIdx, cell := range row.Cells {
+				trimmedText := strings.TrimSpace(cell.Text)
+				if strings.HasSuffix(trimmedText, "+") {
+					// Remove the + and set up continuation
+					row.Cells[cellIdx].Text = strings.TrimSuffix(trimmedText, "+")
+					p.continuingRowIndex = newRowIndex
+					p.continuingCellIndex = cellIdx
+					// Re-parse inline nodes for the updated text
+					if row.Cells[cellIdx].Text != "" {
+						inlineParser := inline.NewParser(row.Cells[cellIdx].Text)
+						inlineNodes := inlineParser.Parse()
+						row.Cells[cellIdx].InlineNodes = make([]interface{}, 0)
+						for _, node := range inlineNodes {
+							if node.Type != inline.NodeText {
+								row.Cells[cellIdx].InlineNodes = append(row.Cells[cellIdx].InlineNodes, node)
+							}
+						}
+					}
+					break // Only the last cell with + continues
 				}
 			}
 
 			// Clear first row flag after processing
 			firstRow = false
-		} else {
-			// This is a continuation line - add to pending content
-			// Preserve the original line (without trimming leading whitespace for code)
-			if pendingRowIndex >= 0 && pendingCellIndex >= 0 {
-				pendingContent = append(pendingContent, originalLine)
-			} else {
-				// No pending cell to accept this content - create a new single-cell row
-				format := table.GetFormat()
-				row := p.parseRow("|", format, false)
-				if len(row.Cells) > 0 {
-					// Set the content directly
-					row.Cells[0].Text = originalLine
-					row.Cells[0].Blocks = p.parseListContent([]string{originalLine})
-				}
-				table.Rows = append(table.Rows, row)
-			}
 		}
-	}
-
-	// Flush any remaining pending content at end of table
-	if pendingRowIndex >= 0 && pendingCellIndex >= 0 && len(pendingContent) > 0 {
-		p.flushPendingContent(&table.Rows[pendingRowIndex], pendingCellIndex, pendingContent)
 	}
 
 	// If no explicit header but columns specified, first row might be header

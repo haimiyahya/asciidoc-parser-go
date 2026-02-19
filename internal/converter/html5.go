@@ -475,12 +475,17 @@ func (c *HTML5Converter) convertSourceBlock(block *ast.StyledBlockNode, w io.Wri
 		c.indent += "  "
 	}
 
-	// Write caption if present
-	if block.Caption != "" {
+	// Write caption if present, otherwise show language name
+	title := block.Caption
+	if title == "" && language != "" {
+		// Use language name as default title
+		title = strings.Title(strings.ToLower(language))
+	}
+	if title != "" {
 		if c.pretty {
 			fmt.Fprint(w, c.indent)
 		}
-		fmt.Fprintf(w, `<div class="title">%s</div>`, c.escape(block.Caption))
+		fmt.Fprintf(w, `<div class="title">%s</div>`, c.escape(title))
 		if c.pretty {
 			fmt.Fprintln(w)
 		}

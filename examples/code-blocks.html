@@ -369,6 +369,7 @@ em, i {
 <section class="sect2">
 <h3 id="_basic_listing_block">Basic Listing Block</h3>
     <div class="listingblock">
+      <div class="title">Go</div>
       <div class="content">
         <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -408,7 +409,11 @@ em, i {
 </section>
 <section class="sect2">
 <h3 id="_multiple_languages">Multiple Languages</h3>
+<div class="paragraph">
+<p>Code blocks without custom titles will automatically show the language name:</p>
+</div>
     <div class="listingblock">
+      <div class="title">Javascript</div>
       <div class="content">
         <pre class="highlight"><code class="language-javascript chroma" data-lang="javascript">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">greet</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
@@ -417,6 +422,7 @@ em, i {
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Ruby</div>
       <div class="content">
         <pre class="highlight"><code class="language-ruby chroma" data-lang="ruby">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">def</span> <span class="nc"></span><span class="o"></span><span class="nf">greet</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
@@ -425,6 +431,7 @@ em, i {
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Rust</div>
       <div class="content">
         <pre class="highlight"><code class="language-rust chroma" data-lang="rust">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">fn</span> <span class="nf">greet</span><span class="p">(</span><span class="n">name</span>: <span class="kp">&amp;</span><span class="kt">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -432,10 +439,19 @@ em, i {
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
       </div>
     </div>
+    <div class="listingblock">
+      <div class="title">Python</div>
+      <div class="content">
+        <pre class="highlight"><code class="language-python chroma" data-lang="python">
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-</span><span class="o">&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="s2">Hello, </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!</span><span class="s2">&#34;</span></span></span></code></pre></code></pre>
+      </div>
+    </div>
 </section>
 <section class="sect2">
 <h3 id="_listing_with_line_numbers">Listing with Line Numbers</h3>
     <div class="listingblock">
+      <div class="title">Go</div>
       <div class="content">
         <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="o">%</span><span class="o">&lt;-</span><span class="o">-</span><span class="w"> </span><span class="nx">kind</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">not</span><span class="w"> </span><span class="nx">supported</span><span class="w"> </span><span class="nx">yet</span><span class="w">
@@ -448,6 +464,7 @@ em, i {
 <section class="sect2">
 <h3 id="_language_gallery">Language Gallery</h3>
     <div class="listingblock">
+      <div class="title">Bash</div>
       <div class="content">
         <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Hello from Bash&#34;</span>
@@ -455,6 +472,7 @@ em, i {
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Yaml</div>
       <div class="content">
         <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nt">server</span><span class="p">:</span><span class="w">
@@ -463,6 +481,7 @@ em, i {
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Json</div>
       <div class="content">
         <pre class="highlight"><code class="language-json chroma" data-lang="json">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="p">{</span>
@@ -472,6 +491,7 @@ em, i {
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Xml</div>
       <div class="content">
         <pre class="highlight"><code class="language-xml chroma" data-lang="xml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
@@ -481,6 +501,7 @@ em, i {
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Css</div>
       <div class="content">
         <pre class="highlight"><code class="language-css chroma" data-lang="css">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nt">body</span> <span class="p">{</span>
@@ -491,6 +512,7 @@ em, i {
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Html</div>
       <div class="content">
         <pre class="highlight"><code class="language-html chroma" data-lang="html">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">&lt;!DOCTYPE html&gt;</span>
@@ -552,6 +574,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_basic_callouts">Basic Callouts</h3>
     <div class="listingblock">
+      <div class="title">Go</div>
       <div class="content">
         <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w">
@@ -567,6 +590,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_multiple_callouts_in_one_block">Multiple Callouts in One Block</h3>
     <div class="listingblock">
+      <div class="title">Bash</div>
       <div class="content">
         <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Install dependencies</span>
@@ -588,6 +612,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_complex_callout_example">Complex Callout Example</h3>
     <div class="listingblock">
+      <div class="title">Python</div>
       <div class="content">
         <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="p">:</span>
@@ -635,6 +660,7 @@ PASS</pre>
 <p>Here&#39;s how to create a simple HTTP server in Go:</p>
 </div>
     <div class="listingblock">
+      <div class="title">Go</div>
       <div class="content">
         <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
@@ -656,6 +682,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_code_with_notes_after">Code with Notes After</h3>
     <div class="listingblock">
+      <div class="title">Rust</div>
       <div class="content">
         <pre class="highlight"><code class="language-rust chroma" data-lang="rust">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">fn</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -684,6 +711,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_configuration_file_example">Configuration File Example</h3>
     <div class="listingblock">
+      <div class="title">Yaml</div>
       <div class="content">
         <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c"># Application Configuration</span><span class="w">
@@ -710,6 +738,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_api_response_example">API Response Example</h3>
     <div class="listingblock">
+      <div class="title">Json</div>
       <div class="content">
         <pre class="highlight"><code class="language-json chroma" data-lang="json">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="p">{</span>
@@ -745,6 +774,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_same_code_in_different_languages">Same Code in Different Languages</h3>
     <div class="listingblock">
+      <div class="title">Javascript</div>
       <div class="content">
         <pre class="highlight"><code class="language-javascript chroma" data-lang="javascript">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// JavaScript
@@ -754,6 +784,7 @@ PASS</pre>
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Typescript</div>
       <div class="content">
         <pre class="highlight"><code class="language-typescript chroma" data-lang="typescript">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// TypeScript
@@ -763,6 +794,7 @@ PASS</pre>
       </div>
     </div>
     <div class="listingblock">
+      <div class="title">Python</div>
       <div class="content">
         <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Python</span>
@@ -779,6 +811,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_code_with_special_characters">Code with Special Characters</h3>
     <div class="listingblock">
+      <div class="title">Go</div>
       <div class="content">
         <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -793,6 +826,7 @@ PASS</pre>
 <section class="sect2">
 <h3 id="_code_with_unicode">Code with Unicode</h3>
     <div class="listingblock">
+      <div class="title">Python</div>
       <div class="content">
         <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Unicode characters in code</span>

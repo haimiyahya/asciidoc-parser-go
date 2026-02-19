@@ -40,6 +40,8 @@ SELECT * FROM users WHERE active = true;
 
 === Multiple Languages
 
+Code blocks without custom titles will automatically show the language name:
+
 [source,javascript]
 ----
 function greet(name) {
@@ -59,6 +61,12 @@ end
 fn greet(name: &str) {
     println!("Hello, {}!", name);
 }
+----
+
+[source,python]
+----
+def greet(name: str) -> str:
+    return f"Hello, {name}!"
 ----
 
 === Listing with Line Numbers

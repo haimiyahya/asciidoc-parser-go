@@ -40,17 +40,21 @@ To ensure visual correctness and provide examples for users, we maintain showcas
 ### High Priority
 
 #### 1. Attribute Substitution
-**Status:** Not implemented
+**Status:** ✅ Implemented
 
 **Description:** Replace attribute references with their values throughout the document.
 
-**Required Features:**
-- Document attribute definitions - `:name: value`
-- Attribute references - `{name}` substituted with value
+**Implemented Features:**
+- ✅ Document attribute definitions - `:name: value`
+- ✅ Attribute references - `{name}` substituted with value
+- ✅ Predefined attributes - `{toc}`, `{sectnums}`, `{backend}`, etc.
+- ✅ Attribute unset - `:name!`
+- ✅ Inline node attribute substitution - links, images, bold, italic, etc.
+- ✅ Nested attribute substitution - recursive substitution in child nodes
+
+**Remaining Features:**
 - Inline attribute setters - `{set:name}value{set}`
-- Predefined attributes - `{toc}`, `{sectnums}`, `{revdate}`, etc.
-- Attribute unset - `:name!`
-- Conditional attribute evaluation - `ifdef::name[]`
+- Conditional attribute evaluation - `ifdef::name[]` (basic exists, needs nesting support)
 - Attribute chaining and dependencies
 
 **Examples:**

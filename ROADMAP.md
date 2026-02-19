@@ -246,10 +246,14 @@ asciidoctor/test/
     // Works correctly:
     First Term:: This is a longer description
     ```
+- **Nested labeled lists not supported** - Qfunc-style nested definitions don't work
+  - **Problem:** `Parent::\n Child1:: def1\n Child2:: def2` renders child items as comments
+  - **Workaround:** Use flat labeled lists or combine items in the definition
 - **Separate `<dl>` elements** - Each labeled list item renders as its own `<dl>` instead of all items in one combined `<dl>`
 
 **Planned Fix:**
 - Add continuation line support (`+` prefix) for labeled list definitions
+- Implement nested labeled list (qfunc) support
 - Group consecutive labeled list items into single `<dl>` element
 - Support multi-paragraph definitions
 

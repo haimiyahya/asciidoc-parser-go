@@ -99,10 +99,14 @@ Third Term:: Short description
 
 === Labeled List with Nested Content
 
-Operating Systems::
-Linux:: Open source, various distributions
-macOS:: Apple's operating system
-Windows:: Microsoft's operating system
+// NOTE: Nested labeled lists (qfunc lists) are not yet supported.
+// The example below demonstrates flat labeled lists.
+
+Operating Systems:: Linux, macOS, Windows
+
+Programming Languages:: Go, Python, JavaScript
+
+Web Browsers:: Chrome, Firefox, Safari
 
 == Mixed List Types
 

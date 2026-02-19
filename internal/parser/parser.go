@@ -652,13 +652,37 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				paragraphLines = nil
 			}
 
-			// Create admonition node
-			admonition := p.createAdmonition(classification.Admonition, lineno)
+			// Collect continuation lines for the admonition
+			// Admonitions can span multiple lines until a blank line or different block
+			admonitionLines := []string{classification.Admonition.Text}
+			p.reader.Advance()
+
+			for p.reader.HasMoreLines() {
+				nextLine := p.reader.PeekLine()
+				nextClass := p.classifier.ClassifyLine(nextLine)
+
+				// Stop at blank lines or non-paragraph blocks
+				if nextClass.Type == reader.BlockBlank ||
+					nextClass.Type != reader.BlockParagraph {
+					break
+				}
+
+				// Accumulate the continuation line
+				p.reader.Advance()
+				admonitionLines = append(admonitionLines, strings.TrimSpace(nextLine))
+			}
+
+			// Join the lines and create the admonition
+			fullText := strings.Join(admonitionLines, " ")
+			admonitionInfo := &reader.AdmonitionInfo{
+				Kind: classification.Admonition.Kind,
+				Text: fullText,
+			}
+			admonition := p.createAdmonition(admonitionInfo, lineno)
 			if admonition != nil {
 				p.addBlockToCurrentSection(doc, admonition)
 			}
 
-			p.reader.Advance()
 			continue
 		}
 

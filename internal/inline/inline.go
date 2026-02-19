@@ -67,6 +67,9 @@ const (
 
 	// NodeFootnote is a footnote reference (footnote:id[text]).
 	NodeFootnote
+
+	// NodeIcon is an icon reference (icon:name[]).
+	NodeIcon
 )
 
 // String returns the string representation of NodeType.
@@ -88,6 +91,7 @@ func (nt NodeType) String() string {
 		NodeMenu:            "Menu",
 		NodeButton:          "Button",
 		NodeFootnote:        "Footnote",
+		NodeIcon:            "Icon",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -151,6 +155,11 @@ type Node struct {
 	FootnoteID   string // Footnote identifier (e.g., "note1", "note2")
 	FootnoteText  string // Footnote text content
 	FootnoteIndex int    // Assigned footnote number (for auto-numbering)
+
+	// Icon fields (for NodeIcon)
+	IconName  string            // Icon name (e.g., "github", "twitter")
+	IconSize  string            // Icon size (e.g., "1x", "2x", "3x", "4x", "lg")
+	IconAttrs map[string]string // Additional icon attributes
 }
 
 // String returns a string representation of node.
@@ -206,6 +215,8 @@ func (n *Node) String() string {
 			return fmt.Sprintf("footnote:%s[]", n.FootnoteID)
 		}
 		return n.Text
+	case NodeIcon:
+		return fmt.Sprintf("icon:%s[]", n.IconName)
 	default:
 		return n.Text
 	}
@@ -294,6 +305,16 @@ func (p *Parser) Parse() []*Node {
 		// Check for footnotes (footnote:id[text])
 		// Must be checked before images and links
 		if node, newPos := p.tryFootnote(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		// Check for icons (icon:name[attrs])
+		// Must be checked before images and links
+		if node, newPos := p.tryIcon(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
 			nodes = append(nodes, node)
@@ -422,6 +443,7 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "<<") ||
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
+				strings.HasPrefix(remaining, "icon:") || // Icon reference
 				strings.HasPrefix(remaining, "footnote:") || // Footnote reference
 				strings.HasPrefix(remaining, "pass:[") || // Inline passthrough macro
 				strings.HasPrefix(remaining, "raw:[") || // Raw passthrough macro
@@ -1503,5 +1525,84 @@ func (p *Parser) tryFootnote() (*Node, int) {
 		FootnoteIndex: 0, // Will be assigned during document processing
 		StartPos:     p.pos,
 		Position:     endPos,
+	}, endPos
+}
+
+// tryIcon attempts to parse an icon: icon:name[attrs].
+// Supports icon:name[], icon:name[size=2x], icon:name[width=x,height=y]
+func (p *Parser) tryIcon() (*Node, int) {
+	s := p.text[p.pos:]
+
+	// Need at least "icon:x]" where x is at least 1 char
+	if len(s) < 8 {
+		return nil, p.pos
+	}
+
+	// Check for icon: prefix
+	if !strings.HasPrefix(s, "icon:") {
+		return nil, p.pos
+	}
+
+	// Find the opening bracket [
+	openBracket := strings.Index(s[5:], "[")
+	if openBracket == -1 {
+		return nil, p.pos
+	}
+	openBracket += 5
+
+	// Extract the icon name (between icon: and bracket)
+	iconName := s[5:openBracket]
+	iconName = strings.TrimSpace(iconName)
+
+	if iconName == "" {
+		return nil, p.pos
+	}
+
+	// Find the closing bracket
+	closeBracket := strings.Index(s[openBracket:], "]")
+	if closeBracket == -1 {
+		return nil, p.pos
+	}
+	closeBracket += openBracket
+
+	// Parse attributes from between [ and ]
+	attrsStr := s[openBracket+1 : closeBracket]
+	attrs := make(map[string]string)
+	iconSize := ""
+
+	// Parse comma-separated attributes
+	if attrsStr != "" {
+		attrParts := strings.Split(attrsStr, ",")
+		for _, attr := range attrParts {
+			attr = strings.TrimSpace(attr)
+			if attr == "" {
+				continue
+			}
+			// Check for key=value format
+			if eqIdx := strings.Index(attr, "="); eqIdx != -1 {
+				key := strings.TrimSpace(attr[:eqIdx])
+				val := strings.TrimSpace(attr[eqIdx+1:])
+				// Remove quotes from value if present
+				if len(val) >= 2 && (val[0] == '"' || val[0] == '\'') {
+					val = val[1 : len(val)-1]
+				}
+				attrs[key] = val
+				// Check for size attribute
+				if key == "size" {
+					iconSize = val
+				}
+			}
+		}
+	}
+
+	endPos := p.pos + closeBracket + 1
+
+	return &Node{
+		Type:     NodeIcon,
+		IconName: iconName,
+		IconSize: iconSize,
+		IconAttrs: attrs,
+		StartPos: p.pos,
+		Position: endPos,
 	}, endPos
 }

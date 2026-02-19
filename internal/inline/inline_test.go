@@ -487,3 +487,92 @@ func TestParseFootnoteInText(t *testing.T) {
 		t.Errorf("Third node Type = %v, want NodeText", nodes[2].Type)
 	}
 }
+
+func TestParseIcon(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		wantType NodeType
+		wantName string
+		wantSize string
+	}{
+		{
+			name:     "simple icon",
+			input:    "icon:github[]",
+			wantType: NodeIcon,
+			wantName: "github",
+			wantSize: "",
+		},
+		{
+			name:     "icon with size",
+			input:    "icon:star[size=2x]",
+			wantType: NodeIcon,
+			wantName: "star",
+			wantSize: "2x",
+		},
+		{
+			name:     "icon with title",
+			input:    "icon:info[title=Click for info]",
+			wantType: NodeIcon,
+			wantName: "info",
+			wantSize: "",
+		},
+		{
+			name:     "icon with multiple attributes",
+			input:    "icon:check[size=lg,title=Done]",
+			wantType: NodeIcon,
+			wantName: "check",
+			wantSize: "lg",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := NewParser(tt.input)
+			nodes := p.Parse()
+
+			if len(nodes) == 0 {
+				t.Fatalf("no nodes returned")
+			}
+
+			node := nodes[0]
+			if node.Type != tt.wantType {
+				t.Errorf("Type = %v, want %v", node.Type, tt.wantType)
+			}
+			if node.IconName != tt.wantName {
+				t.Errorf("IconName = %q, want %q", node.IconName, tt.wantName)
+			}
+			if node.IconSize != tt.wantSize {
+				t.Errorf("IconSize = %q, want %q", node.IconSize, tt.wantSize)
+			}
+		})
+	}
+}
+
+func TestParseIconInText(t *testing.T) {
+	input := "Click icon:github[] to visit"
+	p := NewParser(input)
+	nodes := p.Parse()
+
+	if len(nodes) != 3 {
+		t.Fatalf("got %d nodes, want 3", len(nodes))
+	}
+
+	// First node should be text
+	if nodes[0].Type != NodeText {
+		t.Errorf("First node Type = %v, want NodeText", nodes[0].Type)
+	}
+
+	// Second node should be icon
+	if nodes[1].Type != NodeIcon {
+		t.Errorf("Second node Type = %v, want NodeIcon", nodes[1].Type)
+	}
+	if nodes[1].IconName != "github" {
+		t.Errorf("IconName = %q, want \"github\"", nodes[1].IconName)
+	}
+
+	// Third node should be text
+	if nodes[2].Type != NodeText {
+		t.Errorf("Third node Type = %v, want NodeText", nodes[2].Type)
+	}
+}

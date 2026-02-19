@@ -1157,6 +1157,37 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		// Render the footnote reference as a superscript link
 		fmt.Fprintf(w, `<sup class="footnote" id="_fr%s">[<a href="#_fn%s">%d</a>]</sup>`,
 			fnID, fnID, fnIndex)
+	case inline.NodeIcon:
+		// Icon: icon:name[size=2x]
+		// Render as Font Awesome icon: <i class="fa fa-name"></i>
+		// Map common icon names to Font Awesome classes
+		iconClass := c.getIconClass(node.IconName)
+
+		// Build CSS classes - getIconClass already includes the fa/fab prefix
+		classes := []string{iconClass}
+
+		// Add size class if specified
+		if node.IconSize != "" {
+			sizeClass := c.getIconSizeClass(node.IconSize)
+			if sizeClass != "" {
+				classes = append(classes, sizeClass)
+			}
+		}
+
+		// Add role classes
+		for _, role := range node.Roles {
+			classes = append(classes, role)
+		}
+
+		// Check for additional attributes
+		titleAttr := ""
+		for key, val := range node.IconAttrs {
+			if key == "title" {
+				titleAttr = fmt.Sprintf(` title="%s"`, c.escape(val))
+			}
+		}
+
+		fmt.Fprintf(w, `<i class="%s"%s></i>`, strings.Join(classes, " "), titleAttr)
 	}
 }
 
@@ -1167,6 +1198,188 @@ func (c *HTML5Converter) getClassAttr(roles []string) string {
 	}
 	// Join roles with spaces for HTML class attribute
 	return strings.Join(roles, " ")
+}
+
+// getIconClass maps icon names to Font Awesome class names.
+// For common icons, we use the fa-* prefix. For unknown icons,
+// we assume the name already includes the proper prefix.
+func (c *HTML5Converter) getIconClass(name string) string {
+	// Common icon mappings for Font Awesome
+	iconMap := map[string]string{
+		// Brand icons (usually need "fab" instead of "fa")
+		"github":   "fab fa-github",
+		"twitter":  "fab fa-twitter",
+		"facebook": "fab fa-facebook",
+		"google":   "fab fa-google",
+		"linkedin": "fab fa-linkedin",
+		"youtube":  "fab fa-youtube",
+		"instagram": "fab fa-instagram",
+		"reddit":   "fab fa-reddit",
+		"discord":  "fab fa-discord",
+		"slack":    "fab fa-slack",
+		"gitlab":   "fab fa-gitlab",
+		"bitbucket": "fab fa-bitbucket",
+		"stack-overflow": "fab fa-stack-overflow",
+
+		// Solid icons (default "fa")
+		"home":      "fa fa-home",
+		"search":    "fa fa-search",
+		"edit":      "fa fa-edit",
+		"delete":    "fa fa-trash",
+		"save":      "fa fa-save",
+		"cancel":    "fa fa-times",
+		"check":     "fa fa-check",
+		"plus":      "fa fa-plus",
+		"minus":     "fa fa-minus",
+		"arrow-left": "fa fa-arrow-left",
+		"arrow-right": "fa fa-arrow-right",
+		"arrow-up":   "fa fa-arrow-up",
+		"arrow-down": "fa fa-arrow-down",
+		"caret-left": "fa fa-caret-left",
+		"caret-right": "fa fa-caret-right",
+		"caret-up":   "fa fa-caret-up",
+		"caret-down": "fa fa-caret-down",
+		"angle-left": "fa fa-angle-left",
+		"angle-right": "fa fa-angle-right",
+		"angle-up":   "fa fa-angle-up",
+		"angle-down": "fa fa-angle-down",
+		"chevron-left": "fa fa-chevron-left",
+		"chevron-right": "fa fa-chevron-right",
+		"chevron-up": "fa fa-chevron-up",
+		"chevron-down": "fa fa-chevron-down",
+		"folder":     "fa fa-folder",
+		"folder-open": "fa fa-folder-open",
+		"file":       "fa fa-file",
+		"file-code":  "fa fa-file-code",
+		"file-pdf":   "fa fa-file-pdf",
+		"file-image": "fa fa-file-image",
+		"file-archive": "fa fa-file-zipper",
+		"link":       "fa fa-link",
+		"external-link": "fa fa-external-link-alt",
+		"mail":       "fa fa-envelope",
+		"phone":      "fa fa-phone",
+		"print":      "fa fa-print",
+		"download":   "fa fa-download",
+		"upload":     "fa fa-upload",
+		"warning":    "fa fa-exclamation-triangle",
+		"caution":    "fa fa-exclamation-circle",
+		"important":  "fa fa-info-circle",
+		"note":       "fa fa-sticky-note",
+		"tip":        "fa fa-lightbulb",
+		"question":   "fa fa-question-circle",
+		"info":       "fa fa-info-circle",
+		"success":    "fa fa-check-circle",
+		"error":      "fa fa-times-circle",
+		"bug":        "fa fa-bug",
+		"code":       "fa fa-code",
+		"terminal":   "fa fa-terminal",
+		"laptop":     "fa fa-laptop",
+		"desktop":    "fa fa-desktop",
+		"server":     "fa fa-server",
+		"database":   "fa fa-database",
+		"cloud":      "fa fa-cloud",
+		"wifi":       "fa fa-wifi",
+		"bluetooth":  "fa fa-bluetooth",
+		"battery":    "fa fa-battery-three-quarters",
+		"volume-up":  "fa fa-volume-up",
+		"volume-down": "fa fa-volume-down",
+		"volume-off": "fa fa-volume-mute",
+		"moon":       "fa fa-moon",
+		"sun":        "fa fa-sun",
+		"star":       "fa fa-star",
+		"star-half":  "fa fa-star-half-alt",
+		"heart":      "fa fa-heart",
+		"bookmark":   "fa fa-bookmark",
+		"tag":        "fa fa-tag",
+		"tags":       "fa fa-tags",
+		"cart":       "fa fa-shopping-cart",
+		"credit-card": "fa fa-credit-card",
+		"shopping-bag": "fa fa-shopping-bag",
+		"user":       "fa fa-user",
+		"users":      "fa fa-users",
+		"lock":       "fa fa-lock",
+		"unlock":     "fa fa-unlock",
+		"key":        "fa fa-key",
+		"cog":        "fa fa-cog",
+		"cogs":       "fa fa-cogs",
+		"wrench":     "fa fa-wrench",
+		"hammer":     "fa fa-hammer",
+		"tools":      "fa fa-tools",
+		"calendar":   "fa fa-calendar",
+		"clock":      "fa fa-clock",
+		"hourglass":  "fa fa-hourglass",
+		"stopwatch":  "fa fa-stopwatch",
+		"map":        "fa fa-map",
+		"location":   "fa fa-map-marker-alt",
+		"comment":    "fa fa-comment",
+		"comments":   "fa fa-comments",
+		"thumbs-up":  "fa fa-thumbs-up",
+		"thumbs-down": "fa fa-thumbs-down",
+		"eye":        "fa fa-eye",
+		"eye-slash":  "fa fa-eye-slash",
+		"blind":      "fa fa-blind",
+		"music":      "fa fa-music",
+		"play":       "fa fa-play",
+		"pause":      "fa fa-pause",
+		"stop":       "fa fa-stop",
+		"backward":   "fa fa-backward",
+		"forward":    "fa fa-forward",
+		"fast-backward": "fa fa-fast-backward",
+		"fast-forward": "fa fa-fast-forward",
+		"step-backward": "fa fa-step-backward",
+		"step-forward": "fa fa-step-forward",
+		"eject":      "fa fa-eject",
+		"film":       "fa fa-film",
+		"camera":     "fa fa-camera",
+		"picture":    "fa fa-image",
+		"images":     "fa fa-images",
+		"microphone": "fa fa-microphone",
+		"video":      "fa fa-video",
+		"book":       "fa fa-book",
+		"newspaper":  "fa fa-newspaper",
+		"graduation-cap": "fa fa-graduation-cap",
+		"pencil":     "fa fa-pencil-alt",
+		"eraser":     "fa fa-eraser",
+		"scissors":   "fa fa-cut",
+		"copy":       "fa fa-copy",
+		"paste":      "fa fa-paste",
+		"undo":       "fa fa-undo",
+		"redo":       "fa fa-redo",
+	}
+
+	if mapped, ok := iconMap[name]; ok {
+		return mapped
+	}
+
+	// For unknown icons, assume the name is a valid Font Awesome icon name
+	// and format it as "fa fa-icon-name"
+	// If name already starts with "fa" prefix, use as-is
+	if strings.HasPrefix(name, "fa-") || strings.HasPrefix(name, "fab ") || strings.HasPrefix(name, "fa ") {
+		return name
+	}
+
+	// For simple names, add "fa fa-" prefix
+	// For names with hyphens, add "fa fa-" prefix
+	return "fa fa-" + name
+}
+
+// getIconSizeClass maps icon size values to Font Awesome size classes.
+func (c *HTML5Converter) getIconSizeClass(size string) string {
+	sizeMap := map[string]string{
+		"1x": "fa-lg",
+		"2x": "fa-2x",
+		"3x": "fa-3x",
+		"4x": "fa-4x",
+		"5x": "fa-5x",
+		"lg": "fa-lg",
+		"sm": "fa-sm",
+		"xs": "fa-xs",
+	}
+
+	if mapped, ok := sizeMap[size]; ok {
+		return mapped
+	}
+	return ""
 }
 
 // renderInlineChildren renders child inline nodes within a parent inline node.

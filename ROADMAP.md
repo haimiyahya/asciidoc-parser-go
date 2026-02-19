@@ -113,6 +113,9 @@ Using {product}...
 - **Admonition blocks with custom content** - Block-style syntax `[NOTE]`, `[TIP]`, etc. with title `.Title` and multi-paragraph content
   - Current: Only inline syntax works (`NOTE: text here`)
   - Needed: Support `[NOTE]` block style with title, lists, code blocks inside
+- **Source code line numbers** - `linenums` option for listing blocks to show line numbers
+  - Syntax: `[source,python,linenums]` or `%linenums` start number
+  - Needed: Parse `linenums` attribute and render line numbers in output
 - Verse blocks - Poetry/verse with enhanced line break handling
 - Quote attribution - Enhanced attribution, cite title support
 - Callout lists - Coordinated callouts across code blocks
@@ -181,6 +184,7 @@ See [EXTENSIONS.md](EXTENSIONS.md) for current extension capabilities.
 | **LSP Server** | Community only | Basic implemented | Medium |
 | **Extension System** | Full API | Partial | Medium |
 | **Admonition: Block-style [NOTE]** | Yes | No (inline only) | Medium |
+| **Source blocks: Line numbers (linenums)** | Yes | No | Medium |
 | **Table: Multiline cells (+ continuation)** | Yes | No | High |
 | **Table: Column repeat (3*)** | Yes | Yes | - |
 | **Table: Vertical alignment** | As literal | As literal | - |

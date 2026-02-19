@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lists Showcase</title>
+
+
+<style>
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	line-height: 1.6;
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 1rem;
+	color: #333;
+}
+h1, h2, h3, h4, h5, h6 {
+	margin-top: 1.5em;
+	margin-bottom: 0.5em;
+	font-weight: 600;
+}
+p {
+	margin: 0.5em 0;
+}
+ul, ol {
+	margin: 0.5em 0;
+	padding-left: 2em;
+}
+code {
+	background-color: #f4f4f4;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 0.9em;
+}
+.listingblock, .literalblock {
+	background-color: #f4f4f4;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1em 0;
+	overflow-x: auto;
+}
+.listingblock pre, .literalblock pre {
+	margin: 0;
+	padding: 0;
+}
+.tableblock {
+	margin: 1em 0;
+}
+table.tableblock {
+	border-collapse: collapse;
+	width: 100%;
+}
+table.tableblock th,
+table.tableblock td {
+	border: 1px solid #ddd;
+	padding: 0.5em 0.75em;
+	text-align: left;
+}
+table.tableblock thead th {
+	background-color: #f2f2f2;
+	font-weight: 600;
+	text-align: center;
+}
+table.tableblock.frame-all {
+	border: 1px solid #ddd;
+}
+table.tableblock.frame-topbot {
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
+}
+table.tableblock.frame-sides {
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+}
+table.tableblock.frame-none {
+	border: none;
+}
+/* Frame-specific cell border overrides */
+table.tableblock.frame-topbot th,
+table.tableblock.frame-topbot td {
+	border-left: none;
+	border-right: none;
+}
+table.tableblock.frame-topbot.grid-all th,
+table.tableblock.frame-topbot.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-topbot.grid-all th:first-child,
+table.tableblock.frame-topbot.grid-all td:first-child {
+	border-left: none;
+}
+table.tableblock.frame-sides th,
+table.tableblock.frame-sides td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.frame-none th,
+table.tableblock.frame-none td {
+	border: none;
+}
+table.tableblock.frame-none.grid-all th,
+table.tableblock.frame-none.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-none.grid-all th:first-child,
+table.tableblock.frame-none.grid-all td:first-child {
+	border-left: none;
+}
+table.tableblock.grid-all td,
+table.tableblock.grid-all th {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.grid-all td:first-child,
+table.tableblock.grid-all th:first-child {
+	border-left: none;
+}
+/* Grid rows: only horizontal borders (between rows) */
+table.tableblock.grid-rows th,
+table.tableblock.grid-rows td {
+	border-left: none;
+	border-right: none;
+}
+/* Grid cols: only vertical borders (between columns) */
+table.tableblock.grid-cols th,
+table.tableblock.grid-cols td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.grid-cols td,
+table.tableblock.grid-cols th {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.grid-cols td:first-child,
+table.tableblock.grid-cols th:first-child {
+	border-left: none;
+}
+/* Grid none: no internal borders */
+table.tableblock.grid-none th,
+table.tableblock.grid-none td {
+	border-left: none;
+	border-right: none;
+}
+/* Stripe patterns */
+table.tableblock.stripes-even tr:nth-child(even) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-odd tr:nth-child(odd) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-all tr {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-last tr:last-child {
+	background-color: #f0f0f0;
+}
+/* Auto width: columns size to content */
+table.tableblock.autowidth {
+	width: auto;
+	table-layout: auto;
+}
+/* Horizontal alignment */
+table.tableblock .halign-left {
+	text-align: left;
+}
+table.tableblock .halign-right {
+	text-align: right;
+}
+table.tableblock .halign-center {
+	text-align: center;
+}
+.admonitionblock {
+	margin: 1em 0;
+	padding: 1em;
+	border-left: 4px solid #4CAF50;
+	background-color: #f8f8f8;
+}
+.admonitionblock.note {
+	border-left-color: #2196F3;
+}
+.admonitionblock.tip {
+	border-left-color: #4CAF50;
+}
+.admonitionblock.warning {
+	border-left-color: #FF9800;
+}
+.admonitionblock.caution {
+	border-left-color: #FF5722;
+}
+.admonitionblock.important {
+	border-left-color: #9C27B0;
+}
+.admonitionblock td.icon {
+	padding-right: 1em;
+	font-weight: bold;
+}
+.quoteblock {
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 4px solid #ddd;
+	color: #555;
+}
+.quoteblock blockquote {
+	margin: 0;
+}
+.sidebarblock {
+	background-color: #f0f7ff;
+	border-left: 4px solid #2196F3;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1.5em 0;
+}
+.exampleblock {
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1em 0;
+}
+.colist {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+.colist.arabic {
+	list-style-type: none;
+}
+.colist.arabic .li {
+	padding-left: 2em;
+	position: relative;
+}
+.colist.arabic .conum {
+	display: inline-block;
+	width: 1.8em;
+	height: 1.8em;
+	line-height: 1.8em;
+	text-align: center;
+	border-radius: 50%;
+	background-color: #2196F3;
+	color: white;
+	font-weight: bold;
+	font-size: 0.9em;
+	position: absolute;
+	left: 0;
+}
+.colist.arabic .conum:before {
+	content: attr(data-value);
+}
+.sect1 {
+	margin-bottom: 2em;
+}
+.sect2 {
+	margin-top: 1.5em;
+}
+a {
+	color: #2196F3;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+strong, b {
+	font-weight: 600;
+}
+em, i {
+	font-style: italic;
+}
+/* Chroma Syntax Highlighting (GitHub theme) */
+.highlight {
+	margin: 1em 0;
+}
+.highlight pre {
+	background-color: #f6f8fa;
+	border-radius: 6px;
+	padding: 16px;
+	overflow: auto;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+.highlight code {
+	background: none;
+	padding: 0;
+	font-family: inherit;
+}
+/* Chroma token colors (GitHub theme) */
+.chroma . { color: #24292e; } /* Plain text */
+.chroma .k { color: #cf222e; } /* Keyword */
+.chroma .kd { color: #cf222e; } /* Keyword declaration */
+.chroma .kn { color: #cf222e; } /* Keyword namespace */
+.chroma .kt { color: #cf222e; } /* Keyword type */
+.chroma .n { color: #6f42c1; } /* Name */
+.chroma .na { color: #6f42c1; } /* Name attribute */
+.chroma .nb { color: #959da5; } /* Name builtin */
+.chroma .bp { color: #959da5; } /* Name pseudo builtin */
+.chroma .nc { color: #6f42c1; } /* Name class */
+.chroma .no { color: #cf222e; } /* Name constant */
+.chroma .nd { color: #6f42c1; } /* Name decorator */
+.chroma .ni { color: #0550ae; } /* Name entity */
+.chroma .ne { color: #cf222e; } /* Name exception */
+.chroma .nf { color: #8250df; } /* Name function */
+.chroma .nl { color: #959da5; } /* Name label */
+.chroma .nn { color: #6f42c1; } /* Name namespace */
+.chroma .nx { color: #24292e; } /* Name other */
+.chroma .py { color: #959da5; } /* Name property */
+.chroma .nt { color: #22863a; } /* Name tag */
+.chroma .nv { color: #e36209; } /* Name variable */
+.chroma .vc { color: #e36209; } /* Name variable class */
+.chroma .vg { color: #e36209; } /* Name variable global */
+.chroma .vi { color: #e36209; } /* Name variable instance */
+.chroma .vm { color: #e36209; } /* Name variable magic */
+.chroma .l { color: #0550ae; } /* Literal */
+.chroma .s { color: #0a3069; } /* Literal string */
+.chroma .sa { color: #0a3069; } /* Literal string affine */
+.chroma .sb { color: #0a3069; } /* Literal string backtick */
+.chroma .sc { color: #0a3069; } /* Literal string char */
+.chroma .dl { color: #0a3069; } /* Literal string delimiter */
+.chroma .sd { color: #0a3069; } /* Literal string doc */
+.chroma .s2 { color: #0a3069; } /* Literal string double */
+.chroma .se { color: #cf222e; } /* Literal string escape */
+.chroma .sh { color: #0a3069; } /* Literal string heredoc */
+.chroma .si { color: #0a3069; } /* Literal string interpol */
+.chroma .sx { color: #0a3069; } /* Literal string other */
+.chroma .sr { color: #0550ae; } /* Literal string regex */
+.chroma .s1 { color: #0a3069; } /* Literal string single */
+.chroma .ss { color: #cf222e; } /* Literal string symbol */
+.chroma .m { color: #0550ae; } /* Literal number */
+.chroma .mb { color: #0550ae; } /* Literal number bin */
+.chroma .mf { color: #0550ae; } /* Literal number float */
+.chroma .mh { color: #0550ae; } /* Literal number hex */
+.chroma .mi { color: #0550ae; } /* Literal number integer */
+.chroma .il { color: #0550ae; } /* Literal number long */
+.chroma .mo { color: #0550ae; } /* Literal number oct */
+.chroma .o { color: #cf222e; } /* Operator */
+.chroma .ow { color: #cf222e; } /* Operator word */
+.chroma .p { color: #24292e; } /* Punctuation */
+.chroma .c { color: #6e7781; font-style: italic; } /* Comment */
+.chroma .ch { color: #6e7781; font-style: italic; } /* Comment hashbang */
+.chroma .cm { color: #6e7781; font-style: italic; } /* Comment multiline */
+.chroma .cp { color: #6e7781; } /* Comment preproc */
+.chroma .cpf { color: #6e7781; } /* Comment preproc file */
+.chroma .c1 { color: #6e7781; font-style: italic; } /* Comment single */
+.chroma .cs { color: #6e7781; font-style: italic; } /* Comment special */
+.chroma .g { color: #24292e; } /* Generic */
+.chroma .gd { color: #cf222e; background-color: #ffebe9; } /* Generic deleted */
+.chroma .ge { color: #24292e; font-style: italic; } /* Generic emphasis */
+.chroma .gh { color: #0550ae; font-weight: bold; } /* Generic heading */
+.chroma .gs { color: #24292e; font-weight: bold; } /* Generic strong */
+.chroma .gu { color: #959da5; font-weight: bold; } /* Generic subheading */
+.chroma .gi { color: #22863a; background-color: #f0fff4; } /* Generic inserted */
+.chroma .go { color: #959da5; } /* Generic output */
+.chroma .gp { color: #959da5; } /* Generic prompt */
+.chroma .gr { color: #cf222e; } /* Generic error */
+.chroma .gt { color: #cf222e; } /* Generic traceback */
+.chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+</style>
+
+</head>
+  <body>
+<article>
+    <h1>Lists Showcase</h1>
+<div class="paragraph">
+<p>This document demonstrates all list types available in AsciiDoc.</p>
+</div>
+<section class="sect1">
+<h2 id="_unordered_lists">Unordered Lists</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_basic_unordered_list">Basic Unordered List</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>First item</p>
+</li>
+<li>
+<p>Second item</p>
+</li>
+<li>
+<p>Third item</p>
+</li>
+</ul>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_nested_unordered_lists">Nested Unordered Lists</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Level 1 item</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Level 2 item</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Level 3 item</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Level 4 item</p>
+</li>
+<li>
+<p>Level 4 item again</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Back to level 3</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Back to level 2</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Back to level 1</p>
+</li>
+</ul>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_mixed_content_unordered_list">Mixed Content Unordered List</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Item with <strong>bold text</strong></p>
+</li>
+<li>
+<p>Item with <em>italic text</em></p>
+</li>
+<li>
+<p>Item with <code>inline code</code></p>
+</li>
+<li>
+<p>Item with <a href="https://example.com[a" class="bare">https://example.com[a</a> link]</p>
+</li>
+</ul>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_ordered_lists">Ordered Lists</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_arabic_numerals_default">Arabic Numerals (Default)</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>First step</p>
+</li>
+<li>
+<p>Second step</p>
+</li>
+<li>
+<p>Third step</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_lowercase_alpha">Lowercase Alpha</h3>
+<div class="paragraph">
+<p>[a] First item [b] Second item [c] Third item</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_uppercase_alpha">Uppercase Alpha</h3>
+<div class="paragraph">
+<p>[A] First major point [B] Second major point [C] Third major point</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_lowercase_roman">Lowercase Roman</h3>
+<div class="paragraph">
+<p>[i] First subsection [ii] Second subsection [iii] Third subsection</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_uppercase_roman">Uppercase Roman</h3>
+<div class="paragraph">
+<p>[I] Volume One [II] Volume Two [III] Volume Three</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_nested_ordered_lists">Nested Ordered Lists</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Level 1 arabic</p>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Level 2 arabic</p>
+<div class="olist loweralpha">
+<ol class="loweralpha">
+<li>
+<p>Level 3 arabic</p>
+</li>
+</ol>
+</div>
+</li>
+<li>
+<p>Back to level 2</p>
+</li>
+</ol>
+</div>
+</li>
+<li>
+<p>Level 1 again</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_restart_numbering">Restart Numbering</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>First item</p>
+</li>
+<li>
+<p>Second item</p>
+</li>
+<li>
+<p>Third item</p>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>First item (restarted)</p>
+</li>
+<li>
+<p>Second item</p>
+</li>
+</ol>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_labeled_lists_description_lists">Labeled Lists (Description Lists)</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_basic_labeled_list">Basic Labeled List</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">term 1</dt>
+<dd>
+<p>Description of term 1</p>
+</dd>
+<dt class="hdlist1">term 2</dt>
+<dd>
+<p>Description of term 2</p>
+</dd>
+<dt class="hdlist1">term 3</dt>
+<dd>
+<p>Description of term 3</p>
+</dd>
+</dl>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_labeled_list_with_extended_descriptions">Labeled List with Extended Descriptions</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">First Term</dt>
+<dd>
+<p></p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>This is a longer description that spans multiple lines.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Second Term</dt>
+<dd>
+<p></p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>This also has a detailed description with multiple paragraphs or sentences.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Third Term</dt>
+<dd>
+<p>Short description</p>
+</dd>
+</dl>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_labeled_list_with_nested_content">Labeled List with Nested Content</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Operating Systems</dt>
+<dd>
+<p></p>
+</dd>
+</dl>
+</div>
+<!-- Linux::Open source, various distributions -->
+<!-- macOS::Apple&#39;s operating system -->
+<!-- Windows::Microsoft&#39;s operating system -->
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_mixed_list_types">Mixed List Types</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_ordered_with_unordered_nested">Ordered with Unordered Nested</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Main task one</p>
+</li>
+</ol>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Sub-task a</p>
+</li>
+<li>
+<p>Sub-task b</p>
+</li>
+</ul>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Main task two</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Sub-task with nested list</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Deep nested item</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Main task three</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_unordered_with_ordered_nested">Unordered with Ordered Nested</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Topic one</p>
+</li>
+</ul>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>First detail</p>
+</li>
+<li>
+<p>Second detail</p>
+</li>
+</ol>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Topic two</p>
+</li>
+</ul>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>First point</p>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Sub-point</p>
+</li>
+</ol>
+</div>
+</li>
+<li>
+<p>Topic three</p>
+</li>
+</ol>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_inline_lists">Inline Lists</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_basic_inline_list">Basic Inline List</h3>
+<div class="paragraph">
+<p>The required packages are: asciidoc, python3, and git.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_inline_list_with_or">Inline List with Or</h3>
+<div class="paragraph">
+<p>You can use either: vim, nano, or emacs as your editor.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_inline_list_with_commas">Inline List with Commas</h3>
+<div class="paragraph">
+<p>Supported formats include: HTML, PDF, DocBook, Man Page, EPUB, and Markdown.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_q_a_lists_question_and_answer">Q&amp;A Lists (Question and Answer)</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">What is AsciiDoc?</dt>
+<dd>
+<p></p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>AsciiDoc is a text document format for writing notes, documentation, articles, books, web pages, slide decks and man pages.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">How do I install it?</dt>
+<dd>
+<p></p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>Use the package manager for your system or download from GitHub.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Why use it?</dt>
+<dd>
+<p></p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>Plain text, version control friendly, easy to read, multiple output formats.</p>
+</div>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_checklists_task_lists">Checklists (Task Lists)</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_simple_checklist">Simple Checklist</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>[ ] Task not yet done</p>
+</li>
+<li>
+<p>[x] Completed task</p>
+</li>
+<li>
+<p>[ ] Another pending task</p>
+</li>
+</ul>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_checklist_with_grouping">Checklist with Grouping</h3>
+<div class="paragraph">
+<p>Shopping List:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>[x] Milk</p>
+</li>
+<li>
+<p>[x] Eggs</p>
+</li>
+<li>
+<p>[ ] Bread</p>
+</li>
+<li>
+<p>[ ] Coffee</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Work Tasks:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>[ ] Review PR #123</p>
+</li>
+<li>
+<p>[x] Fix bug in table parser</p>
+</li>
+<li>
+<p>[ ] Update documentation</p>
+</li>
+</ul>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_complex_examples">Complex Examples</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_procedure_with_steps">Procedure with Steps</h3>
+<div class="paragraph">
+<p>Procedure for creating a new document:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Create a new file with <code>.adoc</code> extension</p>
+</li>
+<li>
+<p>Add a document title (line starting with <code>=</code>)</p>
+</li>
+<li>
+<p>Write your content using AsciiDoc syntax</p>
+</li>
+<li>
+<p>Convert to your desired format</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_definition_list_with_code_samples">Definition List with Code Samples</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Data Types</dt>
+<dd>
+<p></p>
+</dd>
+</dl>
+</div>
+<!-- String::Sequence of characters -->
+<div class="paragraph">
+<p><code>` name = &#34;John Doe&#34; `</code></p>
+</div>
+<!-- Integer::Whole numbers -->
+<div class="paragraph">
+<p><code>` count = 42 `</code></p>
+</div>
+<!-- Boolean::True or false -->
+<div class="paragraph">
+<p><code>` isValid = true `</code></p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_multi_level_outline">Multi-level Outline</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Chapter 1</p>
+</li>
+</ul>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Section 1.1</p>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Subsection 1.1.1</p>
+<div class="olist loweralpha">
+<ol class="loweralpha">
+<li>
+<p>Paragraph</p>
+</li>
+</ol>
+</div>
+</li>
+<li>
+<p>Subsection 1.1.2</p>
+</li>
+</ol>
+</div>
+</li>
+<li>
+<p>Section 1.2</p>
+</li>
+</ol>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Chapter 2</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Important note</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Section 2.1</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Another note</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_list_styling">List Styling</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_unordered_list_with_different_markers">Unordered List with Different Markers</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Disc marker item 1</p>
+</li>
+<li>
+<p>Disc marker item 2</p>
+</li>
+</ul>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Circle marker item 1</p>
+</li>
+<li>
+<p>Circle marker item 2</p>
+</li>
+</ul>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Square marker item 1</p>
+</li>
+<li>
+<p>Square marker item 2</p>
+</li>
+</ul>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_ordered_list_starting_value">Ordered List Starting Value</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Item 5</p>
+</li>
+<li>
+<p>Item 6</p>
+</li>
+<li>
+<p>Item 7</p>
+</li>
+</ol>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_lists_in_context">Lists in Context</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_feature_list">Feature List</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Bold feature</strong> - This is an important feature</p>
+</li>
+<li>
+<p><em>Italic feature</em> - Secondary feature</p>
+</li>
+<li>
+<p><code>Monospace feature</code> - Technical feature</p>
+</li>
+</ul>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Feature with <a href="https://example.com[external" class="bare">https://example.com[external</a> link]</p>
+</li>
+<li>
+<p>Feature with <a href="lists.html">internal link</a></p>
+</li>
+</ul>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_comparison_table_as_list">Comparison Table (as List)</h3>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="pros">Pros ==</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Easy to write</p>
+</li>
+<li>
+<p>Plain text</p>
+</li>
+<li>
+<p>Version control friendly</p>
+</li>
+<li>
+<p>Multiple output formats</p>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<section class="sect1">
+<h2 id="cons">Cons ==</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Learning curve for advanced features</p>
+</li>
+<li>
+<p>Less WYSIWYG than word processors</p>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<section class="sect1">
+<h2 id="summary">Summary</h2>
+<div class="sectionbody">
+    <table class="tableblock frame-all grid-all stretch">
+    <colgroup>
+      <col style="width: 33.3333%;">
+      <col style="width: 33.3333%;">
+      <col style="width: 33.3334%;">
+    </colgroup>
+    <tbody>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">List Type</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Syntax Marker</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Example</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Unordered</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>*</code></p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">* Item</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Ordered</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>.</code></p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">. Item</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Labeled</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>::</code></p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">term:: description</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Inline</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">one, two, three</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Checklist</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>-</code></p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">- [x] Done</p></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_current_limitations">Current Limitations</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Multi-line list items without proper continuation</p>
+</li>
+<li>
+<p>Complex nested inline formatting in list items</p>
+</li>
+<li>
+<p>Custom list numbering styles</p>
+</li>
+</ul>
+</div>
+</div>
+</section>
+</article>
+</body>
+</html>

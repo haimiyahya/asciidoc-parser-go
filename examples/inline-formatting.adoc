@@ -1,0 +1,196 @@
+= Inline Formatting Showcase
+
+This document demonstrates all inline formatting features available in AsciiDoc.
+
+== Basic Text Formatting
+
+=== Bold and Italic
+
+// Single asterisk/underscore for italic
+*Italic text* and _italic text_
+
+// Double for bold
+**Bold text** and __bold text__
+
+// Triple for bold italic
+***Bold italic*** and ___bold italic___
+
+// Monospace
+`Monospace text` and +monospace text+
+
+=== Combinations
+
+You can **combine _nested_ formatting** like *this with `code` inside*.
+
+== Subscript and Superscript
+
+// Subscript
+H~2~O is water. x^2^ + y^2^ = z^2^
+
+// Superscript
+E = mc^2^
+The 2^nd^ element is Helium.
+
+== Links and References
+
+=== External Links
+
+// Basic URL auto-linking
+Visit https://asciidoc.org for more information.
+
+// Explicit link with custom text
+https://github.com[GitHub] or https://asciidoc.org[AsciiDoc, window=_blank]
+
+=== Relative Links
+
+link:README.md[README file]
+link:docs/installation.html[Installation Guide]
+
+=== Cross-References (xrefs)
+
+// Reference to another section in this document
+See <<lists_section>> for list examples.
+
+// With custom text
+<<lists_section, the Lists section below>> has more details.
+
+// Reference to another document
+link:tables-advanced.adoc[Tables Advanced]
+
+== UI Macros
+
+// Keyboard shortcuts
+Press kbd:[Ctrl+C] to copy, kbd:[Ctrl+V] to paste.
+Use kbd:[Cmd+Space] to open Spotlight on macOS.
+
+// Buttons
+Click the btn:[Save] button to save your changes.
+Press btn:[Cancel] to exit without saving.
+
+// Menu paths
+Go to menu:File[Open] to open a file.
+Select menu:View[Zoom In, Zoom Out] or use the keyboard shortcuts.
+
+// Menu with nested items
+Choose menu:Preferences[Editor > Font Size]
+
+== Special Characters
+
+// Line break
+This line has a manual line break +
+and continues on the next line.
+
+// Horizontal rule
+Above the line.
+
+---
+
+Below the line.
+
+// Page break (in PDF output)
+<<<
+
+This is after a page break.
+
+== Character Replacement
+
+// Copyright, trademark, registered
+(C) 2026, (TM) symbol, (R) registered
+
+// Arrows
+-> <- -> => <= <=>
+
+// Ellipsis
+Well... that was unexpected.
+
+// Quotes
+`'single quotes`' and `"double quotes""
+
+// Apostrophes and dashes
+It's -- a short dash, and --- a long em-dash.
+
+== Images (Inline)
+
+// Standard image
+image:https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png[AsciiDoc logo, 24, 24]
+
+// With link
+https://github.com[link=https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png[]]
+
+== Icons (Unicode)
+
+// Using Unicode characters instead of icon macros
+✓ Success note
+✗ Warning
+⚠ Caution
+ℹ Information
+★ Star
+♥ Heart
+→ Arrow
+
+== Passthrough
+
+// Triple-plus for inline passthrough
++++<b>This is raw HTML</b>+++
+
+// Single-plus for monospace passthrough
++<verbatim>text</verbatim>+
+
+== Menus and Key Combinations
+
+Complex keyboard shortcut: kbd:[Ctrl+Shift+T]
+
+Nested menu: menu:Tools[Options > Editor > Syntax Highlighting]
+
+== Text Formatting Examples in Context
+
+The **quick brown fox** jumps over the _lazy dog_.
+
+This is `inline code` within a sentence.
+
+Visit https://example.com[our website] for more info.
+
+Press kbd:[Enter] to continue or click btn:[Submit].
+
+== Advanced Examples
+
+=== Mixed Formatting in Lists
+
+* **Bold** item with _italic_ and `code`
+* Normal item with https://example.com[a link]
+* kbd:[Ctrl+N] for new file
+
+=== Inline Formatting in Tables
+
+|===
+| Feature | Syntax | Example
+| Bold | `**text**` | **bold text**
+| Italic | `__text__` | _italic text_
+| Monospace | `` `text` `` | `code`
+| Link | `link:url[text]` | https://example.com[Example]
+|===
+
+[[lists_section]]
+== Lists (Reference Section)
+
+See the *lists.adoc* file for comprehensive list examples.
+
+== Summary of Inline Formatting
+
+|===
+| Style | Syntax | Result
+| Bold | `**text**` | **bold**
+| Italic | `__text__` or `*text*` | _italic_
+| Bold Italic | `***text***` | ***bold italic***
+| Monospace | `` `text` `` or `+text+` | `monospace`
+| Subscript | `text~sub~` | H~2~O
+| Superscript | `text^super^` | x^2^
+| Link | `link:url[text]` | link:url[text]
+| URL | `https://example` | https://example.com
+| Keyboard | `kbd:[key]` | kbd:[Ctrl]
+| Button | `btn:[text]` | btn:[Save]
+| Menu | `menu:Path[item]` | menu:File[Save]
+|===
+
+// NOTE: Icon macros like icon:check[] require font-awesome or similar.
+// This showcase uses Unicode alternatives for portability.

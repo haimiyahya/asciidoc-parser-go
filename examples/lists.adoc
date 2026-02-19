@@ -1,0 +1,282 @@
+= Lists Showcase
+
+This document demonstrates all list types available in AsciiDoc.
+
+== Unordered Lists
+
+=== Basic Unordered List
+
+* First item
+* Second item
+* Third item
+
+=== Nested Unordered Lists
+
+* Level 1 item
+** Level 2 item
+*** Level 3 item
+**** Level 4 item
+**** Level 4 item again
+*** Back to level 3
+** Back to level 2
+* Back to level 1
+
+=== Mixed Content Unordered List
+
+* Item with **bold text**
+* Item with _italic text_
+* Item with `inline code`
+* Item with https://example.com[a link]
+
+== Ordered Lists
+
+=== Arabic Numerals (Default)
+
+. First step
+. Second step
+. Third step
+
+=== Lowercase Alpha
+
+[a] First item
+[b] Second item
+[c] Third item
+
+=== Uppercase Alpha
+
+[A] First major point
+[B] Second major point
+[C] Third major point
+
+=== Lowercase Roman
+
+[i] First subsection
+[ii] Second subsection
+[iii] Third subsection
+
+=== Uppercase Roman
+
+[I] Volume One
+[II] Volume Two
+[III] Volume Three
+
+=== Nested Ordered Lists
+
+. Level 1 arabic
+.. Level 2 arabic
+... Level 3 arabic
+.. Back to level 2
+. Level 1 again
+
+=== Restart Numbering
+
+. First item
+. Second item
+. Third item
+
+[list restart]
+. First item (restarted)
+. Second item
+
+== Labeled Lists (Description Lists)
+
+=== Basic Labeled List
+
+term 1:: Description of term 1
+term 2:: Description of term 2
+term 3:: Description of term 3
+
+=== Labeled List with Extended Descriptions
+
+First Term::
+This is a longer description that spans
+multiple lines.
+
+Second Term::
+This also has a detailed description
+with multiple paragraphs or sentences.
+
+Third Term:: Short description
+
+=== Labeled List with Nested Content
+
+Operating Systems::
+Linux:: Open source, various distributions
+macOS:: Apple's operating system
+Windows:: Microsoft's operating system
+
+== Mixed List Types
+
+=== Ordered with Unordered Nested
+
+. Main task one
+* Sub-task a
+* Sub-task b
+. Main task two
+** Sub-task with nested list
+*** Deep nested item
+. Main task three
+
+=== Unordered with Ordered Nested
+
+* Topic one
+. First detail
+. Second detail
+* Topic two
+. First point
+.. Sub-point
+* Topic three
+
+== Inline Lists
+
+=== Basic Inline List
+
+The required packages are: asciidoc, python3, and git.
+
+=== Inline List with Or
+
+You can use either: vim, nano, or emacs as your editor.
+
+=== Inline List with Commas
+
+Supported formats include: HTML, PDF, DocBook, Man Page, EPUB, and Markdown.
+
+== Q&A Lists (Question and Answer)
+
+[qanda]
+What is AsciiDoc?::
+AsciiDoc is a text document format for writing notes, documentation,
+articles, books, web pages, slide decks and man pages.
+
+How do I install it?::
+Use the package manager for your system or download from GitHub.
+
+Why use it?::
+Plain text, version control friendly, easy to read, multiple output formats.
+
+== Checklists (Task Lists)
+
+=== Simple Checklist
+
+- [ ] Task not yet done
+- [x] Completed task
+- [ ] Another pending task
+
+=== Checklist with Grouping
+
+Shopping List:
+- [x] Milk
+- [x] Eggs
+- [ ] Bread
+- [ ] Coffee
+
+Work Tasks:
+- [ ] Review PR #123
+- [x] Fix bug in table parser
+- [ ] Update documentation
+
+== Complex Examples
+
+=== Procedure with Steps
+
+Procedure for creating a new document:
+
+. Create a new file with `.adoc` extension
+. Add a document title (line starting with `=`)
+. Write your content using AsciiDoc syntax
+. Convert to your desired format
+
+=== Definition List with Code Samples
+
+Data Types::
+
+String:: Sequence of characters
+```
+name = "John Doe"
+```
+
+Integer:: Whole numbers
+```
+count = 42
+```
+
+Boolean:: True or false
+```
+isValid = true
+```
+
+=== Multi-level Outline
+
+* Chapter 1
+. Section 1.1
+.. Subsection 1.1.1
+... Paragraph
+.. Subsection 1.1.2
+. Section 1.2
+* Chapter 2
+** Important note
+. Section 2.1
+** Another note
+
+== List Styling
+
+=== Unordered List with Different Markers
+
+[disc]
+* Disc marker item 1
+* Disc marker item 2
+
+[circle]
+o Circle marker item 1
+o Circle marker item 2
+
+[square]
+* Square marker item 1
+* Square marker item 2
+
+=== Ordered List Starting Value
+
+[start=5]
+. Item 5
+. Item 6
+. Item 7
+
+== Lists in Context
+
+=== Feature List
+
+* **Bold feature** - This is an important feature
+* _Italic feature_ - Secondary feature
+* `Monospace feature` - Technical feature
+
+* Feature with https://example.com[external link]
+* Feature with link:lists.html[internal link]
+
+=== Comparison Table (as List)
+
+== Pros ==
+* Easy to write
+* Plain text
+* Version control friendly
+* Multiple output formats
+
+== Cons ==
+* Learning curve for advanced features
+* Less WYSIWYG than word processors
+
+== Summary
+
+|===
+| List Type | Syntax Marker | Example
+| Unordered | `*` | * Item
+| Ordered | `.` | . Item
+| Labeled | `::` | term:: description
+| Inline | N/A | one, two, three
+| Checklist | `-` | - [x] Done
+|===
+
+== Current Limitations
+
+* Multi-line list items without proper continuation
+* Complex nested inline formatting in list items
+* Custom list numbering styles

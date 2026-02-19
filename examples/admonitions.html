@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admonitions Showcase</title>
+
+
+<style>
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	line-height: 1.6;
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 1rem;
+	color: #333;
+}
+h1, h2, h3, h4, h5, h6 {
+	margin-top: 1.5em;
+	margin-bottom: 0.5em;
+	font-weight: 600;
+}
+p {
+	margin: 0.5em 0;
+}
+ul, ol {
+	margin: 0.5em 0;
+	padding-left: 2em;
+}
+code {
+	background-color: #f4f4f4;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 0.9em;
+}
+.listingblock, .literalblock {
+	background-color: #f4f4f4;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1em 0;
+	overflow-x: auto;
+}
+.listingblock pre, .literalblock pre {
+	margin: 0;
+	padding: 0;
+}
+.tableblock {
+	margin: 1em 0;
+}
+table.tableblock {
+	border-collapse: collapse;
+	width: 100%;
+}
+table.tableblock th,
+table.tableblock td {
+	border: 1px solid #ddd;
+	padding: 0.5em 0.75em;
+	text-align: left;
+}
+table.tableblock thead th {
+	background-color: #f2f2f2;
+	font-weight: 600;
+	text-align: center;
+}
+table.tableblock.frame-all {
+	border: 1px solid #ddd;
+}
+table.tableblock.frame-topbot {
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
+}
+table.tableblock.frame-sides {
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+}
+table.tableblock.frame-none {
+	border: none;
+}
+/* Frame-specific cell border overrides */
+table.tableblock.frame-topbot th,
+table.tableblock.frame-topbot td {
+	border-left: none;
+	border-right: none;
+}
+table.tableblock.frame-topbot.grid-all th,
+table.tableblock.frame-topbot.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-topbot.grid-all th:first-child,
+table.tableblock.frame-topbot.grid-all td:first-child {
+	border-left: none;
+}
+table.tableblock.frame-sides th,
+table.tableblock.frame-sides td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.frame-none th,
+table.tableblock.frame-none td {
+	border: none;
+}
+table.tableblock.frame-none.grid-all th,
+table.tableblock.frame-none.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-none.grid-all th:first-child,
+table.tableblock.frame-none.grid-all td:first-child {
+	border-left: none;
+}
+table.tableblock.grid-all td,
+table.tableblock.grid-all th {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.grid-all td:first-child,
+table.tableblock.grid-all th:first-child {
+	border-left: none;
+}
+/* Grid rows: only horizontal borders (between rows) */
+table.tableblock.grid-rows th,
+table.tableblock.grid-rows td {
+	border-left: none;
+	border-right: none;
+}
+/* Grid cols: only vertical borders (between columns) */
+table.tableblock.grid-cols th,
+table.tableblock.grid-cols td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.grid-cols td,
+table.tableblock.grid-cols th {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.grid-cols td:first-child,
+table.tableblock.grid-cols th:first-child {
+	border-left: none;
+}
+/* Grid none: no internal borders */
+table.tableblock.grid-none th,
+table.tableblock.grid-none td {
+	border-left: none;
+	border-right: none;
+}
+/* Stripe patterns */
+table.tableblock.stripes-even tr:nth-child(even) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-odd tr:nth-child(odd) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-all tr {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-last tr:last-child {
+	background-color: #f0f0f0;
+}
+/* Auto width: columns size to content */
+table.tableblock.autowidth {
+	width: auto;
+	table-layout: auto;
+}
+/* Horizontal alignment */
+table.tableblock .halign-left {
+	text-align: left;
+}
+table.tableblock .halign-right {
+	text-align: right;
+}
+table.tableblock .halign-center {
+	text-align: center;
+}
+.admonitionblock {
+	margin: 1em 0;
+	padding: 1em;
+	border-left: 4px solid #4CAF50;
+	background-color: #f8f8f8;
+}
+.admonitionblock.note {
+	border-left-color: #2196F3;
+}
+.admonitionblock.tip {
+	border-left-color: #4CAF50;
+}
+.admonitionblock.warning {
+	border-left-color: #FF9800;
+}
+.admonitionblock.caution {
+	border-left-color: #FF5722;
+}
+.admonitionblock.important {
+	border-left-color: #9C27B0;
+}
+.admonitionblock td.icon {
+	padding-right: 1em;
+	font-weight: bold;
+}
+.quoteblock {
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 4px solid #ddd;
+	color: #555;
+}
+.quoteblock blockquote {
+	margin: 0;
+}
+.sidebarblock {
+	background-color: #f0f7ff;
+	border-left: 4px solid #2196F3;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1.5em 0;
+}
+.exampleblock {
+	background-color: #f8f8f8;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1em;
+	margin: 1em 0;
+}
+.colist {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+.colist.arabic {
+	list-style-type: none;
+}
+.colist.arabic .li {
+	padding-left: 2em;
+	position: relative;
+}
+.colist.arabic .conum {
+	display: inline-block;
+	width: 1.8em;
+	height: 1.8em;
+	line-height: 1.8em;
+	text-align: center;
+	border-radius: 50%;
+	background-color: #2196F3;
+	color: white;
+	font-weight: bold;
+	font-size: 0.9em;
+	position: absolute;
+	left: 0;
+}
+.colist.arabic .conum:before {
+	content: attr(data-value);
+}
+.sect1 {
+	margin-bottom: 2em;
+}
+.sect2 {
+	margin-top: 1.5em;
+}
+a {
+	color: #2196F3;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+strong, b {
+	font-weight: 600;
+}
+em, i {
+	font-style: italic;
+}
+/* Chroma Syntax Highlighting (GitHub theme) */
+.highlight {
+	margin: 1em 0;
+}
+.highlight pre {
+	background-color: #f6f8fa;
+	border-radius: 6px;
+	padding: 16px;
+	overflow: auto;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+.highlight code {
+	background: none;
+	padding: 0;
+	font-family: inherit;
+}
+/* Chroma token colors (GitHub theme) */
+.chroma . { color: #24292e; } /* Plain text */
+.chroma .k { color: #cf222e; } /* Keyword */
+.chroma .kd { color: #cf222e; } /* Keyword declaration */
+.chroma .kn { color: #cf222e; } /* Keyword namespace */
+.chroma .kt { color: #cf222e; } /* Keyword type */
+.chroma .n { color: #6f42c1; } /* Name */
+.chroma .na { color: #6f42c1; } /* Name attribute */
+.chroma .nb { color: #959da5; } /* Name builtin */
+.chroma .bp { color: #959da5; } /* Name pseudo builtin */
+.chroma .nc { color: #6f42c1; } /* Name class */
+.chroma .no { color: #cf222e; } /* Name constant */
+.chroma .nd { color: #6f42c1; } /* Name decorator */
+.chroma .ni { color: #0550ae; } /* Name entity */
+.chroma .ne { color: #cf222e; } /* Name exception */
+.chroma .nf { color: #8250df; } /* Name function */
+.chroma .nl { color: #959da5; } /* Name label */
+.chroma .nn { color: #6f42c1; } /* Name namespace */
+.chroma .nx { color: #24292e; } /* Name other */
+.chroma .py { color: #959da5; } /* Name property */
+.chroma .nt { color: #22863a; } /* Name tag */
+.chroma .nv { color: #e36209; } /* Name variable */
+.chroma .vc { color: #e36209; } /* Name variable class */
+.chroma .vg { color: #e36209; } /* Name variable global */
+.chroma .vi { color: #e36209; } /* Name variable instance */
+.chroma .vm { color: #e36209; } /* Name variable magic */
+.chroma .l { color: #0550ae; } /* Literal */
+.chroma .s { color: #0a3069; } /* Literal string */
+.chroma .sa { color: #0a3069; } /* Literal string affine */
+.chroma .sb { color: #0a3069; } /* Literal string backtick */
+.chroma .sc { color: #0a3069; } /* Literal string char */
+.chroma .dl { color: #0a3069; } /* Literal string delimiter */
+.chroma .sd { color: #0a3069; } /* Literal string doc */
+.chroma .s2 { color: #0a3069; } /* Literal string double */
+.chroma .se { color: #cf222e; } /* Literal string escape */
+.chroma .sh { color: #0a3069; } /* Literal string heredoc */
+.chroma .si { color: #0a3069; } /* Literal string interpol */
+.chroma .sx { color: #0a3069; } /* Literal string other */
+.chroma .sr { color: #0550ae; } /* Literal string regex */
+.chroma .s1 { color: #0a3069; } /* Literal string single */
+.chroma .ss { color: #cf222e; } /* Literal string symbol */
+.chroma .m { color: #0550ae; } /* Literal number */
+.chroma .mb { color: #0550ae; } /* Literal number bin */
+.chroma .mf { color: #0550ae; } /* Literal number float */
+.chroma .mh { color: #0550ae; } /* Literal number hex */
+.chroma .mi { color: #0550ae; } /* Literal number integer */
+.chroma .il { color: #0550ae; } /* Literal number long */
+.chroma .mo { color: #0550ae; } /* Literal number oct */
+.chroma .o { color: #cf222e; } /* Operator */
+.chroma .ow { color: #cf222e; } /* Operator word */
+.chroma .p { color: #24292e; } /* Punctuation */
+.chroma .c { color: #6e7781; font-style: italic; } /* Comment */
+.chroma .ch { color: #6e7781; font-style: italic; } /* Comment hashbang */
+.chroma .cm { color: #6e7781; font-style: italic; } /* Comment multiline */
+.chroma .cp { color: #6e7781; } /* Comment preproc */
+.chroma .cpf { color: #6e7781; } /* Comment preproc file */
+.chroma .c1 { color: #6e7781; font-style: italic; } /* Comment single */
+.chroma .cs { color: #6e7781; font-style: italic; } /* Comment special */
+.chroma .g { color: #24292e; } /* Generic */
+.chroma .gd { color: #cf222e; background-color: #ffebe9; } /* Generic deleted */
+.chroma .ge { color: #24292e; font-style: italic; } /* Generic emphasis */
+.chroma .gh { color: #0550ae; font-weight: bold; } /* Generic heading */
+.chroma .gs { color: #24292e; font-weight: bold; } /* Generic strong */
+.chroma .gu { color: #959da5; font-weight: bold; } /* Generic subheading */
+.chroma .gi { color: #22863a; background-color: #f0fff4; } /* Generic inserted */
+.chroma .go { color: #959da5; } /* Generic output */
+.chroma .gp { color: #959da5; } /* Generic prompt */
+.chroma .gr { color: #cf222e; } /* Generic error */
+.chroma .gt { color: #cf222e; } /* Generic traceback */
+.chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+</style>
+
+</head>
+  <body>
+<article>
+    <h1>Admonitions Showcase</h1>
+<div class="paragraph">
+<p>This document demonstrates all admonition blocks available in AsciiDoc.</p>
+</div>
+<section class="sect1">
+<h2 id="_basic_admonitions">Basic Admonitions</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="note">Note</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+This is a note admonition. Notes are used for additional
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>information that is helpful but not critical.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="tip">Tip</h3>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+This is a tip admonition. Tips provide helpful suggestions
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>or best practices.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="warning">Warning</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+This is a warning admonition. Warnings alert readers to
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>potential issues or problems.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="caution">Caution</h3>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Caution</div>
+</td>
+<td class="content">
+This is a caution admonition. Cautions warn about possible
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>damage or data loss.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="important">Important</h3>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+This is an important admonition. Important blocks highlight
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>critical information that readers should pay attention to.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_admonitions_with_titles">Admonitions with Titles</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_note_with_title">Note with Title</h3>
+<div class="paragraph">
+<p>.Title Here This note has a custom title. The title appears in bold above the admonition content.</p>
+</div>
+<div class="paragraph">
+<p>This note can also have multiple paragraphs.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_tip_with_title">Tip with Title</h3>
+<div class="paragraph">
+<p>.Pro Tip This is a tip with a custom title. It can contain <strong>bold text</strong>, <em>italic text</em>, and <code>code</code>.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_warning_with_title">Warning with Title</h3>
+<div class="paragraph">
+<p>.Heads Up! This warning has a custom title. Pay attention to this content.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_caution_with_title">Caution with Title</h3>
+<div class="paragraph">
+<p>.Be Careful! This caution block warns about potential issues. Proceed with caution.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_important_with_title">Important with Title</h3>
+<div class="paragraph">
+<p>.Must Read This is important information. Don&#39;t skip this section.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_multi_paragraph_admonitions">Multi-Paragraph Admonitions</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_note_with_multiple_paragraphs">Note with Multiple Paragraphs</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+This is the first paragraph of the note.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This is the second paragraph. Admonitions can contain multiple paragraphs of text.</p>
+</div>
+<div class="paragraph">
+<p>This is a third paragraph with additional information.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_tip_with_multiple_paragraphs">Tip with Multiple Paragraphs</h3>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+First paragraph introduces the tip.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Second paragraph provides more details about the tip.</p>
+</div>
+<div class="paragraph">
+<p>Third paragraph summarizes the key point.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_admonitions_with_lists">Admonitions with Lists</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_note_with_unordered_list">Note with Unordered List</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Here are some important points:
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>First point</p>
+</li>
+<li>
+<p>Second point</p>
+</li>
+<li>
+<p>Third point</p>
+</li>
+</ul>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_warning_with_ordered_list">Warning with Ordered List</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+Follow these steps carefully:
+</td>
+</tr>
+</table>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Step one</p>
+</li>
+<li>
+<p>Step two</p>
+</li>
+<li>
+<p>Step three</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_tip_with_nested_lists">Tip with Nested Lists</h3>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Consider these options:
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Option A</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Sub-option A1</p>
+</li>
+<li>
+<p>Sub-option A2</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Option B</p>
+</li>
+<li>
+<p>Option C</p>
+</li>
+</ul>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_admonitions_with_code">Admonitions with Code</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_note_with_code_block">Note with Code Block</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Here&#39;s an example configuration:
+</td>
+</tr>
+</table>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>[server]
+host = localhost
+port = 8080</pre>
+</div>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_important_with_literal_block">Important with Literal Block</h3>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+The output will be:
+</td>
+</tr>
+</table>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Raw text output
+that preserves
+spacing</pre>
+</div>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_admonitions_with_inline_formatting">Admonitions with Inline Formatting</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_formatted_admonition">Formatted Admonition</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+This note has **bold text**, _italic text_,
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>and <code>inline code</code> within it.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_complex_formatting">Complex Formatting</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+The https://example.com[documentation] has more details.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Use <code>Ctrl+F</code> to search within the page.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_all_admonitions_side_by_side">All Admonitions Side by Side</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="comparison">Comparison</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+A note for general information.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+A tip for helpful suggestions.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+A warning for potential issues.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Caution</div>
+</td>
+<td class="content">
+A caution for possible damage.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+Important information to remember.
+</td>
+</tr>
+</table>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_admonitions_in_context">Admonitions in Context</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_documentation_example">Documentation Example</h3>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_installation_guide">Installation Guide</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Make sure you have Go 1.23 or higher installed
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>before proceeding.</p>
+</div>
+<section class="sect2">
+<h3 id="_step_1_download">Step 1: Download</h3>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Use the latest release for the best features and bug fixes.
+</td>
+</tr>
+</table>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_step_2_build">Step 2: Build</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+Don&#39;t use the `master` branch in production.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Always use a tagged release.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_step_3_configure">Step 3: Configure</h3>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Caution</div>
+</td>
+<td class="content">
+Back up your existing configuration files
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>before making changes.</p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_step_4_run">Step 4: Run</h3>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+Review the logs after first run to ensure
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>everything is working correctly.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_admonitions_with_tables">Admonitions with Tables</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_note_before_table">Note Before Table</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The following table shows the comparison:
+</td>
+</tr>
+</table>
+</div>
+    <table class="tableblock frame-all grid-all stretch">
+    <colgroup>
+      <col style="width: 33.3333%;">
+      <col style="width: 33.3333%;">
+      <col style="width: 33.3334%;">
+    </colgroup>
+    <tbody>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Feature</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Basic</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Pro</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Users</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Unlimited</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Storage</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">1 GB</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">100 GB</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Support</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Email</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">24/7 Phone</p></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_admonitions_with_links">Admonitions with Links</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+See link:README.md[README] for more information.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Check out the https://github.com/asciidoctor/asciidoctor[Asciidoctor documentation].
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+This feature is link:https://github.com/asciidoctor/asciidoctor/issues[tagged as experimental].
+</td>
+</tr>
+</table>
+</div>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_custom_admonition_styling">Custom Admonition Styling</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_block_style_variant">Block Style Variant</h3>
+<div class="paragraph">
+<p>-- This note uses the block style delimiter. The content is between the delimiter lines.</p>
+</div>
+<div class="paragraph">
+<p>It can contain multiple paragraphs and other elements. --</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_escaping_admonitions">Escaping Admonitions</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_preventing_admonition_detection">Preventing Admonition Detection</h3>
+<div class="paragraph">
+<p>To prevent &#34;NOTE:&#34; from being treated as an admonition, use a backslash: \NOTE: This is just regular text.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_summary_of_admonition_types">Summary of Admonition Types</h2>
+<div class="sectionbody">
+  <table class="tableblock frame-all grid-all stretch">
+  <colgroup>
+    <col style="width: 33.3333%;">
+    <col style="width: 33.3333%;">
+    <col style="width: 33.3334%;">
+  </colgroup>
+  <tbody>
+    <tr>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Type</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Purpose</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Icon</p></td>
+    </tr>
+    <tr>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">note</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">General information</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">ℹ</p></td>
+    </tr>
+    <tr>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">tip</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Helpful suggestions</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">💡</p></td>
+    </tr>
+    <tr>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">warning</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Potential issues</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">⚠</p></td>
+    </tr>
+    <tr>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">caution</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Possible damage</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">☡</p></td>
+    </tr>
+    <tr>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">important</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Critical information</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">❗</p></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_best_practices">Best Practices</h2>
+<div class="sectionbody">
+<section class="sect2">
+<h3 id="_when_to_use_each_type">When to Use Each Type</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Use notes for additional, non-critical information.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Use tips for helpful shortcuts or best practices.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+Use warnings for things that might cause unexpected behavior.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Caution</div>
+</td>
+<td class="content">
+Use cautions when data loss or damage is possible.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+Use important for must-know information.
+</td>
+</tr>
+</table>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_writing_effective_admonitions">Writing Effective Admonitions</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Be concise</strong> - Get to the point quickly</p>
+</li>
+<li>
+<p><strong>Be specific</strong> - Clearly state what the reader should know</p>
+</li>
+<li>
+<p><strong>Use sparingly</strong> - Too many admonitions reduce their impact</p>
+</li>
+<li>
+<p><strong>Match type to content</strong> - Use the right admonition for the situation</p>
+</li>
+</ul>
+</div>
+</section>
+</div>
+</section>
+</article>
+</body>
+</html>

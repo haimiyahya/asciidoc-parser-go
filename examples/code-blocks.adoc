@@ -1,0 +1,394 @@
+= Code Blocks Showcase
+
+This document demonstrates various code block types and features in AsciiDoc.
+
+== Listing Blocks (Source Code with Syntax Highlighting)
+
+=== Basic Listing Block
+
+[source,go]
+----
+func main() {
+    fmt.Println("Hello, World!")
+}
+----
+
+=== Listing with Title
+
+[source,python]
+.Python Hello World
+----
+print("Hello, World!")
+----
+
+=== Multiple Languages
+
+[source,javascript]
+----
+function greet(name) {
+    console.log(`Hello, ${name}!`);
+}
+----
+
+[source,ruby]
+----
+def greet(name)
+  puts "Hello, #{name}!"
+end
+----
+
+[source,rust]
+----
+fn greet(name: &str) {
+    println!("Hello, {}!", name);
+}
+----
+
+=== Listing with Line Numbers
+
+[source,go]
+----
+%<-- kind of not supported yet
+func main() {
+    fmt.Println("Hello, World!")
+}
+----
+
+=== Language Gallery
+
+[source,bash]
+----
+echo "Hello from Bash"
+curl https://example.com
+----
+
+[source,yaml]
+----
+server:
+  host: localhost
+  port: 8080
+----
+
+[source,json]
+----
+{
+  "name": "example",
+  "version": "1.0.0"
+}
+----
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item>Example</item>
+</root>
+----
+
+[source,css]
+----
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+----
+
+[source,html]
+----
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Example</title>
+  </head>
+  <body>
+    <h1>Hello</h1>
+  </body>
+</html>
+----
+
+== Literal Blocks (Verbatim Text)
+
+=== Basic Literal Block
+
+....
+This is a literal block.
+All whitespace is preserved.
+    Indentation is maintained.
+Special characters like * and _ are not interpreted.
+....
+
+=== Literal with Title
+
+[literal]
+.Configuration File
+....
+server {
+    listen 8080;
+    server_name localhost;
+}
+....
+
+=== Literal for Command Output
+
+[literal]
+.Command Output
+....
+$ go test ./...
+ok      github.com/example/pkg    0.123s
+PASS
+....
+
+== Code Blocks with Callouts
+
+=== Basic Callouts
+
+[source,go]
+----
+func add(a int, b int) int <1>
+    return a + b <2>
+}
+----
+<1> Function parameters
+<2> Return statement
+
+=== Multiple Callouts in One Block
+
+[source,bash]
+----
+# Install dependencies <1>
+go mod download
+
+# Run tests <2>
+go test ./...
+
+# Build binary <3>
+go build -o app ./cmd/app
+----
+<1> Downloads all required modules
+<2> Runs all tests in the project
+<3> Creates the executable binary
+
+=== Complex Callout Example
+
+[source,python]
+----
+def calculate(a, b): <1>
+    result = a + b <2>
+    return result <3>
+
+print(calculate(5, 3)) <4>
+----
+<1> Function definition with two parameters
+<2> Addition operation
+<3> Returns the calculated result
+<4> Prints: 8
+
+== Listing Blocks with Attributes
+
+=== Listing with Caption
+
+.Standards-compliant code example
+[source,c]
+----
+#include <stdio.h>
+
+int main(void) {
+    printf("Hello, World!\n");
+    return 0;
+}
+----
+
+== Code in Context
+
+=== Explanation Before Code
+
+Here's how to create a simple HTTP server in Go:
+
+[source,go]
+----
+package main
+
+import "net/http"
+
+func main() {
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        w.Write([]byte("Hello, World!"))
+    })
+    http.ListenAndServe(":8080", nil)
+}
+----
+
+The server listens on port 8080.
+
+=== Code with Notes After
+
+[source,rust]
+----
+fn main() {
+    println!("Hello!");
+}
+----
+
+NOTE: Rust programs must have a `main` function as the entry point.
+
+== Multi-Line Code Examples
+
+=== Configuration File Example
+
+[source,yaml]
+----
+# Application Configuration
+app:
+  name: MyApp
+  version: 1.0.0
+  debug: true
+
+server:
+  host: 0.0.0.0
+  port: 8080
+  timeout: 30s
+
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  name: mydb
+  user: admin
+  password: secret
+----
+
+=== API Response Example
+
+[source,json]
+----
+{
+  "status": "success",
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Alice",
+        "email": "alice@example.com"
+      },
+      {
+        "id": 2,
+        "name": "Bob",
+        "email": "bob@example.com"
+      }
+    ]
+  },
+  "meta": {
+    "page": 1,
+    "per_page": 10,
+    "total": 2
+  }
+}
+----
+
+== Code Block Comparisons
+
+=== Same Code in Different Languages
+
+[source,javascript]
+----
+// JavaScript
+const greet = (name) => {
+    return `Hello, ${name}!`;
+};
+----
+
+[source,typescript]
+----
+// TypeScript
+const greet = (name: string): string => {
+    return `Hello, ${name}!`;
+};
+----
+
+[source,python]
+----
+# Python
+def greet(name: str) -> str:
+    return f"Hello, {name}!"
+----
+
+== Special Cases
+
+=== Code with Special Characters
+
+[source,go]
+----
+func main() {
+    // Special characters: * / + - ?
+    str := "text with *bold* and _italic_"
+    regex := `\w+\s+\w+`
+    fmt.Println(str)
+}
+----
+
+=== Code with Unicode
+
+[source,python]
+----
+# Unicode characters in code
+greeting = "Hello, 世界!"
+emoji = "😀"
+print(greeting, emoji)
+----
+
+=== Inline Code in Prose
+
+Use the `fmt.Println()` function to output text.
+The `main()` function is the entry point.
+Variables are declared with `var` or `:=`.
+
+== Passthrough Blocks
+
+=== Inline Passthrough
+
++++<b>This is raw HTML</b>+++ rendered inline.
+
+=== Block Passthrough
+
+++++
+<div style="color: red;">
+  This is a raw HTML block.
+</div>
+++++
+
+== Summary of Code Block Types
+
+|===
+| Type | Delimiter | Use Case |
+| Listing | `----` | Source code with syntax highlighting |
+| Literal | `....` | Verbatim text, command output |
+| Passthrough | `++++` | Raw output without escaping |
+|===
+
+== Syntax Highlighting Support
+
+Currently supported languages include:
+
+* Go (go, golang)
+* Python (python, py)
+* JavaScript (javascript, js)
+* TypeScript (typescript, ts)
+* Ruby (ruby, rb)
+* Rust (rust, rs)
+* Java (java)
+* C/C++ (c, cpp)
+* Bash (bash, sh)
+* YAML (yaml, yml)
+* JSON (json)
+* XML (xml)
+* HTML (html)
+* CSS (css)
+* SQL (sql)
+* And many more...
+
+== Current Limitations
+
+* Line numbering syntax (`%linenums` or similar) may not be fully supported
+* Some languages may not have perfect syntax highlighting
+* Callout rendering may vary by backend

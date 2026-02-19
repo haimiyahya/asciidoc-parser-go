@@ -1,0 +1,264 @@
+= Admonitions Showcase
+
+This document demonstrates all admonition blocks available in AsciiDoc.
+
+== Basic Admonitions
+
+=== Note
+
+NOTE: This is a note admonition. Notes are used for additional
+information that is helpful but not critical.
+
+=== Tip
+
+TIP: This is a tip admonition. Tips provide helpful suggestions
+or best practices.
+
+=== Warning
+
+WARNING: This is a warning admonition. Warnings alert readers to
+potential issues or problems.
+
+=== Caution
+
+CAUTION: This is a caution admonition. Cautions warn about possible
+damage or data loss.
+
+=== Important
+
+IMPORTANT: This is an important admonition. Important blocks highlight
+critical information that readers should pay attention to.
+
+== Admonitions with Titles
+
+=== Note with Title
+
+[NOTE]
+.Title Here
+This note has a custom title. The title appears in bold above
+the admonition content.
+
+This note can also have multiple paragraphs.
+
+=== Tip with Title
+
+[TIP]
+.Pro Tip
+This is a tip with a custom title.
+It can contain **bold text**, _italic text_, and `code`.
+
+=== Warning with Title
+
+[WARNING]
+.Heads Up!
+This warning has a custom title.
+Pay attention to this content.
+
+=== Caution with Title
+
+[CAUTION]
+.Be Careful!
+This caution block warns about potential issues.
+Proceed with caution.
+
+=== Important with Title
+
+[IMPORTANT]
+.Must Read
+This is important information.
+Don't skip this section.
+
+== Multi-Paragraph Admonitions
+
+=== Note with Multiple Paragraphs
+
+NOTE: This is the first paragraph of the note.
+
+This is the second paragraph. Admonitions can contain
+multiple paragraphs of text.
+
+This is a third paragraph with additional information.
+
+=== Tip with Multiple Paragraphs
+
+TIP: First paragraph introduces the tip.
+
+Second paragraph provides more details about the tip.
+
+Third paragraph summarizes the key point.
+
+== Admonitions with Lists
+
+=== Note with Unordered List
+
+NOTE: Here are some important points:
+
+* First point
+* Second point
+* Third point
+
+=== Warning with Ordered List
+
+WARNING: Follow these steps carefully:
+
+. Step one
+. Step two
+. Step three
+
+=== Tip with Nested Lists
+
+TIP: Consider these options:
+
+* Option A
+** Sub-option A1
+** Sub-option A2
+* Option B
+* Option C
+
+== Admonitions with Code
+
+=== Note with Code Block
+
+NOTE: Here's an example configuration:
+
+----
+[server]
+host = localhost
+port = 8080
+----
+
+=== Important with Literal Block
+
+IMPORTANT: The output will be:
+
+.....
+Raw text output
+that preserves
+spacing
+.....
+
+== Admonitions with Inline Formatting
+
+=== Formatted Admonition
+
+NOTE: This note has **bold text**, _italic text_,
+and `inline code` within it.
+
+=== Complex Formatting
+
+WARNING: The https://example.com[documentation] has more details.
+Use kbd:[Ctrl+F] to search within the page.
+
+== All Admonitions Side by Side
+
+=== Comparison
+
+NOTE: A note for general information.
+
+TIP: A tip for helpful suggestions.
+
+WARNING: A warning for potential issues.
+
+CAUTION: A caution for possible damage.
+
+IMPORTANT: Important information to remember.
+
+== Admonitions in Context
+
+=== Documentation Example
+
+== Installation Guide
+
+NOTE: Make sure you have Go 1.23 or higher installed
+before proceeding.
+
+=== Step 1: Download
+
+TIP: Use the latest release for the best features and bug fixes.
+
+=== Step 2: Build
+
+WARNING: Don't use the `master` branch in production.
+Always use a tagged release.
+
+=== Step 3: Configure
+
+CAUTION: Back up your existing configuration files
+before making changes.
+
+=== Step 4: Run
+
+IMPORTANT: Review the logs after first run to ensure
+everything is working correctly.
+
+== Admonitions with Tables
+
+=== Note Before Table
+
+NOTE: The following table shows the comparison:
+
+|===
+| Feature | Basic | Pro
+| Users | 1 | Unlimited
+| Storage | 1 GB | 100 GB
+| Support | Email | 24/7 Phone
+|===
+
+== Admonitions with Links
+
+NOTE: See link:README.md[README] for more information.
+
+TIP: Check out the https://github.com/asciidoctor/asciidoctor[Asciidoctor documentation].
+
+WARNING: This feature is link:https://github.com/asciidoctor/asciidoctor/issues[tagged as experimental].
+
+== Custom Admonition Styling
+
+=== Block Style Variant
+
+[NOTE]
+--
+This note uses the block style delimiter.
+The content is between the delimiter lines.
+
+It can contain multiple paragraphs and other elements.
+--
+
+== Escaping Admonitions
+
+=== Preventing Admonition Detection
+
+To prevent "NOTE:" from being treated as an admonition,
+use a backslash: \NOTE: This is just regular text.
+
+== Summary of Admonition Types
+
+|===
+| Type | Purpose | Icon |
+| note | General information | ℹ |
+| tip | Helpful suggestions | 💡 |
+| warning | Potential issues | ⚠ |
+| caution | Possible damage | ☡ |
+| important | Critical information | ❗ |
+|===
+
+== Best Practices
+
+=== When to Use Each Type
+
+NOTE: Use notes for additional, non-critical information.
+
+TIP: Use tips for helpful shortcuts or best practices.
+
+WARNING: Use warnings for things that might cause unexpected behavior.
+
+CAUTION: Use cautions when data loss or damage is possible.
+
+IMPORTANT: Use important for must-know information.
+
+=== Writing Effective Admonitions
+
+* **Be concise** - Get to the point quickly
+* **Be specific** - Clearly state what the reader should know
+* **Use sparingly** - Too many admonitions reduce their impact
+* **Match type to content** - Use the right admonition for the situation

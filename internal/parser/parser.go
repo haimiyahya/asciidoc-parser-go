@@ -498,18 +498,15 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 					p.addNestedList(classification, lineno, doc)
 				} else if itemInfo.Level < p.currentListLevel {
 					// Going back up the hierarchy - pop from stack until we find the right level
-					// First, check the type of the item we're coming from
-					fromType := p.currentListBlockType
 					p.popListStackToLevel(itemInfo.Level)
 
 					// After popping, decide how to add the new item:
-					// - If coming from same type, add as sibling in current list
-					// - If coming from different type:
-					//   - If current list has items and we just came from that type, don't add to it
-					//   - Instead, check if the last item has a nested list of our type
+					// - If current list type matches, add as sibling in current list
+					// - If different type:
+					//   - Check if the last item has a nested list of our type
 					// - If so, add to that nested list; otherwise create a new nested list
-					if fromType == itemInfo.Type {
-						// Same type - add as sibling
+					if p.currentListBlockType == itemInfo.Type {
+						// Current list type matches - add as sibling
 						p.addListItemToList(classification, lineno)
 					} else if len(p.currentList.Items) > 0 {
 						// Different type and current list has items

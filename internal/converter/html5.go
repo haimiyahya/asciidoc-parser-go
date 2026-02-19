@@ -1577,9 +1577,13 @@ func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 func (c *HTML5Converter) renderListItemContent(item *ast.NodeListItem, w io.Writer) {
 	fmt.Fprint(w, `<p>`)
 
-	// Check if this is a checklist item (marker is "-" and Checked field is explicitly set)
-	// Checklists use the Checked field on NodeListItem
-	isChecklist := item.Marker == "-"
+	// Check if this is a checklist item by checking if text contains [x] or [ ]
+	// This is a heuristic since the checklist syntax is stripped during parsing
+	isChecklist := item.Marker == "-" && (
+		strings.Contains(item.Text, "[x]") ||
+		strings.Contains(item.Text, "[*]") ||
+		strings.Contains(item.Text, "[ ]") ||
+		strings.Contains(item.Text, "[-]"))
 
 	if isChecklist {
 		checkedAttr := ""

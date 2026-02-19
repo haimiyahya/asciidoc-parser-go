@@ -396,6 +396,7 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
 				strings.HasPrefix(remaining, "pass:[") || // Inline passthrough macro
+				strings.HasPrefix(remaining, "raw:[") || // Raw passthrough macro
 				strings.HasPrefix(remaining, "menu:[") ||
 				strings.HasPrefix(remaining, "btn:[") ||
 				strings.HasPrefix(remaining, "kbd:[") ||
@@ -1335,9 +1336,10 @@ func (p *Parser) tryInlineMacro() (*Node, int) {
 	}
 
 	// Check for pattern: macro:[...]
-	// Valid macros: pass (passthrough), menu, btn, kbd, link (inline image)
+	// Valid macros: pass, raw (passthrough), menu, btn, kbd, link (inline image)
 	validMacros := map[string]NodeType{
-		"pass": NodeRawPassThrough, // pass:[...] passes through content without substitutions
+		"pass": NodePassThrough,     // pass:[...] passes through with substitutions
+		"raw":  NodeRawPassThrough,  // raw:[...] passes through without substitutions
 		"menu": NodeMenu,
 		"btn":  NodeButton,
 		"kbd":  NodeMonospace, // kbd uses monospace styling

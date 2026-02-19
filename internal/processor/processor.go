@@ -119,8 +119,14 @@ func (p *Processor) processBlocks(blocks []ast.Node) {
 
 // processParagraph processes a paragraph for attribute references.
 func (p *Processor) processParagraph(para *ast.NodeParagraph) {
-	// Substitute attributes in the paragraph text
-	para.Text = p.substituteAttributes(para.Text)
+	// Substitute attributes in the paragraph text and track position offsets
+	newText, offsets := p.substituteAttributesWithOffsets(para.Text)
+
+	// Update inline node positions based on text length changes
+	p.adjustInlineNodePositions(para.InlineNodes, offsets)
+
+	// Now do the actual substitution
+	para.Text = newText
 
 	// Substitute attributes in inline nodes
 	p.processInlineNodes(para.InlineNodes)
@@ -322,6 +328,122 @@ func (p *Processor) processInlineNode(node *inline.Node) {
 			for k, v := range node.MacroAttrs {
 				node.MacroAttrs[k] = p.substituteAttributes(v)
 			}
+		}
+	}
+}
+
+// positionOffset represents a change in text position at a specific index.
+type positionOffset struct {
+	index  int   // Position in the original text
+	offset int   // Cumulative offset change at this position
+}
+
+// substituteAttributesWithOffsets substitutes attributes and returns position offsets.
+// This is used to adjust inline node positions after text length changes.
+func (p *Processor) substituteAttributesWithOffsets(text string) (string, []positionOffset) {
+	var offsets []positionOffset
+	currentOffset := 0
+
+	result := p.attributeRefPattern.ReplaceAllStringFunc(text, func(match string) string {
+		// Get the position of this match in the original text
+		matchStart := strings.Index(text[currentOffset:], match)
+		if matchStart == -1 {
+			matchStart = 0
+		} else {
+			matchStart += currentOffset
+		}
+
+		// Extract attribute name (remove braces)
+		attrName := match[1 : len(match)-1]
+		attrName = strings.TrimSpace(attrName)
+
+		var replacement string
+		var originalLenMatch = len(match)
+
+		// Check for special attribute syntax
+		if strings.HasPrefix(attrName, "set:") {
+			// {set:name!} - unset attribute
+			name := strings.TrimPrefix(attrName, "set:")
+			name = strings.TrimSuffix(name, "!")
+			delete(p.attributes, name)
+			if p.document.Attributes != nil {
+				delete(p.document.Attributes, name)
+			}
+			replacement = ""
+		} else if strings.HasSuffix(attrName, "!") {
+			// {name!} - undefined check
+			name := strings.TrimSuffix(attrName, "!")
+			if _, exists := p.getAttribute(name); !exists {
+				replacement = "{undefined}"
+			} else {
+				replacement = ""
+			}
+		} else {
+			// Regular attribute reference
+			if val, exists := p.getAttribute(attrName); exists {
+				replacement = val
+			} else {
+				replacement = ""
+			}
+		}
+
+		// Calculate the length change
+		lenChange := len(replacement) - originalLenMatch
+		currentOffset += lenChange
+
+		// Record the offset at this position
+		if lenChange != 0 {
+			offsets = append(offsets, positionOffset{
+				index:  matchStart + originalLenMatch,
+				offset: currentOffset,
+			})
+		}
+
+		// Update currentOffset for next match search
+		currentOffset = matchStart + len(replacement)
+
+		return replacement
+	})
+
+	return result, offsets
+}
+
+// adjustInlineNodePositions adjusts inline node positions based on text length changes.
+func (p *Processor) adjustInlineNodePositions(nodes []interface{}, offsets []positionOffset) {
+	for _, node := range nodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			p.adjustSingleNodePosition(inlineNode, offsets)
+		}
+	}
+}
+
+// adjustSingleNodePosition adjusts a single inline node's positions.
+func (p *Processor) adjustSingleNodePosition(node *inline.Node, offsets []positionOffset) {
+	// Find the applicable offset for this node's position
+	getOffsetAt := func(pos int) int {
+		cumulative := 0
+		for _, off := range offsets {
+			if pos >= off.index {
+				cumulative = off.offset
+			} else {
+				break
+			}
+		}
+		return cumulative
+	}
+
+	// Adjust StartPos and Position
+	if node.StartPos > 0 {
+		node.StartPos += getOffsetAt(node.StartPos)
+	}
+	if node.Position > 0 {
+		node.Position += getOffsetAt(node.Position)
+	}
+
+	// Recursively adjust child nodes
+	if len(node.Children) > 0 {
+		for _, child := range node.Children {
+			p.adjustSingleNodePosition(child, offsets)
 		}
 	}
 }

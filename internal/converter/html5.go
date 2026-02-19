@@ -1036,8 +1036,8 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		}
 		// Concealed index terms produce no output
 	case inline.NodePassThrough:
-		// Inline passthrough: +text+ - content is passed through with substitutions
-		// Apply special characters substitution only
+		// Inline passthrough: +text+ and pass:[text] - content is passed through with substitutions
+		// HTML IS escaped for security (prevents HTML injection)
 		c.writeRawString(c.escape(node.Text), w)
 	case inline.NodeRawPassThrough:
 		// Raw inline passthrough: +++text+++ - content is passed through WITHOUT any escaping

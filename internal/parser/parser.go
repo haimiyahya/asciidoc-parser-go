@@ -1240,6 +1240,13 @@ func (p *Parser) createStyledBlock(styleBlock *reader.StyleBlockInfo, lineno int
 			Attributes: styleBlock.Attributes,
 			Pos:        ast.Position{Line: lineno},
 		}
+	case "raw":
+		// Raw block is same as passthrough - output content as-is
+		return &ast.PassThroughNode{
+			Content:    styleBlock.Content,
+			Attributes: styleBlock.Attributes,
+			Pos:        ast.Position{Line: lineno},
+		}
 	case "sidebar":
 		return &ast.SidebarNode{
 			Title:      "", // Can be parsed from content if needed

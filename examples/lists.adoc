@@ -254,11 +254,11 @@ o Circle marker item 2
 
 |===
 | List Type | Syntax Marker | Example
-| Unordered | `*` | * Item
-| Ordered | `.` | . Item
-| Labeled | `::` | term:: description
-| Inline | N/A | one, two, three
-| Checklist | `-` | - [x] Done
+| Unordered | `*` | ``* Item``
+| Ordered | `.` | ``. Item``
+| Labeled | `::` | ``term:: description``
+| Inline | N/A | ``one, two, three``
+| Checklist | `-` | ``- [x] Done``
 |===
 
 == Current Limitations

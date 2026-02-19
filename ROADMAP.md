@@ -229,6 +229,30 @@ asciidoctor/test/
 └── template_converter_test.rb   # Converter tests
 ```
 
+## Known Limitations
+
+### Labeled Lists (Description Lists)
+
+**Current Issues:**
+- **Multi-line definitions not supported** - When a definition is on separate lines from the term, it's not associated with the term
+  - **Problem:** `term::\n description` renders as separate paragraph
+  - **Workaround:** Use inline definition: `term:: description`
+  - **Example:**
+    ```asciidoc
+    // Does NOT work correctly:
+    First Term::
+    This is a longer description
+
+    // Works correctly:
+    First Term:: This is a longer description
+    ```
+- **Separate `<dl>` elements** - Each labeled list item renders as its own `<dl>` instead of all items in one combined `<dl>`
+
+**Planned Fix:**
+- Add continuation line support (`+` prefix) for labeled list definitions
+- Group consecutive labeled list items into single `<dl>` element
+- Support multi-paragraph definitions
+
 ## Notes
 
 - Asciidoctor does **NOT** provide an official LSP server ([GitHub Issue #3630](https://github.com/asciidoctor/asciidoctor/issues/3630))

@@ -105,6 +105,12 @@ type Node struct {
 	// Alt is the alt text (for Image nodes).
 	Alt string
 
+	// Width is the image width (for Image nodes).
+	Width string
+
+	// Height is the image height (for Image nodes).
+	Height string
+
 	// Ref is the cross-reference target ID (for CrossRef nodes).
 	Ref string
 
@@ -238,6 +244,24 @@ func (p *Parser) Parse() []*Node {
 			nodes = append(nodes, node)
 			p.pos = newPos
 			continue
+		}
+
+		// Check for links (link: macro or bare URLs) BEFORE inline macros
+		// This ensures that:
+		// 1. link:https://...[text] is parsed as a link (not caught by inline macros)
+		// 2. https://example.com[link=...][] is parsed as a link first,
+		//    and only then is the link text recursively parsed for inline macros
+		remaining := p.text[p.pos:]
+		if (strings.HasPrefix(remaining, "link:") ||
+		   (strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://"))) &&
+		   !strings.HasPrefix(remaining, "link=") {
+			if node, newPos := p.tryLink(); node != nil {
+				p.applyRoles(node, pendingRoles)
+				pendingRoles = nil
+				nodes = append(nodes, node)
+				p.pos = newPos
+				continue
+			}
 		}
 
 		// Check for inline macros (pass:[], menu:[], btn:[], kbd:[])
@@ -491,12 +515,46 @@ func isValidMonospaceStart(text string, i int) bool {
 	return false
 }
 
+// imageAttrs holds parsed image attributes.
+type imageAttrs struct {
+	alt    string
+	width  string
+	height string
+}
+
+// parseImageAttributes parses comma-separated image attributes.
+// Format: alt, width, height
+// Only the alt text is required; width and height are optional.
+func (p *Parser) parseImageAttributes(s string) imageAttrs {
+	attrs := imageAttrs{}
+
+	// Split by comma
+	parts := strings.Split(s, ",")
+
+	// First part is alt text (required)
+	if len(parts) > 0 {
+		attrs.alt = strings.TrimSpace(parts[0])
+	}
+
+	// Second part is width (optional)
+	if len(parts) > 1 {
+		attrs.width = strings.TrimSpace(parts[1])
+	}
+
+	// Third part is height (optional)
+	if len(parts) > 2 {
+		attrs.height = strings.TrimSpace(parts[2])
+	}
+
+	return attrs
+}
+
 // tryImage attempts to parse an inline image at current position.
 // Supports: image:url[alt-text] where alt-text is optional.
 func (p *Parser) tryImage() (*Node, int) {
 	remaining := p.text[p.pos:]
 
-	// Check for image macro: image:url[alt-text]
+	// Check for image macro: image:url[alt-text, width, height]
 	if strings.HasPrefix(remaining, "image:") {
 		// Find the closing ] or end of line
 		closeBracket := strings.Index(remaining, "]")
@@ -518,9 +576,9 @@ func (p *Parser) tryImage() (*Node, int) {
 			}, p.pos + len(url) + 6
 		}
 
-		// Extract image:url[alt-text]
+		// Extract image:url[alt-text, width, height]
 		imageSpec := remaining[6:closeBracket]
-		// Find the [ to split url from alt-text
+		// Find the [ to split url from attributes
 		openBracket := strings.Index(imageSpec, "[")
 		if openBracket == -1 {
 			// No [ found, treat entire spec as URL without alt
@@ -535,25 +593,52 @@ func (p *Parser) tryImage() (*Node, int) {
 			}, p.pos + closeBracket + 1
 		}
 
-		// URL is before [, alt-text is after it
+		// URL is before [, attributes are after it
 		url := strings.TrimRight(imageSpec[:openBracket], " \t\n")
-		alt := imageSpec[openBracket+1:]
+		attrsStr := imageSpec[openBracket+1:]
 
 		if url == "" {
 			return nil, p.pos
 		}
 
+		// Parse attributes: alt, width, height (comma-separated)
+		attrs := p.parseImageAttributes(attrsStr)
+
 		return &Node{
-			Type: NodeImage,
-			URL:  url,
-			Alt:  alt,
-			Text: alt, // Use alt as display text
+			Type:   NodeImage,
+			URL:    url,
+			Alt:    attrs.alt,
+			Width:  attrs.width,
+			Height: attrs.height,
+			Text:   attrs.alt, // Use alt as display text
 			StartPos: p.pos,
 			Position: p.pos + closeBracket + 1,
 		}, p.pos + closeBracket + 1
 	}
 
 	return nil, p.pos
+}
+
+// findMatchingBracket finds the position of the closing bracket that matches
+// the opening bracket at the given start position in the string.
+// It handles nested brackets correctly.
+// Returns the position of the closing bracket, or -1 if not found.
+func findMatchingBracket(s string, startBracketPos int) int {
+	if startBracketPos >= len(s) || s[startBracketPos] != '[' {
+		return -1
+	}
+	depth := 0
+	for i := startBracketPos; i < len(s); i++ {
+		if s[i] == '[' {
+			depth++
+		} else if s[i] == ']' {
+			depth--
+			if depth == 0 {
+				return i
+			}
+		}
+	}
+	return -1
 }
 
 // tryLink attempts to parse a link at the current position.
@@ -563,21 +648,26 @@ func (p *Parser) tryLink() (*Node, int) {
 
 	// Check for macro link: link:url[text, attrs...]
 	if strings.HasPrefix(remaining, "link:") {
-		// Find the closing ]
-		closeBracket := strings.Index(remaining, "]")
+		// Find the [ that starts the link text
+		openBracket := strings.Index(remaining, "[")
+		if openBracket == -1 {
+			return nil, p.pos
+		}
+		// Find the matching closing ] (handles nested brackets)
+		closeBracket := findMatchingBracket(remaining, openBracket)
 		if closeBracket == -1 {
 			return nil, p.pos
 		}
 		// Extract link:url[text, attrs...]
 		linkSpec := remaining[5:closeBracket]
-		// Find the [ to split url from text
-		openBracket := strings.Index(linkSpec, "[")
-		if openBracket == -1 {
+		// Find the [ to split url from text (relative to linkSpec)
+		openBracketInSpec := strings.Index(linkSpec, "[")
+		if openBracketInSpec == -1 {
 			return nil, p.pos
 		}
 		// url is before [, text+attrs are after it
-		url := linkSpec[:openBracket]
-		textAndAttrs := linkSpec[openBracket+1 : len(linkSpec)]
+		url := linkSpec[:openBracketInSpec]
+		textAndAttrs := linkSpec[openBracketInSpec+1 : len(linkSpec)]
 
 		// Parse text and attributes
 		// Format: text, attr1=value1, attr2=value2, ...
@@ -611,11 +701,15 @@ func (p *Parser) tryLink() (*Node, int) {
 			return nil, p.pos
 		}
 
+		// Parse the link text for inline macros (e.g., link:[url])
+		children := NewParser(text).Parse()
+
 		return &Node{
 			Type:       NodeLink,
 			Text:       text,
 			URL:        url,
 			Attributes: attrs,
+			Children:   children,
 			StartPos:   p.pos,
 			Position:   p.pos + closeBracket + 1,
 		}, p.pos + closeBracket + 1
@@ -623,7 +717,9 @@ func (p *Parser) tryLink() (*Node, int) {
 
 	// Check for bare URL
 	// Simple heuristic: starts with http:// or https://
-	if strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://") {
+	// Exclude inline image macro: link=https://...
+	if (strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://")) &&
+	   !strings.HasPrefix(remaining, "link=") {
 		// First, check if there's a [text] syntax after the URL
 		// Syntax: https://example.com[custom text] or https://example.com[custom text, attrs...]
 		openBracket := strings.Index(remaining, "[")
@@ -632,10 +728,11 @@ func (p *Parser) tryLink() (*Node, int) {
 			urlPart := remaining[:openBracket]
 			// URL must be at least 10 chars and not contain spaces
 			if len(urlPart) >= 10 && !strings.Contains(urlPart, " ") {
-				closeBracket := strings.Index(remaining[openBracket:], "]")
+				// Find the matching closing ] (handles nested brackets)
+				closeBracket := findMatchingBracket(remaining, openBracket)
 				if closeBracket != -1 {
 					// Parse text and attributes from [text, attrs...]
-					textAndAttrs := remaining[openBracket+1 : openBracket+closeBracket]
+					textAndAttrs := remaining[openBracket+1 : closeBracket]
 					text := textAndAttrs
 					attrs := make(map[string]string)
 
@@ -659,14 +756,18 @@ func (p *Parser) tryLink() (*Node, int) {
 						}
 					}
 
+					// Parse the link text for inline macros (e.g., link:[url])
+					children := NewParser(text).Parse()
+
 					return &Node{
 						Type:       NodeLink,
 						Text:       text,
 						URL:        urlPart,
 						Attributes: attrs,
+						Children:   children,
 						StartPos:   p.pos,
-						Position:   p.pos + openBracket + closeBracket + 1,
-					}, p.pos + openBracket + closeBracket + 1
+						Position:   p.pos + closeBracket + 1,
+					}, p.pos + closeBracket + 1
 				}
 			}
 		}
@@ -1224,7 +1325,7 @@ func DebugTestInline() {
 
 
 // tryInlineMacro tries to parse inline macros of the form macro:[content].
-// Handles: pass:[content], menu:[path], btn:[label], kbd:[key]
+// Handles: pass:[content], menu:[path], btn:[label], kbd:[key], link:[url] (inline image)
 func (p *Parser) tryInlineMacro() (*Node, int) {
 	s := p.text[p.pos:]
 
@@ -1234,12 +1335,13 @@ func (p *Parser) tryInlineMacro() (*Node, int) {
 	}
 
 	// Check for pattern: macro:[...]
-	// Valid macros: pass (passthrough), menu, btn, kbd
+	// Valid macros: pass (passthrough), menu, btn, kbd, link (inline image)
 	validMacros := map[string]NodeType{
 		"pass": NodeRawPassThrough, // pass:[...] passes through content without substitutions
 		"menu": NodeMenu,
 		"btn":  NodeButton,
 		"kbd":  NodeMonospace, // kbd uses monospace styling
+		"link": NodeImage,      // link:[url] is inline image syntax
 	}
 
 	for macroName, nodeType := range validMacros {
@@ -1258,12 +1360,62 @@ func (p *Parser) tryInlineMacro() (*Node, int) {
 		content := s[len(prefix):len(prefix)+closeIndex]
 		endPos := p.pos + len(prefix) + closeIndex + 1
 
+		// For link:[url], create an image node
+		if macroName == "link" {
+			return &Node{
+				Type:     NodeImage,
+				URL:      content,
+				Alt:      "",
+				Text:     "",
+				StartPos: p.pos,
+				Position: endPos,
+			}, endPos
+		}
+
 		return &Node{
 			Type:     nodeType,
 			Text:     content,
 			StartPos: p.pos,
 			Position: endPos,
 		}, endPos
+	}
+
+	// Check for inline image macro: link=path[] or link=path[alt]
+	// This is the inline image syntax (e.g., link=https://example.com/image.png[])
+	if strings.HasPrefix(s, "link=") {
+		// Find the FIRST [ after link= - this marks the start of alt text
+		openBracket := strings.Index(s[5:], "[")
+		if openBracket != -1 {
+			// Path is everything between link= and the [
+			imageURL := s[5 : 5+openBracket]
+			// Find the closing ] for the alt text
+			altText := s[5+openBracket+1:]
+			closeBracket := strings.Index(altText, "]")
+			if closeBracket != -1 {
+				alt := altText[:closeBracket]
+				endPos := p.pos + 5 + openBracket + 1 + closeBracket + 1
+
+				return &Node{
+					Type:     NodeImage,
+					URL:      imageURL,
+					Alt:      alt,
+					Text:     alt,
+					StartPos: p.pos,
+					Position: endPos,
+				}, endPos
+			} else {
+				// No closing bracket found, treat entire rest as URL
+				endPos := len(s)
+				return &Node{
+					Type:     NodeImage,
+					URL:      imageURL,
+					Alt:      "",
+					Text:     "",
+					StartPos: p.pos,
+					Position: endPos,
+				}, endPos
+			}
+		}
 	}
 
 	return nil, p.pos

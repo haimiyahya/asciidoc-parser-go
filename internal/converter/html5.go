@@ -971,13 +971,22 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 		if alt == "" {
 			alt = node.Text
 		}
+		// Build width and height attributes
+		widthAttr := ""
+		heightAttr := ""
+		if node.Width != "" {
+			widthAttr = fmt.Sprintf(` width="%s"`, node.Width)
+		}
+		if node.Height != "" {
+			heightAttr = fmt.Sprintf(` height="%s"`, node.Height)
+		}
 		// Wrap in span class="image" (Asciidoctor compatibility)
 		fmt.Fprint(w, `<span class="image">`)
 		class := c.getClassAttr(node.Roles)
 		if class != "" {
-			fmt.Fprintf(w, `<img src="%s" alt="%s" class="%s">`, c.escape(node.URL), c.escape(alt), class)
+			fmt.Fprintf(w, `<img src="%s" alt="%s" class="%s"%s%s>`, c.escape(node.URL), c.escape(alt), class, widthAttr, heightAttr)
 		} else {
-			fmt.Fprintf(w, `<img src="%s" alt="%s">`, c.escape(node.URL), c.escape(alt))
+			fmt.Fprintf(w, `<img src="%s" alt="%s"%s%s>`, c.escape(node.URL), c.escape(alt), widthAttr, heightAttr)
 		}
 		fmt.Fprint(w, `</span>`)
 	case inline.NodeCrossRef:

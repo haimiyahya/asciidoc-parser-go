@@ -444,10 +444,11 @@ This is an important admonition. Important blocks highlight critical information
 </div>
 </section>
 <section class="sect1">
-<h2 id="_multi_paragraph_admonitions">Multi-Paragraph Admonitions</h2>
+<h2 id="_multi_line_admonitions">Multi-Line Admonitions</h2>
 <div class="sectionbody">
-<section class="sect2">
-<h3 id="_note_with_multiple_paragraphs">Note with Multiple Paragraphs</h3>
+<div class="paragraph">
+<p>Admonitions can span multiple lines. The text continues until a blank line or different block type is encountered.</p>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -455,20 +456,11 @@ This is an important admonition. Important blocks highlight critical information
 <div class="title">Note</div>
 </td>
 <td class="content">
-This is the first paragraph of the note.
+This is the first line of the note. This is the second line that continues the note. This is the third line with more information.
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>This is the second paragraph. Admonitions can contain multiple paragraphs of text.</p>
-</div>
-<div class="paragraph">
-<p>This is a third paragraph with additional information.</p>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_tip_with_multiple_paragraphs">Tip with Multiple Paragraphs</h3>
 <div class="admonitionblock tip">
 <table>
 <tr>
@@ -476,53 +468,11 @@ This is the first paragraph of the note.
 <div class="title">Tip</div>
 </td>
 <td class="content">
-First paragraph introduces the tip.
+First line of the tip. Second line with additional details. Third line summarizing the point.
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>Second paragraph provides more details about the tip.</p>
-</div>
-<div class="paragraph">
-<p>Third paragraph summarizes the key point.</p>
-</div>
-</section>
-</div>
-</section>
-<section class="sect1">
-<h2 id="_admonitions_with_lists">Admonitions with Lists</h2>
-<div class="sectionbody">
-<section class="sect2">
-<h3 id="_note_with_unordered_list">Note with Unordered List</h3>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-Here are some important points:
-</td>
-</tr>
-</table>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>First point</p>
-</li>
-<li>
-<p>Second point</p>
-</li>
-<li>
-<p>Third point</p>
-</li>
-</ul>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_warning_with_ordered_list">Warning with Ordered List</h3>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -530,112 +480,11 @@ Here are some important points:
 <div class="title">Warning</div>
 </td>
 <td class="content">
-Follow these steps carefully:
+This warning spans multiple lines. Each line is accumulated into the warning text. The warning ends at the blank line below.
 </td>
 </tr>
 </table>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Step one</p>
-</li>
-<li>
-<p>Step two</p>
-</li>
-<li>
-<p>Step three</p>
-</li>
-</ol>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_tip_with_nested_lists">Tip with Nested Lists</h3>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">
-Consider these options:
-</td>
-</tr>
-</table>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Option A</p>
-<div class="ulist">
-<ul>
-<li>
-<p>Sub-option A1</p>
-</li>
-<li>
-<p>Sub-option A2</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>Option B</p>
-</li>
-<li>
-<p>Option C</p>
-</li>
-</ul>
-</div>
-</section>
-</div>
-</section>
-<section class="sect1">
-<h2 id="_admonitions_with_code">Admonitions with Code</h2>
-<div class="sectionbody">
-<section class="sect2">
-<h3 id="_note_with_code_block">Note with Code Block</h3>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-Here&#39;s an example configuration:
-</td>
-</tr>
-</table>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>[server]
-host = localhost
-port = 8080</pre>
-</div>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_important_with_literal_block">Important with Literal Block</h3>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Important</div>
-</td>
-<td class="content">
-The output will be:
-</td>
-</tr>
-</table>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>Raw text output
-that preserves
-spacing</pre>
-</div>
-</div>
-</section>
 </div>
 </section>
 <section class="sect1">
@@ -666,6 +515,21 @@ This note has **bold text**, _italic text_, and `inline code` within it.
 </td>
 <td class="content">
 The https://example.com[documentation] has more details. Use kbd:[Ctrl+F] to search within the page.
+</td>
+</tr>
+</table>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_links_and_ui_elements">Links and UI Elements</h3>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Click the btn:[Save] button or press kbd:[Ctrl+S] to save your work. See menu:File[Save As] for more options.
 </td>
 </tr>
 </table>
@@ -739,6 +603,71 @@ Important information to remember.
 </table>
 </div>
 </section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_short_admonitions">Short Admonitions</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Quick note.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+Quick tip.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+Quick warning.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Caution</div>
+</td>
+<td class="content">
+Be careful!
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+Remember this!
+</td>
+</tr>
+</table>
+</div>
 </div>
 </section>
 <section class="sect1">
@@ -824,165 +753,6 @@ Review the logs after first run to ensure everything is working correctly.
 </table>
 </div>
 </section>
-</div>
-</section>
-<section class="sect1">
-<h2 id="_admonitions_with_tables">Admonitions with Tables</h2>
-<div class="sectionbody">
-<section class="sect2">
-<h3 id="_note_before_table">Note Before Table</h3>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-The following table shows the comparison:
-</td>
-</tr>
-</table>
-</div>
-    <table class="tableblock frame-all grid-all stretch">
-    <colgroup>
-      <col style="width: 33.3333%;">
-      <col style="width: 33.3333%;">
-      <col style="width: 33.3334%;">
-    </colgroup>
-    <tbody>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Feature</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Basic</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Pro</p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Users</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Unlimited</p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Storage</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">1 GB</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">100 GB</p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Support</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Email</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">24/7 Phone</p></td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-</div>
-</section>
-<section class="sect1">
-<h2 id="_admonitions_with_links">Admonitions with Links</h2>
-<div class="sectionbody">
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-See link:README.md[README] for more information.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">
-Check out the https://github.com/asciidoctor/asciidoctor[Asciidoctor documentation].
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Warning</div>
-</td>
-<td class="content">
-This feature is link:https://github.com/asciidoctor/asciidoctor/issues[tagged as experimental].
-</td>
-</tr>
-</table>
-</div>
-</div>
-</section>
-<section class="sect1">
-<h2 id="_custom_admonition_styling">Custom Admonition Styling</h2>
-<div class="sectionbody">
-<section class="sect2">
-<h3 id="_block_style_variant">Block Style Variant</h3>
-<div class="paragraph">
-<p>-- This note uses the block style delimiter. The content is between the delimiter lines.</p>
-</div>
-<div class="paragraph">
-<p>It can contain multiple paragraphs and other elements. --</p>
-</div>
-</section>
-</div>
-</section>
-<section class="sect1">
-<h2 id="_escaping_admonitions">Escaping Admonitions</h2>
-<div class="sectionbody">
-<section class="sect2">
-<h3 id="_preventing_admonition_detection">Preventing Admonition Detection</h3>
-<div class="paragraph">
-<p>To prevent &#34;NOTE:&#34; from being treated as an admonition, use a backslash: \NOTE: This is just regular text.</p>
-</div>
-</section>
-</div>
-</section>
-<section class="sect1">
-<h2 id="_summary_of_admonition_types">Summary of Admonition Types</h2>
-<div class="sectionbody">
-  <table class="tableblock frame-all grid-all stretch">
-  <colgroup>
-    <col style="width: 33.3333%;">
-    <col style="width: 33.3333%;">
-    <col style="width: 33.3334%;">
-  </colgroup>
-  <tbody>
-    <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Type</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Purpose</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Icon</p></td>
-    </tr>
-    <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">note</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">General information</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">ℹ</p></td>
-    </tr>
-    <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">tip</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Helpful suggestions</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">💡</p></td>
-    </tr>
-    <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">warning</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Potential issues</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">⚠</p></td>
-    </tr>
-    <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">caution</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Possible damage</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">☡</p></td>
-    </tr>
-    <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">important</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Critical information</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">❗</p></td>
-    </tr>
-  </tbody>
-</table>
 </div>
 </section>
 <section class="sect1">
@@ -1073,12 +843,66 @@ Use important for must-know information.
 </div>
 </section>
 <section class="sect1">
+<h2 id="_summary_of_admonition_types">Summary of Admonition Types</h2>
+<div class="sectionbody">
+    <table class="tableblock frame-all grid-all stretch">
+    <colgroup>
+      <col style="width: 25%;">
+      <col style="width: 25%;">
+      <col style="width: 25%;">
+      <col style="width: 25%;">
+    </colgroup>
+    <tbody>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Type</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Keyword</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Purpose</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Icon</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">note</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">NOTE:</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">General information</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">ℹ</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">tip</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">TIP:</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Helpful suggestions</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">💡</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">warning</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">WARNING:</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Potential issues</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">⚠</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">caution</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">CAUTION:</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Possible damage</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">☡</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">important</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">IMPORTANT:</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Critical information</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">❗</p></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</section>
+<section class="sect1">
 <h2 id="_current_limitations">Current Limitations</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>The following features are not yet fully supported:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
-<p>Block-style admonitions (<code>[NOTE]</code> above content) are not yet supported</p>
+<p>Block-style admonitions (<code>[NOTE]</code> above content)</p>
 <div class="ulist">
 <ul>
 <li>
@@ -1088,15 +912,21 @@ Use important for must-know information.
 </div>
 </li>
 <li>
-<p>Admonitions with custom titles (<code>.Title</code> in block style) are not yet supported</p>
+<p>Admonitions with custom titles (<code>.Title</code> in block style)</p>
 </li>
 <li>
-<p>Multi-paragraph admonitions are partially supported (second paragraph appears separately)</p>
+<p>Lists within admonitions (lists render as separate blocks after the admonition)</p>
 </li>
 <li>
-<p>Lists within admonitions render as separate blocks after the admonition</p>
+<p>Code blocks within admonitions (code blocks render separately)</p>
+</li>
+<li>
+<p>Multi-paragraph admonitions with blank lines (each paragraph renders separately)</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>If you need these features, consider using regular paragraphs with inline formatting or separating the content into adjacent blocks.</p>
 </div>
 </div>
 </section>

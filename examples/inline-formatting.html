@@ -375,7 +375,7 @@ em, i {
 <p><strong>Bold text</strong> and <em>bold text</em></p>
 </div>
 <div class="paragraph">
-<p><strong>*Bold italic</strong>* and <em>_bold italic</em>_</p>
+<p><strong><em>Bold italic</em></strong> and <strong><em>bold italic</em></strong></p>
 </div>
 <div class="paragraph">
 <p><code>Monospace text</code> and monospace text</p>
@@ -409,7 +409,7 @@ em, i {
 <p>Visit <a href="https://asciidoc.org" class="bare">https://asciidoc.org</a> for more information.</p>
 </div>
 <div class="paragraph">
-<p><a href="https://github.com[GitHub" class="bare">https://github.com[GitHub</a>] or <a href="https://asciidoc.org[AsciiDoc" class="bare">https://asciidoc.org[AsciiDoc</a>, window=_blank]</p>
+<p><a href="https://github.com">GitHub</a> or <a href="https://asciidoc.org" target="_blank" rel="noopener">AsciiDoc</a></p>
 </div>
 </section>
 <section class="sect2">
@@ -470,19 +470,19 @@ em, i {
 <h2 id="_character_replacement">Character Replacement</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>(C) 2026, (TM) symbol, (R) registered</p>
+<p>© 2026, ™ symbol, ® registered</p>
 </div>
 <div class="paragraph">
-<p>-&gt; &lt;- -&gt; =&gt; &lt;= &lt;=&gt;</p>
+<p>→ ← → ⇒ ⇐ ⇔</p>
 </div>
 <div class="paragraph">
-<p>Well... that was unexpected.</p>
+<p>Well… that was unexpected.</p>
 </div>
 <div class="paragraph">
 <p><code>&#39;single quotes</code>&#39; and `&#34;double quotes&#34;&#34;</p>
 </div>
 <div class="paragraph">
-<p>It&#39;s -- a short dash, and --- a long em-dash.</p>
+<p>It&#39;s – a short dash, and — a long em-dash.</p>
 </div>
 </div>
 </section>
@@ -493,7 +493,7 @@ em, i {
 <p><span class="image"><img src="https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png" alt="AsciiDoc logo, 24, 24"></span></p>
 </div>
 <div class="paragraph">
-<p><a href="https://github.com[link=https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png[" class="bare">https://github.com[link=https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png[</a>]]</p>
+<p><a href="https://github.com">link=https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png[</a>]</p>
 </div>
 </div>
 </section>
@@ -537,7 +537,7 @@ em, i {
 <p>This is <code>inline code</code> within a sentence.</p>
 </div>
 <div class="paragraph">
-<p>Visit <a href="https://example.com[our" class="bare">https://example.com[our</a> website] for more info.</p>
+<p>Visit <a href="https://example.com">our website</a> for more info.</p>
 </div>
 <div class="paragraph">
 <p>Press <code>Enter</code> to continue or click <b class="button">Submit</b>.</p>
@@ -555,7 +555,7 @@ em, i {
 <p><strong>Bold</strong> item with <em>italic</em> and <code>code</code></p>
 </li>
 <li>
-<p>Normal item with <a href="https://example.com[a" class="bare">https://example.com[a</a> link]</p>
+<p>Normal item with <a href="https://example.com">a link</a></p>
 </li>
 <li>
 <p><code>Ctrl+N</code> for new file</p>
@@ -595,7 +595,7 @@ em, i {
       <tr>
         <td class="tableblock halign-left valign-top"><p class="tableblock">Link</p></td>
         <td class="tableblock halign-left valign-top"><p class="tableblock"><code>link:url[text]</code></p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://example.com[Example" class="bare">https://example.com[Example</a>]</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://example.com">Example</a></p></td>
       </tr>
     </tbody>
   </table>
@@ -638,7 +638,7 @@ em, i {
     <tr>
       <td class="tableblock halign-left valign-top"><p class="tableblock">Bold Italic</p></td>
       <td class="tableblock halign-left valign-top"><p class="tableblock"><code>***text***</code></p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>*bold italic</strong>*</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock"><strong><em>bold italic</em></strong></p></td>
     </tr>
     <tr>
       <td class="tableblock halign-left valign-top"><p class="tableblock">Monospace</p></td>

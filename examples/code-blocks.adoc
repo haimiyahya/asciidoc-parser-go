@@ -416,5 +416,4 @@ Currently supported languages include:
 == Current Limitations
 
 * Line numbering syntax (`linenums` option) is not supported
-* Callout markers (`<1>`, `<2>`) are not rendered in code - they appear in a list below the code block instead
 * Some languages may not have perfect syntax highlighting

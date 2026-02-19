@@ -579,14 +579,14 @@ PASS</pre>
       <div class="title">Go</div>
       <div class="content">
         <pre class="highlight"><code class="language-go chroma" data-lang="go">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">b</span><span class="w">
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="err">①</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="err">②</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
       </div>
     </div>
     <div class="colist arabic">
-      <div class="li"><b class="conum" data-value="1"></b> <span>Function parameters</span></div>
-      <div class="li"><b class="conum" data-value="2"></b> <span>Return statement</span></div>
+      <div class="li">① <span>Function parameters</span></div>
+      <div class="li">② <span>Return statement</span></div>
     </div>
 </section>
 <section class="sect2">
@@ -595,20 +595,20 @@ PASS</pre>
       <div class="title">Bash</div>
       <div class="content">
         <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Install dependencies</span>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Install dependencies ①</span>
 </span></span><span class="line"><span class="cl">go mod download
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Run tests</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Run tests ②</span>
 </span></span><span class="line"><span class="cl">go <span class="nb">test</span> ./...
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1"># Build binary</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Build binary ③</span>
 </span></span><span class="line"><span class="cl">go build -o app ./cmd/app</span></span></code></pre></code></pre>
       </div>
     </div>
     <div class="colist arabic">
-      <div class="li"><b class="conum" data-value="1"></b> <span>Downloads all required modules</span></div>
-      <div class="li"><b class="conum" data-value="2"></b> <span>Runs all tests in the project</span></div>
-      <div class="li"><b class="conum" data-value="3"></b> <span>Creates the executable binary</span></div>
+      <div class="li">① <span>Downloads all required modules</span></div>
+      <div class="li">② <span>Runs all tests in the project</span></div>
+      <div class="li">③ <span>Creates the executable binary</span></div>
     </div>
 </section>
 <section class="sect2">
@@ -617,18 +617,18 @@ PASS</pre>
       <div class="title">Python</div>
       <div class="content">
         <pre class="highlight"><code class="language-python chroma" data-lang="python">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="p">:</span>
-</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span>
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="p">:</span> <span class="err">①</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="err">②</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span> <span class="err">③</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">calculate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="p">)</span></span></span></code></pre></code></pre>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">calculate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="p">)</span> <span class="err">④</span></span></span></code></pre></code></pre>
       </div>
     </div>
     <div class="colist arabic">
-      <div class="li"><b class="conum" data-value="1"></b> <span>Function definition with two parameters</span></div>
-      <div class="li"><b class="conum" data-value="2"></b> <span>Addition operation</span></div>
-      <div class="li"><b class="conum" data-value="3"></b> <span>Returns the calculated result</span></div>
-      <div class="li"><b class="conum" data-value="4"></b> <span>Prints: 8</span></div>
+      <div class="li">① <span>Function definition with two parameters</span></div>
+      <div class="li">② <span>Addition operation</span></div>
+      <div class="li">③ <span>Returns the calculated result</span></div>
+      <div class="li">④ <span>Prints: 8</span></div>
     </div>
 </section>
 </div>
@@ -967,9 +967,6 @@ PASS</pre>
 <ul>
 <li>
 <p>Line numbering syntax (<code>linenums</code> option) is not supported</p>
-</li>
-<li>
-<p>Callout markers (<code>&lt;1&gt;</code>, <code>&lt;2&gt;</code>) are not rendered in code - they appear in a list below the code block instead</p>
 </li>
 <li>
 <p>Some languages may not have perfect syntax highlighting</p>

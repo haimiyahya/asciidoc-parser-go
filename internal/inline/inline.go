@@ -24,6 +24,9 @@ const (
 	// NodeItalic is italic text (__italic__ or _italic_ on single words).
 	NodeItalic
 
+	// NodeBoldItalic is bold+italic text (***bold italic*** or ___bold italic___).
+	NodeBoldItalic
+
 	// NodeMonospace is monospace text (`text` with backticks).
 	NodeMonospace
 
@@ -256,6 +259,15 @@ func (p *Parser) Parse() []*Node {
 		}
 
 		if node, newPos := p.tryLink(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		// Check for bold+italic before bold or italic (***text*** before **text**)
+		if node, newPos := p.tryBoldItalic(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
 			nodes = append(nodes, node)
@@ -612,6 +624,53 @@ func (p *Parser) tryLink() (*Node, int) {
 	// Check for bare URL
 	// Simple heuristic: starts with http:// or https://
 	if strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://") {
+		// First, check if there's a [text] syntax after the URL
+		// Syntax: https://example.com[custom text] or https://example.com[custom text, attrs...]
+		openBracket := strings.Index(remaining, "[")
+		if openBracket != -1 {
+			// Check if [ comes right after the URL (no space between)
+			urlPart := remaining[:openBracket]
+			// URL must be at least 10 chars and not contain spaces
+			if len(urlPart) >= 10 && !strings.Contains(urlPart, " ") {
+				closeBracket := strings.Index(remaining[openBracket:], "]")
+				if closeBracket != -1 {
+					// Parse text and attributes from [text, attrs...]
+					textAndAttrs := remaining[openBracket+1 : openBracket+closeBracket]
+					text := textAndAttrs
+					attrs := make(map[string]string)
+
+					// Check if there are attributes (comma followed by space and attribute)
+					commaIdx := strings.Index(textAndAttrs, ", ")
+					if commaIdx != -1 {
+						text = textAndAttrs[:commaIdx]
+						attrStr := textAndAttrs[commaIdx+2:]
+
+						// Parse attributes: window="_blank", rel="noopener"
+						attrParts := strings.Split(attrStr, ", ")
+						for _, attr := range attrParts {
+							if eqIdx := strings.Index(attr, "="); eqIdx != -1 {
+								key := strings.TrimSpace(attr[:eqIdx])
+								val := attr[eqIdx+1:]
+								if len(val) >= 2 && (val[0] == '"' || val[0] == '\'') {
+									val = val[1 : len(val)-1]
+								}
+								attrs[key] = val
+							}
+						}
+					}
+
+					return &Node{
+						Type:       NodeLink,
+						Text:       text,
+						URL:        urlPart,
+						Attributes: attrs,
+						StartPos:   p.pos,
+						Position:   p.pos + openBracket + closeBracket + 1,
+					}, p.pos + openBracket + closeBracket + 1
+				}
+			}
+		}
+
 		// Find the end of the URL (stop at space or punctuation)
 		// Note: periods are valid in URLs (domain names), but trailing periods should be excluded
 		end := len(remaining)
@@ -637,6 +696,47 @@ func (p *Parser) tryLink() (*Node, int) {
 			StartPos: p.pos,
 			Position: p.pos + end,
 		}, p.pos + end
+	}
+
+	return nil, p.pos
+}
+
+// tryBoldItalic attempts to parse bold+italic text: ***bold italic*** or ___bold italic___.
+func (p *Parser) tryBoldItalic() (*Node, int) {
+	remaining := p.text[p.pos:]
+
+	// Check for ***bold italic***
+	if strings.HasPrefix(remaining, "***") {
+		closeIndex := strings.Index(remaining[3:], "***")
+		if closeIndex != -1 && closeIndex > 0 {
+			text := remaining[3 : closeIndex+3]
+			// Recursively parse inner content for nested inline markup
+			children := NewParser(text).Parse()
+			return &Node{
+				Type:     NodeBoldItalic,
+				Text:     text,
+				Children: children,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 6,
+			}, p.pos + closeIndex + 6
+		}
+	}
+
+	// Check for ___bold italic___
+	if strings.HasPrefix(remaining, "___") {
+		closeIndex := strings.Index(remaining[3:], "___")
+		if closeIndex != -1 && closeIndex > 0 {
+			text := remaining[3 : closeIndex+3]
+			// Recursively parse inner content for nested inline markup
+			children := NewParser(text).Parse()
+			return &Node{
+				Type:     NodeBoldItalic,
+				Text:     text,
+				Children: children,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 6,
+			}, p.pos + closeIndex + 6
+		}
 	}
 
 	return nil, p.pos

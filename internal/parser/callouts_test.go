@@ -252,10 +252,9 @@ line two # <2>
 
 	html := buf.String()
 
-	// Check that callout markers are present
-	assert.Contains(t, html, `class="conum"`)
-	assert.Contains(t, html, `data-value="1"`)
-	assert.Contains(t, html, `data-value="2"`)
+	// Check that callout markers are present (Unicode circled numbers)
+	assert.Contains(t, html, "①")
+	assert.Contains(t, html, "②")
 
 	// Check that descriptions are present
 	assert.Contains(t, html, "First description")

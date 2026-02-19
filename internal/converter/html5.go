@@ -63,6 +63,54 @@ func (c *HTML5Converter) escape(s string) string {
 	return htmlstd.EscapeString(s)
 }
 
+// replaceSpecialChars replaces AsciiDoc special characters with their Unicode equivalents.
+// This handles replacements like (C) -> ©, (TM) -> ™, (R) -> ®, etc.
+// Using Unicode characters directly so they work correctly with HTML escaping.
+// NOTE: Order matters! Longer patterns must be checked before shorter ones.
+func (c *HTML5Converter) replaceSpecialChars(s string) string {
+	// Order matters for some replacements - check longer patterns first
+	replacements := []struct {
+		from string
+		to   string
+	}{
+		// Copyright, trademark, registered
+		{"(C)", "©"},
+		{"(c)", "©"},
+		{"(TM)", "™"},
+		{"(tm)", "™"},
+		{"(R)", "®"},
+		{"(r)", "®"},
+
+		// Arrows - longer patterns first
+		{"<=>", "⇔"},
+		{"->", "→"},
+		{"<-", "←"},
+		{"=>", "⇒"},
+		{"<=", "⇐"},
+		{"->>", "⇥"},
+
+		// Ellipsis (three dots)
+		{"...", "…"},
+
+		// Dashes - longer patterns first
+		{"---", "—"}, // em dash
+		{"--", "–"},  // en dash
+
+		// Single quotes (curly apostrophes/quotes)
+		// This is a simplified version - Asciidoctor has more sophisticated quote handling
+		{"'", "'"},
+
+		// Double quotes (curly quotes)
+		{"\"", "\""}, // Note: Asciidoctor does contextual curly quotes
+	}
+
+	result := s
+	for _, repl := range replacements {
+		result = strings.ReplaceAll(result, repl.from, repl.to)
+	}
+	return result
+}
+
 // writeCSS writes CSS styles to the output.
 func (c *HTML5Converter) writeCSS(w io.Writer) {
 	css := `
@@ -439,14 +487,45 @@ func (c *HTML5Converter) convertSourceBlock(block *ast.StyledBlockNode, w io.Wri
 		return
 	}
 
+	// Build a map of line indices to callout numbers
+	// The parser has already extracted callout markers (<1>, <2>, etc.) from the source
+	// and stored them in block.Callouts. We need to add them back as Unicode circled numbers.
+	calloutMarkers := make(map[int][]string) // line index -> list of Unicode markers
+	unicodeCallouts := []string{"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲", "⑳"}
+
+	for _, co := range block.Callouts {
+		if co.LineIndex >= 0 && co.LineIndex < len(lines) {
+			// Get the Unicode marker for this callout number
+			marker := ""
+			if co.Number <= len(unicodeCallouts) {
+				marker = unicodeCallouts[co.Number-1]
+			} else {
+				// For numbers beyond our preset, use the number in parentheses
+				marker = fmt.Sprintf("<b>%d</b>", co.Number)
+			}
+			calloutMarkers[co.LineIndex] = append(calloutMarkers[co.LineIndex], marker)
+		}
+	}
+
+	// Append callout markers to the appropriate lines
+	processedLines := make([]string, len(lines))
+	for i, line := range lines {
+		processedLine := line
+		if markers, hasCallouts := calloutMarkers[i]; hasCallouts {
+			// Append all callout markers for this line at the end
+			processedLine = line + " " + strings.Join(markers, " ")
+		}
+		processedLines[i] = processedLine
+	}
+	content := strings.Join(processedLines, "\n")
+
 	// Find the lexer for the language
 	lexer := lexers.Get(language)
 	if lexer == nil {
 		lexer = lexers.Fallback
 	}
 
-	// Tokenize the code
-	content := strings.Join(lines, "\n")
+	// Tokenize the code (content already has callout markers replaced)
 	iterator, err := lexer.Tokenise(nil, content)
 	if err != nil {
 		// Fallback to plain pre/code if tokenization fails
@@ -726,7 +805,9 @@ func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) 
 
 	// If there are no inline nodes, use simple rendering
 	if len(para.InlineNodes) == 0 {
-		fmt.Fprintf(w, `<p>%s</p>`+"\n", c.escape(para.Text))
+		// Apply character replacements before escaping
+		replaced := c.replaceSpecialChars(para.Text)
+		fmt.Fprintf(w, `<p>%s</p>`+"\n", c.escape(replaced))
 		fmt.Fprintf(w, `</div>`+"\n")
 		return
 	}
@@ -742,7 +823,9 @@ func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) 
 			// Write any text before this inline node
 			if startPos > lastEnd {
 				text := para.Text[lastEnd:startPos]
-				c.writeRawString(c.escape(text), w)
+				// Apply character replacements before escaping
+				replaced := c.replaceSpecialChars(text)
+				c.writeRawString(c.escape(replaced), w)
 			}
 			lastEnd = inlineNode.Position
 
@@ -754,7 +837,9 @@ func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) 
 	// Write any remaining text after last inline node
 	if lastEnd < len(para.Text) {
 		text := para.Text[lastEnd:]
-		c.writeRawString(c.escape(text), w)
+		// Apply character replacements before escaping
+		replaced := c.replaceSpecialChars(text)
+		c.writeRawString(c.escape(replaced), w)
 	}
 
 	fmt.Fprintf(w, `</p>`+"\n")
@@ -765,7 +850,9 @@ func (c *HTML5Converter) convertParagraph(para *ast.NodeParagraph, w io.Writer) 
 func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 	switch node.Type {
 	case inline.NodeText:
-		c.writeRawString(c.escape(node.Text), w)
+		// Apply special character replacements before escaping
+		replaced := c.replaceSpecialChars(node.Text)
+		c.writeRawString(c.escape(replaced), w)
 	case inline.NodeBold:
 		class := c.getClassAttr(node.Roles)
 		if class != "" {
@@ -792,6 +879,19 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			c.writeRawString(c.escape(node.Text), w)
 		}
 		c.writeRawString("</em>", w)
+	case inline.NodeBoldItalic:
+		class := c.getClassAttr(node.Roles)
+		if class != "" {
+			c.writeRawString(`<strong class="`+class+`"><em class="`+class+`">`, w)
+		} else {
+			c.writeRawString("<strong><em>", w)
+		}
+		if len(node.Children) > 0 {
+			c.renderInlineChildren(node, w)
+		} else {
+			c.writeRawString(c.escape(node.Text), w)
+		}
+		c.writeRawString("</em></strong>", w)
 	case inline.NodeMonospace:
 		class := c.getClassAttr(node.Roles)
 		if class != "" {
@@ -1445,6 +1545,9 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 		// Render with callouts
 		fmt.Fprintf(w, `<pre>`)
 
+		// Unicode circled numbers for callouts
+		unicodeCallouts := []string{"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲", "⑳"}
+
 		// Render each line with callout markers
 		for lineIdx, line := range literal.Lines {
 			// Find callouts on this line
@@ -1455,13 +1558,19 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 				}
 			}
 
-			// Sort callouts by column position
-			// For now, just append them at the end
+			// Write the line content
 			fmt.Fprint(w, c.escape(line))
 
 			// Add callout markers at end of line
 			for _, co := range lineCallouts {
-				fmt.Fprintf(w, ` <b class="conum" data-value="%d"></b>`, co.Number)
+				marker := ""
+				if co.Number <= len(unicodeCallouts) {
+					marker = unicodeCallouts[co.Number-1]
+				} else {
+					// For numbers beyond our preset, use the number in bold
+					marker = fmt.Sprintf("<b>%d</b>", co.Number)
+				}
+				fmt.Fprintf(w, " %s", marker)
 			}
 
 			if lineIdx < len(literal.Lines)-1 {
@@ -1508,6 +1617,9 @@ func (c *HTML5Converter) renderCalloutList(literal *ast.NodeLiteral, w io.Writer
 
 	c.writeOpenTagWithClass("div", "colist arabic", w)
 
+	// Unicode circled numbers for callouts
+	unicodeCallouts := []string{"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲", "⑳"}
+
 	// Render callouts in numerical order
 	for i := 1; i <= maxNumber; i++ {
 		if co, exists := calloutMap[i]; exists {
@@ -1515,7 +1627,15 @@ func (c *HTML5Converter) renderCalloutList(literal *ast.NodeLiteral, w io.Writer
 				fmt.Fprint(w, c.indent)
 			}
 			fmt.Fprintf(w, `<div class="li">`)
-			fmt.Fprintf(w, `<b class="conum" data-value="%d"></b> `, i)
+
+			// Use Unicode circled number
+			marker := ""
+			if i <= len(unicodeCallouts) {
+				marker = unicodeCallouts[i-1]
+			} else {
+				marker = fmt.Sprintf("<b>%d</b>", i)
+			}
+			fmt.Fprintf(w, `%s `, marker)
 			fmt.Fprintf(w, `<span>%s</span>`, c.escape(co.Description))
 			fmt.Fprintf(w, `</div>`)
 			if c.pretty {
@@ -1553,6 +1673,9 @@ func (c *HTML5Converter) renderCalloutListForStyled(styled *ast.StyledBlockNode,
 
 	c.writeOpenTagWithClass("div", "colist arabic", w)
 
+	// Unicode circled numbers for callouts
+	unicodeCallouts := []string{"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲", "⑳"}
+
 	// Render callouts in numerical order
 	for i := 1; i <= maxNumber; i++ {
 		if co, exists := calloutMap[i]; exists {
@@ -1560,7 +1683,15 @@ func (c *HTML5Converter) renderCalloutListForStyled(styled *ast.StyledBlockNode,
 				fmt.Fprint(w, c.indent)
 			}
 			fmt.Fprintf(w, `<div class="li">`)
-			fmt.Fprintf(w, `<b class="conum" data-value="%d"></b> `, i)
+
+			// Use Unicode circled number
+			marker := ""
+			if i <= len(unicodeCallouts) {
+				marker = unicodeCallouts[i-1]
+			} else {
+				marker = fmt.Sprintf("<b>%d</b>", i)
+			}
+			fmt.Fprintf(w, `%s `, marker)
 			fmt.Fprintf(w, `<span>%s</span>`, c.escape(co.Description))
 			fmt.Fprintf(w, `</div>`)
 			if c.pretty {

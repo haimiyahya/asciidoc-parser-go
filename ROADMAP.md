@@ -197,7 +197,7 @@ See [EXTENSIONS.md](EXTENSIONS.md) for current extension capabilities.
 | **Verse blocks** | Yes | Partial | Medium |
 | **Quote blocks** | Yes | Partial | Medium |
 | **Sidebar blocks** | Yes | Yes | - |
-| **Callout lists** | Yes | Partial | High |
+| **Callout lists** | Yes | Yes | - |
 
 ## Development Strategy
 

@@ -1323,6 +1323,13 @@ func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
 		// Get the outermost list (first item pushed)
 		outermostEntry := p.listStack[0]
 		p.addBlockToCurrentSection(doc, outermostEntry.list)
+
+		// Clear pending block style if this was a styled list (e.g., qanda)
+		if outermostEntry.list.Style != "" {
+			p.pendingBlockStyle = ""
+			p.pendingBlockStyleAttrs = nil
+		}
+
 		p.currentList = nil
 		p.currentListBlockType = 0
 		p.currentListLevel = 0
@@ -1330,6 +1337,13 @@ func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
 	} else if p.currentList != nil {
 		// No nested lists, just add the current list
 		p.addBlockToCurrentSection(doc, p.currentList)
+
+		// Clear pending block style if this was a styled list (e.g., qanda)
+		if p.currentList.Style != "" {
+			p.pendingBlockStyle = ""
+			p.pendingBlockStyleAttrs = nil
+		}
+
 		p.currentList = nil
 		p.currentListBlockType = 0
 		p.currentListLevel = 0
@@ -1470,10 +1484,19 @@ func (p *Parser) startNewList(classification *reader.Classification, lineno int,
 		return
 	}
 
+	// Check if there's a pending block style (e.g., [qanda])
+	listStyle := ""
+	if p.pendingBlockStyle != "" {
+		listStyle = p.pendingBlockStyle
+		// Don't consume the style yet - let the list items consume it
+		// The style will be cleared after the list is closed
+	}
+
 	// Create the list node - all lists use TypeList as the Kind
 	p.currentList = &ast.NodeList{
 		Kind:  ast.TypeList,
 		Items: []ast.Node{listItem},
+		Style: listStyle,
 		Pos:   ast.Position{Line: lineno},
 	}
 	p.currentListBlockType = info.Type

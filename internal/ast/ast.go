@@ -135,6 +135,9 @@ type NodeList struct {
 	Kind NodeType
 	// Items are the list items.
 	Items []Node
+	// Style is the list style (e.g., "qanda", "bibliography").
+	// Empty string for default styling.
+	Style string
 	// Pos is the location in the source.
 	Pos Position
 }

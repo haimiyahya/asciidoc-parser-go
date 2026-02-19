@@ -1343,6 +1343,12 @@ func (c *HTML5Converter) convertBibliographyEntry(entry *ast.BibliographyEntryNo
 
 // convertList converts a list to HTML.
 func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
+	// Check if this is a qanda (question and answer) list
+	if list.Style == "qanda" {
+		c.convertQandaList(list, w)
+		return
+	}
+
 	// Determine list type based on first item
 	if len(list.Items) == 0 {
 		return
@@ -1442,6 +1448,49 @@ func (c *HTML5Converter) orderedListClass(item ast.Node) string {
 		}
 	}
 	return "arabic" // Default
+}
+
+// convertQandaList converts a Q&A list to HTML.
+// Q&A lists are rendered as an ordered list with questions in italics.
+func (c *HTML5Converter) convertQandaList(list *ast.NodeList, w io.Writer) {
+	if len(list.Items) == 0 {
+		return
+	}
+
+	// Q&A lists use a qlist wrapper with qanda class
+	fmt.Fprint(w, `<div class="qlist qanda">`+"\n")
+	fmt.Fprint(w, `<ol>`+"\n")
+
+	for _, item := range list.Items {
+		if li, ok := item.(*ast.NodeListItem); ok {
+			fmt.Fprint(w, `<li>`+"\n")
+
+			// Render question (term) in italics
+			fmt.Fprint(w, `<p><em>`)
+			if len(li.InlineNodes) == 0 {
+				fmt.Fprint(w, c.escape(li.Term))
+			} else {
+				c.renderInlineText(li.Term, li.InlineNodes, w)
+			}
+			fmt.Fprint(w, `</em></p>`+"\n")
+
+			// Render answer (definition) as paragraph
+			if li.Definition != "" {
+				fmt.Fprint(w, `<p>`)
+				if len(li.DefinitionNodes) == 0 {
+					fmt.Fprint(w, c.escape(li.Definition))
+				} else {
+					c.renderInlineText(li.Definition, li.DefinitionNodes, w)
+				}
+				fmt.Fprint(w, `</p>`+"\n")
+			}
+
+			fmt.Fprint(w, `</li>`+"\n")
+		}
+	}
+
+	fmt.Fprint(w, `</ol>`+"\n")
+	fmt.Fprint(w, `</div>`+"\n")
 }
 
 // convertListItem converts a list item to HTML.

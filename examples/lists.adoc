@@ -131,14 +131,9 @@ Supported formats include: HTML, PDF, DocBook, Man Page, EPUB, and Markdown.
 
 == Q&A Lists (Question and Answer)
 
-// NOTE: Q&A lists ([qanda] style) are not yet supported.
-// Using labeled list format as alternative:
-
-What is AsciiDoc?:: AsciiDoc is a text document format for writing notes,
-documentation, articles, books, web pages, slide decks and man pages.
-
+[qanda]
+What is AsciiDoc?:: AsciiDoc is a text document format for writing notes, documentation, articles, books, web pages, slide decks and man pages.
 How do I install it?:: Use the package manager for your system or download from GitHub.
-
 Why use it?:: Plain text, version control friendly, easy to read, multiple output formats.
 
 == Checklists (Task Lists)

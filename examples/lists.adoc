@@ -113,21 +113,21 @@ Web Browsers:: Chrome, Firefox, Safari
 === Ordered with Unordered Nested
 
 . Main task one
-* Sub-task a
-* Sub-task b
+  * Sub-task a
+  * Sub-task b
 . Main task two
-** Sub-task with nested list
-*** Deep nested item
+  ** Sub-task with nested list
+    *** Deep nested item
 . Main task three
 
 === Unordered with Ordered Nested
 
 * Topic one
-. First detail
-. Second detail
+  . First detail
+  . Second detail
 * Topic two
-. First point
-.. Sub-point
+  . First point
+    .. Sub-point
 * Topic three
 
 == Inline Lists

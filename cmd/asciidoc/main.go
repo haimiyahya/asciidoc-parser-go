@@ -227,6 +227,13 @@ func main() {
 			inputFileName, len(doc.Blocks), len(doc.Attributes))
 	}
 
+	// Process the document (attribute substitution, etc.)
+	proc := processor.NewProcessor(doc)
+	if err := proc.Process(); err != nil {
+		printError("failed to process document: %v", err)
+		os.Exit(1)
+	}
+
 	// Convert to output format
 	var output []byte
 	var outputExt string

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/inline"
 )
 
 // Processor processes an AsciiDoc document after parsing.
@@ -110,13 +111,19 @@ func (p *Processor) processBlocks(blocks []ast.Node) {
 			p.processLiteral(n)
 		case *ast.NodeBlock:
 			p.processBlock(n)
+		case *ast.BibliographyEntryNode:
+			p.processBibliographyEntry(n)
 		}
 	}
 }
 
 // processParagraph processes a paragraph for attribute references.
 func (p *Processor) processParagraph(para *ast.NodeParagraph) {
+	// Substitute attributes in the paragraph text
 	para.Text = p.substituteAttributes(para.Text)
+
+	// Substitute attributes in inline nodes
+	p.processInlineNodes(para.InlineNodes)
 }
 
 // processSection processes a section for attribute references.
@@ -141,6 +148,10 @@ func (p *Processor) processListItem(item *ast.NodeListItem) {
 	if item.Term != "" {
 		item.Term = p.substituteAttributes(item.Term)
 	}
+
+	// Substitute attributes in inline nodes
+	p.processInlineNodes(item.InlineNodes)
+	p.processInlineNodes(item.DefinitionNodes)
 }
 
 // processLiteral processes a literal block (verbatim, no substitution).
@@ -153,6 +164,15 @@ func (p *Processor) processBlock(block *ast.NodeBlock) {
 	for i, line := range block.Lines {
 		block.Lines[i] = p.substituteAttributes(line)
 	}
+}
+
+// processBibliographyEntry processes a bibliography entry for attribute references.
+func (p *Processor) processBibliographyEntry(entry *ast.BibliographyEntryNode) {
+	entry.Text = p.substituteAttributes(entry.Text)
+	entry.XRefText = p.substituteAttributes(entry.XRefText)
+
+	// Substitute attributes in inline nodes
+	p.processInlineNodes(entry.InlineNodes)
 }
 
 // substituteAttributes replaces {attribute} references with their values.
@@ -261,4 +281,47 @@ func (p *Processor) GetAllAttributes() map[string]string {
 	}
 
 	return result
+}
+
+// processInlineNodes processes inline nodes for attribute references.
+// This handles attribute substitution in inline markup like links, images, etc.
+func (p *Processor) processInlineNodes(nodes []interface{}) {
+	for _, node := range nodes {
+		if inlineNode, ok := node.(*inline.Node); ok {
+			p.processInlineNode(inlineNode)
+		}
+	}
+}
+
+// processInlineNode processes a single inline node for attribute references.
+func (p *Processor) processInlineNode(node *inline.Node) {
+	// Substitute attributes in Text field
+	node.Text = p.substituteAttributes(node.Text)
+
+	// Substitute attributes in URL field (for links)
+	node.URL = p.substituteAttributes(node.URL)
+
+	// Substitute attributes in Alt field (for images)
+	node.Alt = p.substituteAttributes(node.Alt)
+
+	// Substitute attributes in Ref and RefText fields (for cross-references)
+	node.Ref = p.substituteAttributes(node.Ref)
+	node.RefText = p.substituteAttributes(node.RefText)
+
+	// Recursively process child nodes
+	if len(node.Children) > 0 {
+		for _, child := range node.Children {
+			p.processInlineNode(child)
+		}
+	}
+
+	// Substitute attributes in macro-specific fields
+	if node.MacroName != "" {
+		node.MacroTarget = p.substituteAttributes(node.MacroTarget)
+		if node.MacroAttrs != nil {
+			for k, v := range node.MacroAttrs {
+				node.MacroAttrs[k] = p.substituteAttributes(v)
+			}
+		}
+	}
 }

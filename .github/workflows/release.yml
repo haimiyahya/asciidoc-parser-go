@@ -9,6 +9,24 @@ on:
     branches: [ master, main ]
 
 jobs:
+  vulnerability-scan:
+    name: Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: false
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -36,7 +54,7 @@ jobs:
 
   build:
     name: Build Release Binaries
-    needs: test
+    needs: [vulnerability-scan, test]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     strategy:
@@ -156,6 +174,17 @@ jobs:
           sha256sum * > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      - name: Generate SBOM
+        run: |
+          # Install syft
+          wget -qO- https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          # Generate SBOM in SPDX format
+          syft . -o spdx-json > artifacts/SBOM-spdx.json
+          syft . -o cyclonedx-json > artifacts/SBOM-cyclonedx.json
+          syft . -o table > artifacts/SBOM.txt
+          echo "SBOM generated:"
+          ls -la artifacts/SBOM*
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -193,6 +222,13 @@ jobs:
             ```bash
             sha256sum -c SHA256SUMS.txt
             ```
+
+            ### SBOM (Software Bill of Materials)
+
+            This release includes SBOM files in multiple formats:
+            - `SBOM-spdx.json` - SPDX JSON format
+            - `SBOM-cyclonedx.json` - CycloneDX JSON format
+            - `SBOM.txt` - Human-readable table format
 
             ### Docker
 

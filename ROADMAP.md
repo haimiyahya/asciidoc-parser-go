@@ -257,6 +257,27 @@ asciidoctor/test/
 - Group consecutive labeled list items into single `<dl>` element
 - Support multi-paragraph definitions
 
+### Ordered Lists
+
+**Current Issues:**
+- **Explicit list numbering styles not supported** - Bracket syntax `[a]`, `[A]`, `[i]`, `[I]` don't create styled ordered lists
+  - **Problem:** `[a] Item` renders as plain text with brackets instead of lettered list
+  - **Workaround:** Use dot notation levels (`.` , `..` , `...` , `....`) for different numbering styles
+  - **Example:**
+    ```asciidoc
+    // Does NOT work:
+    [a] First item
+    [b] Second item
+
+    // Works (gives lower roman):
+    .. First item
+    .. Second item
+    ```
+
+**Planned Fix:**
+- Implement explicit numbering style syntax `[a]`, `[A]`, `[i]`, `[I]`
+- Support `list-style` attribute on ordered lists
+
 ## Notes
 
 - Asciidoctor does **NOT** provide an official LSP server ([GitHub Issue #3630](https://github.com/asciidoctor/asciidoctor/issues/3630))

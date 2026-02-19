@@ -50,6 +50,12 @@ type Parser struct {
 	pendingBlockStyle string
 	pendingBlockStyleAttrs map[string]string
 
+	// Admonition tracking - for block-style admonitions [NOTE], [TIP], etc.
+	pendingAdmonitionKind string // "NOTE", "TIP", "WARNING", etc.
+	pendingAdmonitionTitle string
+	pendingAdmonitionBlocks []ast.Node
+	pendingAdmonitionAttrs map[string]string
+
 	// Bibliography tracking
 	currentBibliography *ast.BibliographyNode
 	pendingBiblioAnchor *reader.AnchorInfo
@@ -338,6 +344,9 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			// Close any open list first
 			p.closeCurrentList(doc)
 
+			// Close any pending admonition
+			p.closePendingAdmonition(doc)
+
 			// Flush any pending paragraph first
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
@@ -452,6 +461,18 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 
 		// Handle block styles ([style]) that apply to the next block
 		if classification.Type == reader.BlockStyle && classification.Style != nil {
+			styleName := strings.ToUpper(classification.Style.Name)
+
+			// Check if this is an admonition style
+			if isAdmonitionStyle(styleName) {
+				// Start collecting blocks for a block-style admonition
+				p.pendingAdmonitionKind = styleName
+				p.pendingAdmonitionAttrs = classification.Style.Attributes
+				p.pendingAdmonitionBlocks = nil
+				p.reader.Advance()
+				continue
+			}
+
 			// Store the style to apply to the next section
 			p.pendingBlockStyle = classification.Style.Name
 			p.pendingBlockStyleAttrs = classification.Style.Attributes
@@ -577,11 +598,12 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 			continue
 		}
 
-		// Handle blank lines - they terminate paragraphs and lists
+		// Handle blank lines - they terminate paragraphs, lists, and admonitions
 		if classification.Type == reader.BlockBlank {
 			// Close any open list
 			p.closeCurrentList(doc)
 
+			// Flush any pending paragraph FIRST (so it gets added to pending admonition if applicable)
 			if len(paragraphLines) > 0 {
 				para := p.createParagraph(paragraphLines, paragraphLineno)
 				if para != nil {
@@ -589,8 +611,27 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				}
 				paragraphLines = nil
 			}
+
+			// THEN close any pending admonition (after paragraph has been added)
+			p.closePendingAdmonition(doc)
+
 			p.reader.Advance()
 			continue
+		}
+
+		// Handle block titles (lines starting with ".") when we're in an admonition
+		// Check for title lines like ".Title" - must start with "." and have non-space after
+		if p.pendingAdmonitionKind != "" {
+			line := classification.Original
+			trimmed := strings.TrimSpace(line)
+			// A title starts with "." followed by non-space (not ".." which is a comment)
+			if strings.HasPrefix(trimmed, ".") && len(trimmed) > 1 && trimmed[1] != '.' {
+				// This is a title line for the admonition
+				titleText := trimmed[1:] // Remove the leading "."
+				p.pendingAdmonitionTitle = titleText
+				p.reader.Advance()
+				continue
+			}
 		}
 
 		// Handle comments (skip them)
@@ -767,6 +808,9 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 
 	// Close any remaining open list
 	p.closeCurrentList(doc)
+
+	// Close any pending admonition (e.g., when document ends without blank line)
+	p.closePendingAdmonition(doc)
 
 	// Run tree processors if an extension registry is configured
 	if p.extensionRegistry != nil {
@@ -1426,6 +1470,46 @@ func (p *Parser) closeCurrentList(doc *ast.NodeDocument) {
 	}
 }
 
+// closePendingAdmonition closes a pending block-style admonition and adds it to the document.
+func (p *Parser) closePendingAdmonition(doc *ast.NodeDocument) {
+	if p.pendingAdmonitionKind == "" {
+		return
+	}
+
+	// Create the admonition node
+	admonition := &ast.AdmonitionNode{
+		Kind:       p.pendingAdmonitionKind,
+		Title:      p.pendingAdmonitionTitle,
+		Blocks:     p.pendingAdmonitionBlocks,
+		Attributes: p.pendingAdmonitionAttrs,
+		Pos:        ast.Position{Line: 0},
+	}
+
+	// Add the admonition to the document
+	if p.currentSection != nil {
+		p.currentSection.Children = append(p.currentSection.Children, admonition)
+	} else {
+		doc.Blocks = append(doc.Blocks, admonition)
+	}
+
+	// Clear the pending admonition state
+	p.pendingAdmonitionKind = ""
+	p.pendingAdmonitionTitle = ""
+	p.pendingAdmonitionBlocks = nil
+	p.pendingAdmonitionAttrs = nil
+}
+
+// isAdmonitionStyle checks if a style name is an admonition style.
+func isAdmonitionStyle(style string) bool {
+	styles := []string{"NOTE", "TIP", "WARNING", "CAUTION", "IMPORTANT"}
+	for _, s := range styles {
+		if style == s {
+			return true
+		}
+	}
+	return false
+}
+
 // popListStackToLevel pops lists from the stack until we reach the target level.
 // This is used when we encounter an item at a higher level (closer to root) than
 // the current nested list.
@@ -1732,7 +1816,14 @@ func (p *Parser) Advance() bool {
 
 // addBlockToCurrentSection adds a block to either the current section's children
 // or to doc.Blocks if there's no current section.
+// If we're currently collecting blocks for an admonition, the block is added there instead.
 func (p *Parser) addBlockToCurrentSection(doc *ast.NodeDocument, block ast.Node) {
+	// If we're collecting blocks for a block-style admonition, add to it
+	if p.pendingAdmonitionKind != "" {
+		p.pendingAdmonitionBlocks = append(p.pendingAdmonitionBlocks, block)
+		return
+	}
+
 	if p.currentSection != nil {
 		p.currentSection.Children = append(p.currentSection.Children, block)
 	} else {

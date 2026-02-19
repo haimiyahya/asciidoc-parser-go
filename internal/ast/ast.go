@@ -211,8 +211,14 @@ type NodeBlock struct {
 type AdmonitionNode struct {
 	// Kind is the admonition kind (NOTE, WARNING, TIP, CAUTION, IMPORTANT).
 	Kind string
-	// Text is the admonition content.
+	// Text is the admonition content (for inline-style admonitions like "NOTE: text").
 	Text string
+	// Title is the optional admonition title (for block-style admonitions).
+	Title string
+	// Blocks are child blocks within the admonition (for block-style with multi-paragraph content).
+	Blocks []Node
+	// Attributes are additional admonition attributes.
+	Attributes map[string]string
 	// Pos is the location in the source.
 	Pos Position
 }

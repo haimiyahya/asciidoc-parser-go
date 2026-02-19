@@ -2052,25 +2052,41 @@ func (c *HTML5Converter) convertAdmonition(admonition *ast.AdmonitionNode, w io.
 	kind := strings.ToLower(admonition.Kind)
 	class := "admonitionblock " + kind
 
-	// Parse inline markup in admonition text
-	inlineParser := inline.NewParser(admonition.Text)
-	inlineNodes := inlineParser.Parse()
-
-	// Convert inline nodes to HTML
-	var contentHTML strings.Builder
-	for _, node := range inlineNodes {
-		c.convertInlineNode(node, &contentHTML)
-	}
+	// Check if this is a block-style admonition (has child blocks)
+	isBlockStyle := len(admonition.Blocks) > 0
 
 	// Always add newlines for Asciidoctor compatibility (even in embedded mode)
 	fmt.Fprintf(w, `<div class="%s">`+"\n", class)
 	fmt.Fprintf(w, `<table>`+"\n")
 	fmt.Fprintf(w, `<tr>`+"\n")
 	fmt.Fprintf(w, `<td class="icon">`+"\n")
-	fmt.Fprintf(w, `<div class="title">%s</div>`+"\n", strings.ToUpper(kind[:1])+kind[1:])
+
+	// Icon title - use custom title if provided, otherwise use the kind
+	iconTitle := admonition.Title
+	if iconTitle == "" {
+		iconTitle = strings.ToUpper(kind[:1]) + kind[1:]
+	}
+	fmt.Fprintf(w, `<div class="title">%s</div>`+"\n", iconTitle)
 	fmt.Fprintf(w, `</td>`+"\n")
 	fmt.Fprintf(w, `<td class="content">`+"\n")
-	fmt.Fprintf(w, `<p class="tableblock">%s</p>`+"\n", contentHTML.String())
+
+	if isBlockStyle {
+		// Block-style admonition: render child blocks
+		for _, block := range admonition.Blocks {
+			c.convertNode(block, w)
+		}
+	} else if admonition.Text != "" {
+		// Inline-style admonition: parse and render the text
+		inlineParser := inline.NewParser(admonition.Text)
+		inlineNodes := inlineParser.Parse()
+
+		var contentHTML strings.Builder
+		for _, node := range inlineNodes {
+			c.convertInlineNode(node, &contentHTML)
+		}
+		fmt.Fprintf(w, `<p class="tableblock">%s</p>`+"\n", contentHTML.String())
+	}
+
 	fmt.Fprintf(w, `</td>`+"\n")
 	fmt.Fprintf(w, `</tr>`+"\n")
 	fmt.Fprintf(w, `</table>`+"\n")

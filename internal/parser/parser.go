@@ -245,7 +245,8 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 						thirdLine := p.reader.PeekLine()
 						thirdClass := p.classifier.ClassifyLine(thirdLine)
 						if thirdClass.Type == reader.BlockLiteral ||
-							thirdClass.Type == reader.BlockVerbatim {
+							thirdClass.Type == reader.BlockVerbatim ||
+							thirdClass.Type == reader.BlockTable {
 							// This caption line belongs to the styled+delimited block
 							pendingCaptionLine = savedLine
 							// Put the styled block line back (it will be processed normally)
@@ -271,15 +272,17 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				delimitedBlockLines = []string{}
 				delimitedBlockLineno = lineno
 
-				// For tables, add pending attribute and caption lines at the beginning
+				// For tables, add pending caption and attribute lines at the beginning
+				// NOTE: In AsciiDoc, caption comes BEFORE attributes (e.g., .Title [cols=...] |===)
+				// The table parser expects: attributes first, then caption
 				if classification.Type == reader.BlockTable {
-					if pendingAttributeLine != "" {
-						delimitedBlockLines = append(delimitedBlockLines, pendingAttributeLine)
-						pendingAttributeLine = ""
-					}
 					if pendingCaptionLine != "" {
 						delimitedBlockLines = append(delimitedBlockLines, pendingCaptionLine)
 						pendingCaptionLine = ""
+					}
+					if pendingAttributeLine != "" {
+						delimitedBlockLines = append(delimitedBlockLines, pendingAttributeLine)
+						pendingAttributeLine = ""
 					}
 				}
 

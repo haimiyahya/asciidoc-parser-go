@@ -36,17 +36,33 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 		FooterRowIndex: -1, // Initialize to -1 to indicate no footer
 	}
 
-	// First line might contain table attributes
+	// First line might contain caption or table attributes
+	// In AsciiDoc source: .Title [attrs] |=== (caption before attributes)
+	// But we need to handle both orders for compatibility
 	lineIdx := 0
-	firstLine := strings.TrimSpace(lines[lineIdx])
 
-	// Check if first line contains attributes (e.g., [cols="1,2,3"])
-	if strings.HasPrefix(firstLine, "[") {
-		attrs := p.parseTableAttributes(firstLine)
-		for k, v := range attrs {
-			table.Attributes[k] = v
+	// Check for caption first (line starting with single .)
+	if lineIdx < len(lines) {
+		captionLine := strings.TrimSpace(lines[lineIdx])
+		if strings.HasPrefix(captionLine, ".") && !strings.HasPrefix(captionLine, "..") && !strings.HasPrefix(captionLine, ".#") {
+			// This is a caption line (single . not followed by . or #)
+			// Remove the leading . and trim
+			table.Caption = strings.TrimLeft(captionLine, ".")
+			table.Caption = strings.TrimSpace(table.Caption)
+			lineIdx++
 		}
-		lineIdx++
+	}
+
+	// Check for attributes (e.g., [cols="1,2,3"])
+	if lineIdx < len(lines) {
+		firstLine := strings.TrimSpace(lines[lineIdx])
+		if strings.HasPrefix(firstLine, "[") {
+			attrs := p.parseTableAttributes(firstLine)
+			for k, v := range attrs {
+				table.Attributes[k] = v
+			}
+			lineIdx++
+		}
 	}
 
 	// Parse column specs if provided
@@ -64,19 +80,6 @@ func (p *TableParser) ParseTable(lines []string, lineno int) *ast.Table {
 				hasHeaderOption = true
 				break
 			}
-		}
-	}
-
-	// Check for caption (line starting with single .)
-	// Caption comes after attributes but before table content
-	if lineIdx < len(lines) {
-		captionLine := strings.TrimSpace(lines[lineIdx])
-		if strings.HasPrefix(captionLine, ".") && !strings.HasPrefix(captionLine, "..") && !strings.HasPrefix(captionLine, ".#") {
-			// This is a caption line (single . not followed by . or #)
-			// Remove the leading . and trim
-			table.Caption = strings.TrimLeft(captionLine, ".")
-			table.Caption = strings.TrimSpace(table.Caption)
-			lineIdx++
 		}
 	}
 

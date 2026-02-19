@@ -36,29 +36,8 @@ This document demonstrates all list types available in AsciiDoc.
 . Second step
 . Third step
 
-=== Lowercase Alpha
-
-[a] First item
-[b] Second item
-[c] Third item
-
-=== Uppercase Alpha
-
-[A] First major point
-[B] Second major point
-[C] Third major point
-
-=== Lowercase Roman
-
-[i] First subsection
-[ii] Second subsection
-[iii] Third subsection
-
-=== Uppercase Roman
-
-[I] Volume One
-[II] Volume Two
-[III] Volume Three
+// NOTE: Explicit list numbering styles [a], [A], [i], [I] are not yet supported.
+// Use dot notation with different levels for alternative styles:
 
 === Nested Ordered Lists
 

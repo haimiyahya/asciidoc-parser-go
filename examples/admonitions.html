@@ -444,44 +444,6 @@ This is an important admonition. Important blocks highlight critical information
 </div>
 </section>
 <section class="sect1">
-<h2 id="_admonitions_with_titles">Admonitions with Titles</h2>
-<div class="sectionbody">
-<section class="sect2">
-<h3 id="_note_with_title">Note with Title</h3>
-<div class="paragraph">
-<p>.Title Here This note has a custom title. The title appears in bold above the admonition content.</p>
-</div>
-<div class="paragraph">
-<p>This note can also have multiple paragraphs.</p>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_tip_with_title">Tip with Title</h3>
-<div class="paragraph">
-<p>.Pro Tip This is a tip with a custom title. It can contain <strong>bold text</strong>, <em>italic text</em>, and <code>code</code>.</p>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_warning_with_title">Warning with Title</h3>
-<div class="paragraph">
-<p>.Heads Up! This warning has a custom title. Pay attention to this content.</p>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_caution_with_title">Caution with Title</h3>
-<div class="paragraph">
-<p>.Be Careful! This caution block warns about potential issues. Proceed with caution.</p>
-</div>
-</section>
-<section class="sect2">
-<h3 id="_important_with_title">Important with Title</h3>
-<div class="paragraph">
-<p>.Must Read This is important information. Don&#39;t skip this section.</p>
-</div>
-</section>
-</div>
-</section>
-<section class="sect1">
 <h2 id="_multi_paragraph_admonitions">Multi-Paragraph Admonitions</h2>
 <div class="sectionbody">
 <section class="sect2">
@@ -1108,6 +1070,34 @@ Use important for must-know information.
 </ul>
 </div>
 </section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="_current_limitations">Current Limitations</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Block-style admonitions (<code>[NOTE]</code> above content) are not yet supported</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Use inline syntax instead: <code>NOTE: text here</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Admonitions with custom titles (<code>.Title</code> in block style) are not yet supported</p>
+</li>
+<li>
+<p>Multi-paragraph admonitions are partially supported (second paragraph appears separately)</p>
+</li>
+<li>
+<p>Lists within admonitions render as separate blocks after the admonition</p>
+</li>
+</ul>
+</div>
 </div>
 </section>
 </article>

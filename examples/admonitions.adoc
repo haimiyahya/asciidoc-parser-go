@@ -29,45 +29,6 @@ damage or data loss.
 IMPORTANT: This is an important admonition. Important blocks highlight
 critical information that readers should pay attention to.
 
-== Admonitions with Titles
-
-=== Note with Title
-
-[NOTE]
-.Title Here
-This note has a custom title. The title appears in bold above
-the admonition content.
-
-This note can also have multiple paragraphs.
-
-=== Tip with Title
-
-[TIP]
-.Pro Tip
-This is a tip with a custom title.
-It can contain **bold text**, _italic text_, and `code`.
-
-=== Warning with Title
-
-[WARNING]
-.Heads Up!
-This warning has a custom title.
-Pay attention to this content.
-
-=== Caution with Title
-
-[CAUTION]
-.Be Careful!
-This caution block warns about potential issues.
-Proceed with caution.
-
-=== Important with Title
-
-[IMPORTANT]
-.Must Read
-This is important information.
-Don't skip this section.
-
 == Multi-Paragraph Admonitions
 
 === Note with Multiple Paragraphs
@@ -262,3 +223,11 @@ IMPORTANT: Use important for must-know information.
 * **Be specific** - Clearly state what the reader should know
 * **Use sparingly** - Too many admonitions reduce their impact
 * **Match type to content** - Use the right admonition for the situation
+
+== Current Limitations
+
+* Block-style admonitions (`[NOTE]` above content) are not yet supported
+  * Use inline syntax instead: `NOTE: text here`
+* Admonitions with custom titles (`.Title` in block style) are not yet supported
+* Multi-paragraph admonitions are partially supported (second paragraph appears separately)
+* Lists within admonitions render as separate blocks after the admonition

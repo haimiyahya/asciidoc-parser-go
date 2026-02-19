@@ -138,8 +138,13 @@ jobs:
           echo "Directory structure:"
           find . -type f -o -type d | sort
           echo ""
-          # Find all files recursively and move them to current directory
-          find . -mindepth 2 -type f -exec bash -c 'target="$(basename "$1")"; counter=0; while [ -e "$target" ] && [ "$target" != "$1" ]; do counter=$((counter+1)); target="${target%.*}_$counter.${target##*.}"; done; mv "$1" "$target"' _ {} \;
+          # Find all files in subdirectories and move them to current directory
+          # Artifact names are already unique, so no duplicate handling needed
+          for dir in */; do
+            if [ -f "${dir}${dir%/}" ]; then
+              mv "${dir}${dir%/}" .
+            fi
+          done
           # Remove all empty subdirectories
           find . -mindepth 1 -type d -delete
           echo "Final structure:"

@@ -122,12 +122,15 @@ Web Browsers:: Chrome, Firefox, Safari
 
 === Unordered with Ordered Nested
 
+// NOTE: Ordered lists nested inside unordered lists are not yet fully supported.
+// Using unordered sub-items for demonstration:
+
 * Topic one
-  . First detail
-  . Second detail
+** First detail
+** Second detail
 * Topic two
-  . First point
-    .. Sub-point
+** First point
+*** Sub-point
 * Topic three
 
 == Inline Lists

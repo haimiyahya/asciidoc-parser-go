@@ -32,14 +32,30 @@ type HTML5Converter struct {
 
 	// extensionRegistry holds custom macro processors
 	extensionRegistry *extension.Registry
+
+	// footnotes is a slice of footnotes collected during conversion
+	// Each footnote is stored as a map with keys: id, index, text
+	footnotes []Footnote
+
+	// footnoteIndexMap maps footnote IDs to their assigned numbers
+	footnoteIndexMap map[string]int
+}
+
+// Footnote represents a footnote in the document.
+type Footnote struct {
+	ID    string // The footnote ID from the source
+	Index int    // The assigned footnote number
+	Text  string // The footnote text content
 }
 
 // NewHTML5Converter creates a new HTML5 converter.
 func NewHTML5Converter() *HTML5Converter {
 	return &HTML5Converter{
-		indent:               "",
-		pretty:               true,
+		indent:           "",
+		pretty:           true,
 		suppressHeaderFooter: false,
+		footnotes:        make([]Footnote, 0),
+		footnoteIndexMap: make(map[string]int),
 	}
 }
 
@@ -748,6 +764,11 @@ func (c *HTML5Converter) Convert(doc *ast.NodeDocument, w io.Writer) error {
 		c.convertNode(block, w)
 	}
 
+	// Render footnote list if there are any footnotes
+	if len(c.footnotes) > 0 {
+		c.convertFootnotes(w)
+	}
+
 	if !c.suppressHeaderFooter {
 		fmt.Fprint(w, "</article>")
 		if c.pretty {
@@ -770,6 +791,29 @@ func (c *HTML5Converter) convertHeader(header *ast.DocumentHeader, w io.Writer) 
 	if header.Title != "" {
 		c.writeElement("h1", c.escape(header.Title), w)
 	}
+}
+
+// convertFootnotes renders the footnote list at the end of the document.
+func (c *HTML5Converter) convertFootnotes(w io.Writer) {
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+	fmt.Fprintf(w, `<div id="footnotes">`+"\n")
+	fmt.Fprintf(w, `<hr>`+"\n")
+
+	for _, fn := range c.footnotes {
+		if c.pretty {
+			fmt.Fprint(w, "\t")
+		}
+		// Format: <div class="footnote" id="_fnid">[index] text</div>
+		fmt.Fprintf(w, `<div class="footnote" id="_fn%s">[%d] %s</div>`,
+			fn.ID, fn.Index, c.escape(fn.Text))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	}
+
+	fmt.Fprintf(w, `</div>`+"\n")
 }
 
 // convertNode converts an AST node to HTML.
@@ -1089,6 +1133,30 @@ func (c *HTML5Converter) convertInlineNode(node *inline.Node, w io.Writer) {
 			classAttr = fmt.Sprintf("%s %s", class, "button")
 		}
 		fmt.Fprintf(w, `<b class="%s">%s</b>`, classAttr, c.escape(node.Text))
+	case inline.NodeFootnote:
+		// Footnote reference: footnote:id[text]
+		// Check if this footnote has been seen before
+		fnID := node.FootnoteID
+		fnIndex, exists := c.footnoteIndexMap[fnID]
+
+		if !exists {
+			// New footnote - assign the next number
+			fnIndex = len(c.footnotes) + 1
+			c.footnoteIndexMap[fnID] = fnIndex
+
+			// Only add to footnotes list if there's text (not a reference)
+			if node.FootnoteText != "" {
+				c.footnotes = append(c.footnotes, Footnote{
+					ID:    fnID,
+					Index: fnIndex,
+					Text:  node.FootnoteText,
+				})
+			}
+		}
+
+		// Render the footnote reference as a superscript link
+		fmt.Fprintf(w, `<sup class="footnote" id="_fr%s">[<a href="#_fn%s">%d</a>]</sup>`,
+			fnID, fnID, fnIndex)
 	}
 }
 

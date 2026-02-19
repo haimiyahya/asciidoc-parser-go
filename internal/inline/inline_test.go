@@ -405,3 +405,85 @@ func TestParseCrossRefWithCustomText(t *testing.T) {
 	}
 }
 
+
+func TestParseFootnote(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		wantType NodeType
+		wantID   string
+		wantText string
+	}{
+		{
+			name:     "footnote with text",
+			input:    "footnote:note1[This is a footnote]",
+			wantType: NodeFootnote,
+			wantID:   "note1",
+			wantText: "This is a footnote",
+		},
+		{
+			name:     "footnote reference (empty text)",
+			input:    "footnote:note1[]",
+			wantType: NodeFootnote,
+			wantID:   "note1",
+			wantText: "",
+		},
+		{
+			name:     "footnote with complex text",
+			input:    "footnote:fn2[Text with **bold** inside]",
+			wantType: NodeFootnote,
+			wantID:   "fn2",
+			wantText: "Text with **bold** inside",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := NewParser(tt.input)
+			nodes := p.Parse()
+
+			if len(nodes) == 0 {
+				t.Fatalf("no nodes returned")
+			}
+
+			node := nodes[0]
+			if node.Type != tt.wantType {
+				t.Errorf("Type = %v, want %v", node.Type, tt.wantType)
+			}
+			if node.FootnoteID != tt.wantID {
+				t.Errorf("FootnoteID = %q, want %q", node.FootnoteID, tt.wantID)
+			}
+			if node.FootnoteText != tt.wantText {
+				t.Errorf("FootnoteText = %q, want %q", node.FootnoteText, tt.wantText)
+			}
+		})
+	}
+}
+
+func TestParseFootnoteInText(t *testing.T) {
+	input := "This is text with a footnote:note1[ref] and more text"
+	p := NewParser(input)
+	nodes := p.Parse()
+
+	if len(nodes) != 3 {
+		t.Fatalf("got %d nodes, want 3", len(nodes))
+	}
+
+	// First node should be text
+	if nodes[0].Type != NodeText {
+		t.Errorf("First node Type = %v, want NodeText", nodes[0].Type)
+	}
+
+	// Second node should be footnote
+	if nodes[1].Type != NodeFootnote {
+		t.Errorf("Second node Type = %v, want NodeFootnote", nodes[1].Type)
+	}
+	if nodes[1].FootnoteID != "note1" {
+		t.Errorf("FootnoteID = %q, want \"note1\"", nodes[1].FootnoteID)
+	}
+
+	// Third node should be text (after footnote)
+	if nodes[2].Type != NodeText {
+		t.Errorf("Third node Type = %v, want NodeText", nodes[2].Type)
+	}
+}

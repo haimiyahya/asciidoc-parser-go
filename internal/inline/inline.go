@@ -64,6 +64,9 @@ const (
 
 	// NodeButton is a UI button (btn:OK).
 	NodeButton
+
+	// NodeFootnote is a footnote reference (footnote:id[text]).
+	NodeFootnote
 )
 
 // String returns the string representation of NodeType.
@@ -84,6 +87,7 @@ func (nt NodeType) String() string {
 		NodeRawPassThrough: "RawPassThrough",
 		NodeMenu:            "Menu",
 		NodeButton:          "Button",
+		NodeFootnote:        "Footnote",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -142,6 +146,11 @@ type Node struct {
 	MacroName  string            // Macro name (e.g., "badge", "version")
 	MacroTarget string            // Macro target (text between : and [)
 	MacroAttrs  map[string]string // Macro attributes from square brackets
+
+	// Footnote fields (for NodeFootnote)
+	FootnoteID   string // Footnote identifier (e.g., "note1", "note2")
+	FootnoteText  string // Footnote text content
+	FootnoteIndex int    // Assigned footnote number (for auto-numbering)
 }
 
 // String returns a string representation of node.
@@ -189,6 +198,14 @@ func (n *Node) String() string {
 		return fmt.Sprintf("menu:[%s]", n.Text)
 	case NodeButton:
 		return fmt.Sprintf("btn:[%s]", n.Text)
+	case NodeFootnote:
+		if n.FootnoteID != "" {
+			if n.FootnoteText != "" {
+				return fmt.Sprintf("footnote:%s[%s]", n.FootnoteID, n.FootnoteText)
+			}
+			return fmt.Sprintf("footnote:%s[]", n.FootnoteID)
+		}
+		return n.Text
 	default:
 		return n.Text
 	}
@@ -267,6 +284,16 @@ func (p *Parser) Parse() []*Node {
 		// Check for inline macros (pass:[], menu:[], btn:[], kbd:[])
 		// Must be checked before other constructs that use brackets
 		if node, newPos := p.tryInlineMacro(); node != nil {
+			p.applyRoles(node, pendingRoles)
+			pendingRoles = nil
+			nodes = append(nodes, node)
+			p.pos = newPos
+			continue
+		}
+
+		// Check for footnotes (footnote:id[text])
+		// Must be checked before images and links
+		if node, newPos := p.tryFootnote(); node != nil {
 			p.applyRoles(node, pendingRoles)
 			pendingRoles = nil
 			nodes = append(nodes, node)
@@ -395,6 +422,7 @@ func (p *Parser) Parse() []*Node {
 				strings.HasPrefix(remaining, "<<") ||
 				strings.HasPrefix(remaining, "image:") ||
 				strings.HasPrefix(remaining, "link:") ||
+				strings.HasPrefix(remaining, "footnote:") || // Footnote reference
 				strings.HasPrefix(remaining, "pass:[") || // Inline passthrough macro
 				strings.HasPrefix(remaining, "raw:[") || // Raw passthrough macro
 				strings.HasPrefix(remaining, "menu:[") ||
@@ -1421,4 +1449,59 @@ func (p *Parser) tryInlineMacro() (*Node, int) {
 	}
 
 	return nil, p.pos
+}
+
+// tryFootnote attempts to parse a footnote: footnote:id[text] or footnote:id[].
+// The id can be any identifier, and if [] is empty, it's a reference to an existing footnote.
+func (p *Parser) tryFootnote() (*Node, int) {
+	s := p.text[p.pos:]
+
+	// Need at least "footnote:x]" where x is at least 1 char
+	if len(s) < 11 {
+		return nil, p.pos
+	}
+
+	// Check for footnote: prefix
+	if !strings.HasPrefix(s, "footnote:") {
+		return nil, p.pos
+	}
+
+	// Find the colon after "footnote:"
+	colonPos := 9 // Position after "footnote:"
+
+	// Find the opening bracket [
+	openBracket := strings.Index(s[colonPos:], "[")
+	if openBracket == -1 {
+		return nil, p.pos
+	}
+	openBracket += colonPos
+
+	// Extract the footnote ID (between colon and bracket)
+	footnoteID := s[colonPos:openBracket]
+	footnoteID = strings.TrimSpace(footnoteID)
+
+	if footnoteID == "" {
+		return nil, p.pos
+	}
+
+	// Find the closing bracket
+	closeBracket := strings.Index(s[openBracket:], "]")
+	if closeBracket == -1 {
+		return nil, p.pos
+	}
+	closeBracket += openBracket
+
+	// Extract the footnote text (between [ and ])
+	footnoteText := s[openBracket+1 : closeBracket]
+
+	endPos := p.pos + closeBracket + 1
+
+	return &Node{
+		Type:         NodeFootnote,
+		FootnoteID:   footnoteID,
+		FootnoteText: footnoteText,
+		FootnoteIndex: 0, // Will be assigned during document processing
+		StartPos:     p.pos,
+		Position:     endPos,
+	}, endPos
 }

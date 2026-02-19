@@ -15,10 +15,27 @@ func main() {
 
 === Listing with Title
 
+You can add a caption/title above any code block by placing a line
+starting with `.` before the block:
+
 [source,python]
 .Python Hello World
 ----
 print("Hello, World!")
+----
+
+[source,javascript]
+.Calculate Sum
+----
+function sum(a, b) {
+    return a + b;
+}
+----
+
+[source,sql]
+.Fetch All Users
+----
+SELECT * FROM users WHERE active = true;
 ----
 
 === Multiple Languages

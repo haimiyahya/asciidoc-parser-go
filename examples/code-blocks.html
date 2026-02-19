@@ -379,11 +379,30 @@ em, i {
 </section>
 <section class="sect2">
 <h3 id="_listing_with_title">Listing with Title</h3>
+<div class="paragraph">
+<p>You can add a caption/title above any code block by placing a line starting with <code>.</code> before the block:</p>
+</div>
     <div class="listingblock">
       <div class="title">Python Hello World</div>
       <div class="content">
         <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa"></span><span class="s2">&#34;</span><span class="s2">Hello, World!</span><span class="s2">&#34;</span><span class="p">)</span></span></span></code></pre></code></pre>
+      </div>
+    </div>
+    <div class="listingblock">
+      <div class="title">Calculate Sum</div>
+      <div class="content">
+        <pre class="highlight"><code class="language-javascript chroma" data-lang="javascript">
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">function</span> <span class="nx">sum</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">a</span> <span class="o">+</span> <span class="nx">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
+      </div>
+    </div>
+    <div class="listingblock">
+      <div class="title">Fetch All Users</div>
+      <div class="content">
+        <pre class="highlight"><code class="language-sql chroma" data-lang="sql">
+<pre class="chroma"><code><span class="line"><span class="cl"><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">true</span><span class="p">;</span></span></span></code></pre></code></pre>
       </div>
     </div>
 </section>
@@ -651,7 +670,7 @@ PASS</pre>
 <div class="title">Note</div>
 </td>
 <td class="content">
-Rust programs must have a `main` function as the entry point.
+<p class="tableblock">Rust programs must have a <code>main</code> function as the entry point.</p>
 </td>
 </tr>
 </table>

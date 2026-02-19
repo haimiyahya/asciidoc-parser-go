@@ -111,11 +111,13 @@ It's -- a short dash, and --- a long em-dash.
 
 == Images (Inline)
 
-// Standard image
-image:https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png[AsciiDoc logo, 24, 24]
+// Standard image with alt text, width, and height
+image:https://example.com/asciidoc-logo.png[AsciiDoc logo, 24, 24]
 
-// With link
-https://github.com[link=https://raw.githubusercontent.com/github/explore/main/topics/asciidoc/asciidoc.png[]]
+// Image as link (clickable image)
+https://github.com[link=https://example.com/asciidoc-logo.png[]]
+
+// Note: The URLs above are examples. Replace with actual image URLs.
 
 == Icons (Unicode)
 

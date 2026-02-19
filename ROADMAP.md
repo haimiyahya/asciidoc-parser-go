@@ -278,6 +278,22 @@ asciidoctor/test/
 - Implement explicit numbering style syntax `[a]`, `[A]`, `[i]`, `[I]`
 - Support `list-style` attribute on ordered lists
 
+### Special List Types
+
+**Current Issues:**
+- **Inline lists not supported** - The `text: item1, item2, and item3` syntax doesn't create inline definition lists
+  - **Problem:** Inline lists render as plain paragraphs
+  - **Workaround:** Use regular paragraphs or labeled lists
+- **Q&A lists not supported** - The `[qanda]` style doesn't create question/answer lists
+  - **Problem:** Q&A lists are not recognized
+  - **Workaround:** Use labeled lists with questions as terms
+- **Bibliography lists** - The `bibliography` style is not implemented
+
+**Planned Fix:**
+- Implement inline list parsing and rendering
+- Implement Q&A list style
+- Add bibliography list support
+
 ## Notes
 
 - Asciidoctor does **NOT** provide an official LSP server ([GitHub Issue #3630](https://github.com/asciidoctor/asciidoctor/issues/3630))

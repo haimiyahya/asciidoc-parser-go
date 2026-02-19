@@ -114,6 +114,9 @@ Web Browsers:: Chrome, Firefox, Safari
 
 == Inline Lists
 
+// NOTE: Inline lists (text: item1, item2, and item3) are not yet supported.
+// The examples below are rendered as regular paragraphs.
+
 === Basic Inline List
 
 The required packages are: asciidoc, python3, and git.
@@ -128,16 +131,15 @@ Supported formats include: HTML, PDF, DocBook, Man Page, EPUB, and Markdown.
 
 == Q&A Lists (Question and Answer)
 
-[qanda]
-What is AsciiDoc?::
-AsciiDoc is a text document format for writing notes, documentation,
-articles, books, web pages, slide decks and man pages.
+// NOTE: Q&A lists ([qanda] style) are not yet supported.
+// Using labeled list format as alternative:
 
-How do I install it?::
-Use the package manager for your system or download from GitHub.
+What is AsciiDoc?:: AsciiDoc is a text document format for writing notes,
+documentation, articles, books, web pages, slide decks and man pages.
 
-Why use it?::
-Plain text, version control friendly, easy to read, multiple output formats.
+How do I install it?:: Use the package manager for your system or download from GitHub.
+
+Why use it?:: Plain text, version control friendly, easy to read, multiple output formats.
 
 == Checklists (Task Lists)
 

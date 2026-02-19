@@ -138,6 +138,8 @@ type NodeList struct {
 	// Style is the list style (e.g., "qanda", "bibliography").
 	// Empty string for default styling.
 	Style string
+	// Attributes are list-level attributes (e.g., "start" for ordered lists).
+	Attributes map[string]string
 	// Pos is the location in the source.
 	Pos Position
 }

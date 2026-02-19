@@ -1557,18 +1557,26 @@ func (p *Parser) startNewList(classification *reader.Classification, lineno int,
 
 	// Check if there's a pending block style (e.g., [qanda])
 	listStyle := ""
+	listAttrs := make(map[string]string)
 	if p.pendingBlockStyle != "" {
 		listStyle = p.pendingBlockStyle
 		// Don't consume the style yet - let the list items consume it
 		// The style will be cleared after the list is closed
 	}
+	// Copy any pending block style attributes (e.g., start=5)
+	if p.pendingBlockStyleAttrs != nil {
+		for k, v := range p.pendingBlockStyleAttrs {
+			listAttrs[k] = v
+		}
+	}
 
 	// Create the list node - all lists use TypeList as the Kind
 	p.currentList = &ast.NodeList{
-		Kind:  ast.TypeList,
-		Items: []ast.Node{listItem},
-		Style: listStyle,
-		Pos:   ast.Position{Line: lineno},
+		Kind:       ast.TypeList,
+		Items:      []ast.Node{listItem},
+		Style:      listStyle,
+		Attributes: listAttrs,
+		Pos:        ast.Position{Line: lineno},
 	}
 	p.currentListBlockType = info.Type
 	p.currentListLevel = info.Level

@@ -1442,6 +1442,7 @@ func (lc *LineClassifier) isStyledBlock(line string) bool {
 
 // parseBlockStyle parses a block style line like [style] or [style,opts="val"].
 // For source blocks, also extracts the language: [source,go] -> style="source", language="go"
+// For lists, extracts attributes: [start=5] -> attributes["start"]="5"
 func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 	trimmed := strings.TrimSpace(line)
 
@@ -1461,16 +1462,50 @@ func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 
 	attrs := make(map[string]string)
 
-	// Handle [source,language] or [listing,language] syntax
+	// Check if the first part itself is a key=value pair (e.g., [start=5])
+	if strings.Contains(styleName, "=") {
+		// Parse the key=value pair
+		eqIdx := strings.Index(styleName, "=")
+		key := strings.TrimSpace(styleName[:eqIdx])
+		value := strings.TrimSpace(styleName[eqIdx+1:])
+
+		// Remove quotes if present
+		if len(value) > 0 {
+			if (value[0] == '"' && value[len(value)-1] == '"') ||
+				(value[0] == '\'' && value[len(value)-1] == '\'') {
+				value = value[1 : len(value)-1]
+			}
+		}
+
+		attrs[key] = value
+		styleName = "" // No style name, just attributes
+	}
+
+	// Handle additional attributes after the style name
 	if len(parts) == 2 {
 		secondPart := strings.TrimSpace(parts[1])
-		// Check if it's a simple language identifier (no = sign)
+
+		// Check if it's a simple language identifier (no = sign) for source/listing blocks
 		if !strings.Contains(secondPart, "=") && (styleName == "source" || styleName == "listing") {
 			// Treat as language identifier
 			attrs["language"] = secondPart
+		} else if strings.Contains(secondPart, "=") {
+			// Parse key=value attribute
+			eqIdx := strings.Index(secondPart, "=")
+			key := strings.TrimSpace(secondPart[:eqIdx])
+			value := strings.TrimSpace(secondPart[eqIdx+1:])
+
+			// Remove quotes if present
+			if len(value) > 0 {
+				if (value[0] == '"' && value[len(value)-1] == '"') ||
+					(value[0] == '\'' && value[len(value)-1] == '\'') {
+					value = value[1 : len(value)-1]
+				}
+			}
+
+			attrs[key] = value
 		} else {
-			// Parse as key=value attributes
-			// For now, just store the raw content - full parsing would be more complex
+			// Store raw value for other cases
 			attrs["raw"] = secondPart
 		}
 	}

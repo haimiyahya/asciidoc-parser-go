@@ -1398,9 +1398,16 @@ func (c *HTML5Converter) convertList(list *ast.NodeList, w io.Writer) {
 	// Always add newlines for Asciidoctor compatibility
 	fmt.Fprintf(w, `<div class="%s">`+"\n", wrapperClass)
 
-	// For ordered lists, add class attribute
+	// For ordered lists, add class attribute and optional start attribute
 	if tag == "ol" {
-		fmt.Fprintf(w, `<ol class="%s">`+"\n", orderedListClass)
+		// Check for start attribute (e.g., [start=5])
+		startAttr := ""
+		if list.Attributes != nil {
+			if startVal, ok := list.Attributes["start"]; ok {
+				startAttr = fmt.Sprintf(` start="%s"`, startVal)
+			}
+		}
+		fmt.Fprintf(w, `<ol class="%s"%s>`+"\n", orderedListClass, startAttr)
 	} else if tag == "ul" && unorderedListClass != "" {
 		// Unordered list with style class
 		fmt.Fprintf(w, `<ul class="%s">`+"\n", unorderedListClass)

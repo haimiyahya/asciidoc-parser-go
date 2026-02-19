@@ -73,11 +73,12 @@ def greet(name: str) -> str:
 
 [source,go]
 ----
-%<-- kind of not supported yet
 func main() {
     fmt.Println("Hello, World!")
 }
 ----
+
+*Note: Line numbering with `linenums` option is not yet fully supported.*
 
 === Language Gallery
 

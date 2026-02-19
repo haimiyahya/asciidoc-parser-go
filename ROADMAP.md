@@ -84,11 +84,13 @@ Using {product}...
 #### 3. Table Improvements
 **Current:** Basic tables with column specifications and attributes
 
+**Implemented Features:**
+- ✅ **Multi-line cells (`+` continuation)** - Lines ending with `+` continue in same cell with newline separator
+  - Example: `| Line 1+` followed by `Line 2` becomes one cell with "Line 1\nLine 2"
+  - The `+` character is removed from output
+  - Chained continuation: `line1+` followed by `line2+` followed by `line3`
+
 **Remaining Features:**
-- **Multi-line cells (`+` continuation)** - Lines ending with `+` should continue in same cell with newline separator
-  - Example: `| Line 1 +` followed by `| Line 2` should become one cell with "Line 1\nLine 2"
-  - The `+` character should be removed from output
-  - This requires changes to the table row parser to detect and collect continuation lines
 - Cell styles via column specs - `[cols="2*l"]` for literal columns already works
 - Vertical table support
 - Auto-fit column widths (`[%autowidth]` implemented)`

@@ -88,15 +88,14 @@ term 3:: Description of term 3
 
 === Labeled List with Extended Descriptions
 
-First Term::
-This is a longer description that spans
-multiple lines.
+First Term:: This is a longer description that spans multiple lines.
 
-Second Term::
-This also has a detailed description
-with multiple paragraphs or sentences.
+Second Term:: This also has a detailed description with multiple sentences.
 
 Third Term:: Short description
+
+// Note: For multi-line definitions, keep the text on the same line as the term.
+// Multi-paragraph definitions are not yet supported in this implementation.
 
 === Labeled List with Nested Content
 

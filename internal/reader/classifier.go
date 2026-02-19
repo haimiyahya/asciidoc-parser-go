@@ -1062,6 +1062,11 @@ func (lc *LineClassifier) checkListItem(line string, indent int) *ListInfo {
 		info.Level = indent/2 + 1
 	}
 
+	// Checklist: - [x] or - [ ] (must check BEFORE unordered since checklists also use -)
+	if lc.isChecklistItem(trimmed, info) {
+		return info
+	}
+
 	// Unordered lists: -, *, o (with space after)
 	if lc.isUnorderedListItem(trimmed, info) {
 		return info
@@ -1074,11 +1079,6 @@ func (lc *LineClassifier) checkListItem(line string, indent int) *ListInfo {
 
 	// Labeled lists: term :: or term ;; or term :::: (with space after)
 	if lc.isLabeledListItem(trimmed, info) {
-		return info
-	}
-
-	// Checklist: - [x] or - [ ]
-	if lc.isChecklistItem(trimmed, info) {
 		return info
 	}
 

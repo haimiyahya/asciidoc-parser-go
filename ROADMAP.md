@@ -294,6 +294,26 @@ asciidoctor/test/
 - Implement Q&A list style
 - Add bibliography list support
 
+### Mixed List Types
+
+**Current Issues:**
+- **Single nested list per item** - Each list item can only have one nested list
+  - **Problem:** When mixing unordered (`*`) and ordered (`.`) lists at different levels under the same parent, the second list type replaces the first instead of creating a separate nested list
+  - **Example:** The following doesn't render as expected:
+    ```asciidoc
+    * Chapter 2
+    ** Important note
+    . Section 2.1
+    ** Another note
+    ```
+    In this example, `. Section 2.1` should be a separate nested list under "Chapter 2", parallel to the `** Important note` list. However, due to the AST limitation (only one `NestedList` field per `NodeListItem`), items are added to the existing nested list instead.
+  - **Workaround:** Use consistent list types for nested items, or separate the mixed lists with blank lines
+
+**Planned Fix:**
+- Change `NodeListItem.NestedList` from a single pointer to a slice of lists
+- Update parser to create multiple nested lists per item when needed
+- Update HTML converter to render multiple nested lists per item
+
 ## Notes
 
 - Asciidoctor does **NOT** provide an official LSP server ([GitHub Issue #3630](https://github.com/asciidoctor/asciidoctor/issues/3630))

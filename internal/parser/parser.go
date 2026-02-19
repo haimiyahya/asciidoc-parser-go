@@ -498,14 +498,80 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 					p.addNestedList(classification, lineno, doc)
 				} else if itemInfo.Level < p.currentListLevel {
 					// Going back up the hierarchy - pop from stack until we find the right level
+					// First, check the type of the item we're coming from
+					fromType := p.currentListBlockType
 					p.popListStackToLevel(itemInfo.Level)
-					// After popping, add the item to the now-current list
-					p.addListItemToList(classification, lineno)
+
+					// After popping, decide how to add the new item:
+					// - If coming from same type, add as sibling in current list
+					// - If coming from different type:
+					//   - If current list has items and we just came from that type, don't add to it
+					//   - Instead, check if the last item has a nested list of our type
+					// - If so, add to that nested list; otherwise create a new nested list
+					if fromType == itemInfo.Type {
+						// Same type - add as sibling
+						p.addListItemToList(classification, lineno)
+					} else if len(p.currentList.Items) > 0 {
+						// Different type and current list has items
+						// Check if the last item has a nested list of the new type
+						lastItemIdx := len(p.currentList.Items) - 1
+						if lastItemIdx >= 0 {
+							if li, ok := p.currentList.Items[lastItemIdx].(*ast.NodeListItem); ok && li.NestedList != nil {
+								// The last item has a nested list - check if it's the right type
+								nestedList := li.NestedList
+								// Get the type of the nested list from its first item
+								if len(nestedList.Items) > 0 {
+									if nestedLi, ok := nestedList.Items[0].(*ast.NodeListItem); ok {
+										nestedType := listItemToBlockType(nestedLi.Marker)
+										if nestedType == itemInfo.Type {
+											// The nested list matches our type - add to it
+											p.currentList = nestedList
+											p.currentListLevel = itemInfo.Level
+											p.currentListBlockType = itemInfo.Type
+											// Push the parent list onto stack
+											p.listStack = append(p.listStack, listStackEntry{
+												list:      p.currentList,
+												level:     p.currentListLevel,
+												blockType: p.currentListBlockType,
+											})
+											p.addListItemToList(classification, lineno)
+											continue
+										}
+									}
+								}
+							}
+						}
+						// No matching nested list - create a new one under the last item
+						p.addNestedList(classification, lineno, doc)
+					} else {
+						// Different type but current list is empty - add as direct item
+						p.addListItemToList(classification, lineno)
+					}
 				} else {
-					// Different list type at same level - close current and start new
-					p.closeCurrentList(doc)
-					if classification.List != nil {
-						p.startNewList(classification, lineno, doc)
+					// Different list type at same level
+					// Check if there's a parent list of this type in the stack
+					// If so, pop back to it (e.g., returning to * after . items)
+					// Otherwise, nest inside current list item (e.g., . after * items)
+					foundParent := false
+					for i := len(p.listStack) - 1; i >= 0; i-- {
+						if p.listStack[i].blockType == itemInfo.Type && p.listStack[i].level == itemInfo.Level {
+							// Found a parent list of this type at this level - pop back to it
+							// Pop all entries above and including the matching one
+							for j := len(p.listStack) - 1; j >= i; j-- {
+								p.currentList = p.listStack[j].list
+								p.currentListLevel = p.listStack[j].level
+								p.currentListBlockType = p.listStack[j].blockType
+								p.listStack = p.listStack[:j]
+							}
+							foundParent = true
+							break
+						}
+					}
+					if foundParent {
+						p.addListItemToList(classification, lineno)
+					} else {
+						// No parent list of this type - nest as mixed list content
+						p.addNestedList(classification, lineno, doc)
 					}
 				}
 			}
@@ -1017,11 +1083,16 @@ func (p *Parser) createListItem(info *reader.ListInfo, lineno int) ast.Node {
 		}
 	}
 
+	// Determine checked state for checklists
+	// ChecklistChecked means the item is checked ([x] or [*])
+	checked := info.ChecklistState == reader.ChecklistChecked
+
 	return &ast.NodeListItem{
 		Kind:           ast.TypeListItem,
 		Marker:          info.Marker,
 		Level:           info.Level,
 		Ordinal:         info.Ordinal,
+		Checked:         checked,
 		Text:            text,
 		Term:            info.Term,
 		Definition:      info.Text, // For labeled lists, Text contains the definition
@@ -1623,6 +1694,23 @@ func (p *Parser) addNestedList(classification *reader.Classification, lineno int
 	p.currentList = nestedList
 	p.currentListLevel = info.Level
 	p.currentListBlockType = info.Type
+}
+
+// listItemToBlockType converts a list marker to its block type.
+func listItemToBlockType(marker string) reader.BlockType {
+	if len(marker) == 0 {
+		return reader.BlockListUnordered
+	}
+	switch marker[0] {
+	case '.', ';':
+		return reader.BlockListOrdered
+	case '*', '-', 'o':
+		return reader.BlockListUnordered
+	case ':':
+		return reader.BlockListLabeled
+	default:
+		return reader.BlockListUnordered
+	}
 }
 
 // Advance is a helper that consumes the next line.

@@ -197,8 +197,12 @@ isValid = true
 . Section 1.2
 * Chapter 2
 ** Important note
-. Section 2.1
 ** Another note
+* Chapter 3
+. Section 3.1
+.. Subsection 3.1.1
+. Section 3.2
+.. Subsection 3.2.1
 
 == List Styling
 

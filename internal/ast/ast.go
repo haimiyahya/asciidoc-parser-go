@@ -152,6 +152,9 @@ type NodeListItem struct {
 	Level int
 	// Ordinal is the ordinal number for ordered lists (1, 2, etc.).
 	Ordinal int
+	// Checked indicates if this is a checked checklist item.
+	// For checklists: true for "[x]", false for "[ ]"
+	Checked bool
 	// Text is the item text content.
 	Text string
 	// Definition is the definition text for labeled lists (item.Definition).

@@ -1,7 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
+asciidoc-parser-go: wrote ./examples/lists.html
+-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lists Showcase</title>
 
@@ -618,9 +616,6 @@ em, i {
 <li>
 <p>Sub-task b</p>
 </li>
-</ul>
-</div>
-</li>
 <li>
 <p>Main task two</p>
 <div class="ulist">
@@ -635,11 +630,14 @@ em, i {
 </ul>
 </div>
 </li>
+<li>
+<p>Main task three</p>
+</li>
 </ul>
 </div>
 </li>
-<li>
-<p>Main task three</p>
+</ul>
+</div>
 </li>
 </ol>
 </div>
@@ -738,13 +736,13 @@ em, i {
 <div class="ulist">
 <ul>
 <li>
-<p>[ ] Task not yet done</p>
+<p><input type="checkbox"> Task not yet done</p>
 </li>
 <li>
-<p>[x] Completed task</p>
+<p><input type="checkbox" checked="checked"> Completed task</p>
 </li>
 <li>
-<p>[ ] Another pending task</p>
+<p><input type="checkbox"> Another pending task</p>
 </li>
 </ul>
 </div>
@@ -757,16 +755,16 @@ em, i {
 <div class="ulist">
 <ul>
 <li>
-<p>[x] Milk</p>
+<p><input type="checkbox" checked="checked"> Milk</p>
 </li>
 <li>
-<p>[x] Eggs</p>
+<p><input type="checkbox" checked="checked"> Eggs</p>
 </li>
 <li>
-<p>[ ] Bread</p>
+<p><input type="checkbox"> Bread</p>
 </li>
 <li>
-<p>[ ] Coffee</p>
+<p><input type="checkbox"> Coffee</p>
 </li>
 </ul>
 </div>
@@ -776,13 +774,13 @@ em, i {
 <div class="ulist">
 <ul>
 <li>
-<p>[ ] Review PR #123</p>
+<p><input type="checkbox"> Review PR #123</p>
 </li>
 <li>
-<p>[x] Fix bug in table parser</p>
+<p><input type="checkbox" checked="checked"> Fix bug in table parser</p>
 </li>
 <li>
-<p>[ ] Update documentation</p>
+<p><input type="checkbox"> Update documentation</p>
 </li>
 </ul>
 </div>
@@ -843,9 +841,6 @@ em, i {
 <ul>
 <li>
 <p>Chapter 1</p>
-</li>
-</ul>
-</div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -873,8 +868,7 @@ em, i {
 </li>
 </ol>
 </div>
-<div class="ulist">
-<ul>
+</li>
 <li>
 <p>Chapter 2</p>
 <div class="ulist">
@@ -882,17 +876,37 @@ em, i {
 <li>
 <p>Important note</p>
 </li>
-</ul>
-</div>
-</li>
-<li>
-<p>Section 2.1</p>
-<div class="ulist">
-<ul>
 <li>
 <p>Another note</p>
 </li>
 </ul>
+</div>
+</li>
+<li>
+<p>Chapter 3</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Section 3.1</p>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Subsection 3.1.1</p>
+</li>
+</ol>
+</div>
+</li>
+<li>
+<p>Section 3.2</p>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Subsection 3.2.1</p>
+</li>
+</ol>
+</div>
+</li>
+</ol>
 </div>
 </li>
 </ul>

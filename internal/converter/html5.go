@@ -1527,14 +1527,7 @@ func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 		// Has nested list - open li, render text in p, nested list, close li
 		fmt.Fprint(w, `<li>
 `)
-		fmt.Fprint(w, `<p>`)
-		if len(item.InlineNodes) == 0 {
-			c.writeRawString(c.escape(item.Text), w)
-		} else {
-			c.renderInlineText(item.Text, item.InlineNodes, w)
-		}
-		fmt.Fprint(w, `</p>
-`)
+		c.renderListItemContent(item, w)
 		c.convertNode(item.NestedList, w)
 		fmt.Fprint(w, `</li>
 `)
@@ -1542,17 +1535,36 @@ func (c *HTML5Converter) convertListItem(item *ast.NodeListItem, w io.Writer) {
 		// Regular list item without nested list - wrap content in p tag (Asciidoctor compatibility)
 		fmt.Fprint(w, `<li>
 `)
-		fmt.Fprint(w, `<p>`)
-		if len(item.InlineNodes) == 0 {
-			c.writeRawString(c.escape(item.Text), w)
-		} else {
-			c.renderInlineText(item.Text, item.InlineNodes, w)
-		}
-		fmt.Fprint(w, `</p>
-`)
+		c.renderListItemContent(item, w)
 		fmt.Fprint(w, `</li>
 `)
 	}
+}
+
+// renderListItemContent renders the content of a list item (text or checkbox).
+func (c *HTML5Converter) renderListItemContent(item *ast.NodeListItem, w io.Writer) {
+	fmt.Fprint(w, `<p>`)
+
+	// Check if this is a checklist item (marker is "-" and Checked field is explicitly set)
+	// Checklists use the Checked field on NodeListItem
+	isChecklist := item.Marker == "-"
+
+	if isChecklist {
+		checkedAttr := ""
+		if item.Checked {
+			checkedAttr = ` checked="checked"`
+		}
+		fmt.Fprintf(w, `<input type="checkbox"%s>`, checkedAttr)
+		fmt.Fprint(w, ` `)
+	}
+
+	if len(item.InlineNodes) == 0 {
+		c.writeRawString(c.escape(item.Text), w)
+	} else {
+		c.renderInlineText(item.Text, item.InlineNodes, w)
+	}
+	fmt.Fprint(w, `</p>
+`)
 }
 
 // renderInlineText renders text with inline nodes.

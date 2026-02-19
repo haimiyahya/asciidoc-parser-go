@@ -4,6 +4,37 @@ This document outlines future features and implementation priorities for asciido
 
 **Current Status:** All core phases (0-13) are complete with 100% Asciidoctor compatibility on 32 built-in test cases. See [README.md](README.md) for completed features.
 
+## Visual Validation Showcases
+
+To ensure visual correctness and provide examples for users, we maintain showcase HTML files that demonstrate specific AsciiDoc features.
+
+### Current Showcases
+
+| Showcase | Status | Description |
+|----------|--------|-------------|
+| `examples/showcase.adoc` | ✅ Complete | General overview - sections, basic lists, paragraphs |
+| `examples/tables-advanced.adoc` | ✅ Complete | All table features - frame, grid, stripes, alignment, etc. |
+
+### Planned Showcases (High Priority)
+
+| Showcase | Description | Features to Demonstrate |
+|----------|-------------|-------------------------|
+| `inline-formatting.adoc` | Text markup showcase | Bold, italic, monospace, sub/superscript, links (external/inter-document/xrefs), inline images, icons, keyboard shortcuts, buttons, menus |
+| `lists.adoc` | All list types | Ordered (arabic, alpha, roman), unordered with nesting, labeled/description lists, checklist tasks, inline and nested combinations |
+| `admonitions.adoc` | Callout blocks | Note, tip, warning, caution, important blocks with/without titles, multi-line content, icons |
+| `code-blocks.adoc` | Source code | Listing blocks with syntax highlighting, literal blocks, callouts (`<1>`), different languages, line numbering |
+
+### Medium Priority Showcases
+
+| Showcase | Description |
+|----------|-------------|
+| `blocks-showcase.adoc` | Example, quote (plain vs verse), sidebar, pass-through blocks |
+| `document-structure.adoc` | Multiple section levels, preamble, TOC, book vs article doctype |
+| `images-and-media.adoc` | Images, diagrams, video embeds |
+| `attributes-demo.adoc` | Attribute definitions, references, conditional inclusion |
+
+**Purpose:** These showcases serve both as visual regression tests and user-facing examples. Each should be viewable in a browser to verify correct rendering.
+
 ## Implementation Priorities
 
 ### High Priority

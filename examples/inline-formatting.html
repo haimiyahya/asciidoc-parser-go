@@ -27,6 +27,16 @@ ul, ol {
 	margin: 0.5em 0;
 	padding-left: 2em;
 }
+/* Unordered list marker styles */
+ul.disc {
+	list-style-type: disc;
+}
+ul.circle {
+	list-style-type: circle;
+}
+ul.square {
+	list-style-type: square;
+}
 code {
 	background-color: #f4f4f4;
 	padding: 0.2em 0.4em;
@@ -354,6 +364,47 @@ em, i {
 .chroma .gr { color: #cf222e; } /* Generic error */
 .chroma .gt { color: #cf222e; } /* Generic traceback */
 .chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+/* Line numbers table styling */
+table.linenums {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 0;
+}
+table.linenums td {
+	padding: 0;
+	margin: 0;
+	border: none;
+	vertical-align: baseline;
+	line-height: 1.45;
+}
+table.linenums .linenum {
+	padding: 0 8px 0 0;
+	text-align: right;
+	color: #999;
+	user-select: none;
+	border-right: 1px solid #ddd;
+	width: 1%;
+	white-space: nowrap;
+	font-size: 12px;
+}
+table.linenums .code {
+	padding: 0 0 0 8px;
+	text-align: left;
+}
+table.linenums .code .chroma {
+	white-space: pre;
+	display: block;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+table.linenums pre,
+table.linenums code {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border-radius: 0;
+}
 </style>
 
 </head>

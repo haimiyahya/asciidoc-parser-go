@@ -119,8 +119,21 @@ Second Term:: This also has a detailed description with multiple sentences.
 
 Third Term:: Short description
 
-// Note: For multi-line definitions, keep the text on the same line as the term.
-// Multi-paragraph definitions are not yet supported in this implementation.
+=== Multi-line Definitions
+
+Labeled list items can have multi-line definitions. Simply add the continuation
+lines on the following lines (no need for special syntax).
+
+Installation instructions::
+Download the package from the official website.
+Extract the archive to your preferred location.
+Run the installer script.
+Follow the on-screen prompts.
+
+Configuration steps::
+Edit the configuration file in /etc/myapp/config.yaml.
+Set your preferred options and save the file.
+Restart the application for changes to take effect.
 
 === Labeled List with Nested Content
 

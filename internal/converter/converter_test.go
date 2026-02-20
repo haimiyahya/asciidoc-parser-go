@@ -668,3 +668,34 @@ func TestHTML5ConverterTableNoAutowidth(t *testing.T) {
 	output := buf.String()
 	assert.Contains(t, output, "<colgroup>", "colgroup should be present without autowidth")
 }
+
+func TestHTML5ConverterExplicitStyleOrderedList(t *testing.T) {
+	// Test that explicit style markers [a], [A], [i], [I] render as <ol> with correct class
+	doc := &ast.NodeDocument{
+		Blocks: []ast.Node{
+			&ast.NodeList{
+				Items: []ast.Node{
+					&ast.NodeListItem{
+						Marker: "[a]",
+						Text:   "First item",
+					},
+					&ast.NodeListItem{
+						Marker: "[a]",
+						Text:   "Second item",
+					},
+				},
+			},
+		},
+	}
+
+	converter := NewHTML5Converter()
+	var buf bytes.Buffer
+	err := converter.Convert(doc, &buf)
+	require.NoError(t, err)
+
+	output := buf.String()
+	t.Logf("Output:\n%s", output)
+	assert.Contains(t, output, `<ol class="loweralpha">`, "Should be ordered list with loweralpha class")
+	assert.Contains(t, output, `<div class="olist loweralpha">`, "Should have olist wrapper with loweralpha class")
+}
+

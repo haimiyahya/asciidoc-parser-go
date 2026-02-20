@@ -1915,6 +1915,22 @@ func (c *HTML5Converter) listTag(item ast.Node) string {
 		case "::", ":::", "::::", ";;;;:":
 			return "dl" // Labeled/definition list
 		}
+
+		// Check for explicit numbering style markers: [a], [A], [i], [I], [1]
+		if strings.HasPrefix(li.Marker, "[") && strings.HasSuffix(li.Marker, "]") {
+			// Extract the style and validate it
+			style := li.Marker[1:len(li.Marker)-1]
+			switch strings.ToLower(style) {
+			case "a", "loweralpha", "upperalpha":
+				return "ol" // Explicit style ordered list (lower/upper alpha)
+			case "i", "lowerroman", "upperroman":
+				return "ol" // Explicit style ordered list (lower/upper roman)
+			case "1", "arabic":
+				return "ol" // Explicit style ordered list (arabic)
+			default:
+				// Not a valid explicit style, fall through to default
+			}
+		}
 	}
 	// Check for multi-character ordered list markers (e.g. "..", ";;", "::")
 	if li, ok := item.(*ast.NodeListItem); ok {
@@ -1933,8 +1949,44 @@ func (c *HTML5Converter) listTag(item ast.Node) string {
 // - 3 dots (...) = loweralpha (a, b, c)
 // - 4 dots (....) = upperalpha (A, B, C)
 // - 5+ dots cycles through the above
+// - Explicit styles [a], [A], [i], [I] override the dot-based numbering
 func (c *HTML5Converter) orderedListClass(item ast.Node) string {
 	if li, ok := item.(*ast.NodeListItem); ok {
+		marker := li.Marker
+
+		// Check for explicit numbering style markers: [a], [A], [i], [I], etc.
+		if strings.HasPrefix(marker, "[") && strings.HasSuffix(marker, "]") {
+			style := marker[1:len(marker)-1]
+			switch style {
+			case "a":
+				return "loweralpha"
+			case "A":
+				return "upperalpha"
+			case "i":
+				return "lowerroman"
+			case "I":
+				return "upperroman"
+			case "1":
+				return "arabic"
+			default:
+				// Try lowercase for flexibility with long-form names
+				switch strings.ToLower(style) {
+				case "loweralpha":
+					return "loweralpha"
+				case "upperalpha":
+					return "upperalpha"
+				case "lowerroman":
+					return "lowerroman"
+				case "upperroman":
+					return "upperroman"
+				case "arabic":
+					return "arabic"
+				default:
+					return "arabic" // Default fallback
+				}
+			}
+		}
+
 		markerLen := len(li.Marker)
 		// Handle both dot (.) and semicolon (;) markers
 		if markerLen > 0 && (li.Marker[0] == '.' || li.Marker[0] == ';') {

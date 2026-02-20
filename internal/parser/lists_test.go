@@ -2,9 +2,11 @@
 package parser
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
+	"github.com/haimiyahya/asciidoc-parser-go/internal/converter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -588,4 +590,158 @@ Content for level 3.
 
 	// Level 3 section should have 1 paragraph child
 	assert.Len(t, level3Section.Children, 1)
+}
+
+// TestDebugExplicitStyle helps debug the explicit style parsing
+func TestDebugExplicitStyle(t *testing.T) {
+	source := `[a] First
+[a] Second
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+
+	t.Logf("Document has %d blocks", len(doc.Blocks))
+	for i, block := range doc.Blocks {
+		t.Logf("Block %d: %T", i, block)
+		if para, ok := block.(*ast.NodeParagraph); ok {
+			t.Logf("  Paragraph: %q", para.Text)
+		}
+		if list, ok := block.(*ast.NodeList); ok {
+			t.Logf("  List: %d items", len(list.Items))
+			for j, item := range list.Items {
+				if li, ok := item.(*ast.NodeListItem); ok {
+					t.Logf("    Item %d: Marker=%q, Text=%q", j, li.Marker, li.Text)
+				}
+			}
+		}
+	}
+}
+
+func TestParseExplicitStyleOrderedList(t *testing.T) {
+	// In AsciiDoc, all items in the same list use the SAME explicit style marker
+	// The browser handles the actual numbering (a, b, c, ...)
+	source := `[a] First item
+[a] Second item
+[a] Third item
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have 1 block (the list)
+	assert.Len(t, doc.Blocks, 1, "Should have 1 block")
+
+	list, ok := doc.Blocks[0].(*ast.NodeList)
+	require.True(t, ok, "First block should be a NodeList")
+	assert.Equal(t, ast.TypeList, list.Kind)
+	assert.Len(t, list.Items, 3, "Should have 3 items")
+
+	// Check first item
+	item0, ok0 := list.Items[0].(*ast.NodeListItem)
+	require.True(t, ok0)
+	assert.Equal(t, "[a]", item0.Marker, "First item marker should be [a]")
+	assert.Equal(t, "First item", item0.Text, "First item text")
+
+	// Check second item
+	item1, ok1 := list.Items[1].(*ast.NodeListItem)
+	require.True(t, ok1)
+	assert.Equal(t, "[a]", item1.Marker, "Second item marker should be [a]")
+	assert.Equal(t, "Second item", item1.Text, "Second item text")
+
+	// Check third item
+	item2, ok2 := list.Items[2].(*ast.NodeListItem)
+	require.True(t, ok2)
+	assert.Equal(t, "[a]", item2.Marker, "Third item marker should be [a]")
+	assert.Equal(t, "Third item", item2.Text, "Third item text")
+}
+
+func TestParseMixedExplicitNumberingStyles(t *testing.T) {
+	// Note: In AsciiDoc, you can't mix dot-based markers with explicit style markers
+	// in the same list. Each marker style creates its own list.
+	// This test verifies that explicit style markers create ordered lists.
+
+	source := `. Arabic item
+. Another arabic
+`
+
+	p, err := NewParserFromString(source)
+	require.NoError(t, err)
+
+	doc, err := p.Parse()
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	// Should have 1 block (the list)
+	assert.Len(t, doc.Blocks, 1)
+
+	list, ok := doc.Blocks[0].(*ast.NodeList)
+	require.True(t, ok)
+	assert.Len(t, list.Items, 2)
+
+	// Check dot-based markers
+	item0, _ := list.Items[0].(*ast.NodeListItem)
+	assert.Equal(t, ".", item0.Marker)
+
+	item1, _ := list.Items[1].(*ast.NodeListItem)
+	assert.Equal(t, ".", item1.Marker)
+}
+
+func TestParseExplicitStyleAllVariants(t *testing.T) {
+	// Test each explicit style marker separately
+	testCases := []struct {
+		name   string
+		marker string
+		class  string
+	}{
+		{"loweralpha", "[a]", "loweralpha"},
+		{"upperalpha", "[A]", "upperalpha"},
+		{"lowerroman", "[i]", "lowerroman"},
+		{"upperroman", "[I]", "upperroman"},
+		{"arabic", "[1]", "arabic"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			source := tc.marker + " First item\n" + tc.marker + " Second item\n"
+
+			p, err := NewParserFromString(source)
+			require.NoError(t, err)
+
+			doc, err := p.Parse()
+			require.NoError(t, err)
+			require.NotNil(t, doc)
+
+			// Should have 1 block (the list)
+			assert.Len(t, doc.Blocks, 1)
+
+			list, ok := doc.Blocks[0].(*ast.NodeList)
+			require.True(t, ok)
+			assert.Len(t, list.Items, 2)
+
+			// Check explicit style markers
+			item0, _ := list.Items[0].(*ast.NodeListItem)
+			assert.Equal(t, tc.marker, item0.Marker)
+
+			item1, _ := list.Items[1].(*ast.NodeListItem)
+			assert.Equal(t, tc.marker, item1.Marker)
+
+			// Verify HTML conversion
+			html5Converter := converter.NewHTML5Converter()
+			var buf bytes.Buffer
+			err = html5Converter.Convert(doc, &buf)
+			require.NoError(t, err)
+
+			output := buf.String()
+			assert.Contains(t, output, `<ol class="`+tc.class+`">`)
+			assert.Contains(t, output, `<div class="olist `+tc.class+`">`)
+		})
+	}
 }

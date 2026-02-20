@@ -861,3 +861,152 @@ func TestBlockTypeIsDelimitedBlock(t *testing.T) {
 		})
 	}
 }
+
+// TestExplicitStyleOrderedList tests the explicit numbering style syntax.
+func TestExplicitStyleOrderedList(t *testing.T) {
+	lc := NewLineClassifier()
+
+	// First, let's verify full classification works
+	t.Run("full classification", func(t *testing.T) {
+		line := "[a] First item"
+		result := lc.ClassifyLine(line)
+		if result.List == nil {
+			t.Fatalf("Expected list info, got nil")
+		}
+		t.Logf("Line: %q -> Type: %v, Marker: %q, Text: %q",
+			line, result.Type, result.List.Marker, result.List.Text)
+	})
+
+	tests := []struct {
+		name     string
+		line     string
+		expected bool
+		listType BlockType
+		marker   string
+		text     string
+	}{
+		{
+			name:     "lowercase alpha",
+			line:     "[a] First item",
+			expected: true,
+			listType: BlockListOrdered,
+			marker:   "[a]",
+			text:     "First item",
+		},
+		{
+			name:     "uppercase alpha",
+			line:     "[A] First item",
+			expected: true,
+			listType: BlockListOrdered,
+			marker:   "[A]",
+			text:     "First item",
+		},
+		{
+			name:     "lowercase roman",
+			line:     "[i] First item",
+			expected: true,
+			listType: BlockListOrdered,
+			marker:   "[i]",
+			text:     "First item",
+		},
+		{
+			name:     "uppercase roman",
+			line:     "[I] First item",
+			expected: true,
+			listType: BlockListOrdered,
+			marker:   "[I]",
+			text:     "First item",
+		},
+		{
+			name:     "arabic explicit",
+			line:     "[1] First item",
+			expected: true,
+			listType: BlockListOrdered,
+			marker:   "[1]",
+			text:     "First item",
+		},
+		{
+			name:     "loweralpha long form",
+			line:     "[loweralpha] First item",
+			expected: true,
+			listType: BlockListOrdered,
+			marker:   "[loweralpha]",
+			text:     "First item",
+		},
+		{
+			name:     "not a style - random text",
+			line:     "[xyz] First item",
+			expected: false,
+		},
+		{
+			name:     "no space after bracket",
+			line:     "[a]First item",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info := lc.checkListItem(strings.TrimSpace(tt.line), 0)
+
+			if tt.expected {
+				require.NotNil(t, info, "Expected to match as list item")
+				assert.Equal(t, tt.listType, info.Type, "List type should match")
+				assert.Equal(t, tt.marker, info.Marker, "Marker should match")
+				assert.Equal(t, tt.text, info.Text, "Text should match")
+			} else {
+				if info != nil {
+					// If it matched as some other list type, that's wrong
+					if info.Type == BlockListOrdered {
+						t.Errorf("Expected no match, but got ordered list with marker %q", info.Marker)
+					}
+				}
+			}
+		})
+	}
+}
+
+// TestExplicitStyleMultipleLetters tests that only specific style markers work
+func TestExplicitStyleMultipleLetters(t *testing.T) {
+	lc := NewLineClassifier()
+
+	// In AsciiDoc, [a], [A], [i], [I], [1] (and their long forms) are valid.
+	// Other letters like [b], [c] etc. are NOT valid explicit style markers.
+	// All items in the same list use the SAME style marker (e.g., all use [a]).
+
+	validMarkers := []string{
+		"[a] First", "[A] First", "[i] First", "[I] First", "[1] First",
+		"[loweralpha] First", "[upperalpha] First",
+		"[lowerroman] First", "[upperroman] First",
+		"[arabic] First",
+	}
+
+	for _, line := range validMarkers {
+		result := lc.ClassifyLine(line)
+		if result.List == nil {
+			t.Errorf("Line %q should be recognized as list item", line)
+			continue
+		}
+		if result.Type != BlockListOrdered {
+			t.Errorf("Line %q should be BlockListOrdered, got %v", line, result.Type)
+		}
+		t.Logf("Line: %q -> Marker: %q, Text: %q", line, result.List.Marker, result.List.Text)
+	}
+
+	// Invalid markers should NOT be recognized as explicit style ordered lists
+	invalidMarkers := []string{
+		"[b] Second", "[c] Third", "[x] X item",
+	}
+
+	for _, line := range invalidMarkers {
+		result := lc.ClassifyLine(line)
+		// These should NOT be recognized as explicit style ordered lists
+		if result.List != nil && result.Type == BlockListOrdered {
+			marker := result.List.Marker
+			// If it was recognized, make sure it's not because of the explicit style check
+			if marker == "[b]" || marker == "[c]" || marker == "[x]" {
+				t.Errorf("Line %q should NOT be recognized as explicit style ordered list", line)
+			}
+		}
+	}
+}

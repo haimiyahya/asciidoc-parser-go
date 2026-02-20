@@ -1072,6 +1072,11 @@ func (lc *LineClassifier) checkListItem(line string, indent int) *ListInfo {
 		return info
 	}
 
+	// Explicit numbering style: [a], [A], [i], [I], [1]
+	if lc.isExplicitStyleOrderedListItem(trimmed, info) {
+		return info
+	}
+
 	// Ordered lists: ., .., ..., ;, ::, ::: (dot-style)
 	if lc.isOrderedListItem(trimmed, info) {
 		return info
@@ -1177,6 +1182,67 @@ func (lc *LineClassifier) isOrderedListItem(line string, info *ListInfo) bool {
 	info.Ordinal = markerCount
 	info.Level = markerCount
 	info.Text = strings.TrimSpace(line[markerCount:])
+	return true
+}
+
+// isExplicitStyleOrderedListItem checks for explicit numbering style [a], [A], [i], [I], [1].
+// These override the default dot-based numbering.
+func (lc *LineClassifier) isExplicitStyleOrderedListItem(line string, info *ListInfo) bool {
+	// Pattern: [style] text where style is a, A, i, I, 1, etc.
+	// Must have at least: "[a] " or "[A] " or "[i] " or "[I] "
+
+	if len(line) < 5 {
+		return false
+	}
+
+	// Check for opening bracket
+	if line[0] != '[' {
+		return false
+	}
+
+	// Find closing bracket
+	closeBracket := strings.Index(line, "]")
+	if closeBracket == -1 || closeBracket > 12 { // 12 for [loweralpha], [upperroman]
+		return false
+	}
+
+	// Extract style between brackets
+	style := line[1:closeBracket]
+
+	// Valid styles: a, A, i, I, 1, arabic, loweralpha, upperalpha, lowerroman, upperroman
+	switch strings.ToLower(style) {
+	case "a", "loweralpha":
+		// Valid loweralpha style
+	case "A", "upperalpha":
+		// Valid upperalpha style
+	case "i", "lowerroman":
+		// Valid lowerroman style
+	case "I", "upperroman":
+		// Valid upperroman style
+	case "1", "arabic":
+		// Valid arabic style
+	default:
+		// Not a valid explicit style
+		return false
+	}
+
+	// Must have space (or tab) after closing bracket
+	if closeBracket+1 >= len(line) || (line[closeBracket+1] != ' ' && line[closeBracket+1] != '\t') {
+		return false
+	}
+
+	// Extract text after the style and bracket
+	text := strings.TrimSpace(line[closeBracket+1:])
+
+	info.Type = BlockListOrdered
+	info.Marker = "." // Use single dot as marker
+	info.Ordinal = 1  // Start at ordinal 1
+	info.Level = 1    // Start at level 1
+	info.Text = text
+	// Store the explicit numbering style - we'll use Attributes to pass this
+	// But ListInfo doesn't have Attributes, so we'll use a special marker prefix
+	info.Marker = "[" + style + "]" // Store the explicit style in the marker
+
 	return true
 }
 

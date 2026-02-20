@@ -36,8 +36,54 @@ This document demonstrates all list types available in AsciiDoc.
 . Second step
 . Third step
 
-// NOTE: Explicit list numbering styles [a], [A], [i], [I] are not yet supported.
-// Use dot notation with different levels for alternative styles:
+=== Explicit Numbering Styles
+
+You can explicitly specify the numbering style using markers before each item.
+All items in the same list use the same style marker.
+
+==== Lower-Alpha (a, b, c)
+
+[a] Prepare the environment
+[a] Write the code
+[a] Run the tests
+[a] Deploy to production
+
+==== Upper-Alpha (A, B, C)
+
+[A] Initial phase
+[A] Development phase
+[A] Testing phase
+[A] Release phase
+
+==== Lower-Roman (i, ii, iii)
+
+[i] Project kickoff
+[i] Requirements gathering
+[i] Design specification
+[i] Implementation
+
+==== Upper-Roman (I, II, III)
+
+[I] Foundation
+[I] Structure
+[I] Finishing touches
+[I] Final inspection
+
+==== Explicit Arabic (1, 2, 3)
+
+[1] Read the documentation
+[1] Follow the tutorial
+[1] Practice with examples
+
+==== Long-Form Style Names
+
+[loweralpha] First option
+[loweralpha] Second option
+[loweralpha] Third option
+
+[upperroman] Primary goal
+[upperroman] Secondary objective
+[upperroman] Tertiary aim
 
 === Nested Ordered Lists
 
@@ -204,6 +250,30 @@ isValid = true
 . Section 3.2
 .. Subsection 3.2.1
 
+=== Software Development Process (with Explicit Styles)
+
+Development phases:
+
+[I] Planning Phase
+[a] Requirements analysis
+[a] Architecture design
+[a] Technology selection
+
+[II] Development Phase
+[a] Backend implementation
+[a] Frontend development
+[a] API integration
+
+[III] Testing Phase
+[i] Unit tests
+[i] Integration tests
+[i] User acceptance tests
+
+[IV] Deployment Phase
+[i] Staging deployment
+[i] Production deployment
+[i] Post-release monitoring
+
 == List Styling
 
 === Unordered List with Different Markers
@@ -255,7 +325,8 @@ o Circle marker item 2
 |===
 | List Type | Syntax Marker | Example
 | Unordered | `*` | ``* Item``
-| Ordered | `.` | ``. Item``
+| Ordered (dot) | `.` | ``. Item``
+| Ordered (explicit) | `[a]`, `[A]`, `[i]`, `[I]`, `[1]` | ``[a] Item``
 | Labeled | `::` | ``term:: description``
 | Inline | N/A | ``one, two, three``
 | Checklist | `-` | ``- [x] Done``
@@ -265,4 +336,7 @@ o Circle marker item 2
 
 * Multi-line list items without proper continuation
 * Complex nested inline formatting in list items
-* Custom list numbering styles
+* Multiple nested lists per item (mixed list types)
+* Inline lists (text: item1, item2, and item3)
+* Q&A lists with qanda attribute
+* Bibliography lists

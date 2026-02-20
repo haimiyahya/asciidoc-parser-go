@@ -44,6 +44,11 @@ type Parser struct {
 	currentListBlockType reader.BlockType
 	currentListLevel int
 
+	// Continuation tracking - when a labeled list item consumes continuation lines,
+	// we need to skip the next Advance() call in the main loop
+	skipNextAdvance            bool
+	linesConsumedByContinuation int
+
 	// Block anchor tracking - [[id]] before a section applies to that section
 	pendingAnchorID string
 
@@ -595,7 +600,13 @@ func (p *Parser) Parse() (*ast.NodeDocument, error) {
 				}
 			}
 
-			p.reader.Advance()
+			// Check if continuation collection already consumed the lines
+			if p.skipNextAdvance {
+				p.skipNextAdvance = false
+				p.linesConsumedByContinuation = 0
+			} else {
+				p.reader.Advance()
+			}
 			continue
 		}
 
@@ -1662,6 +1673,13 @@ func (p *Parser) startNewList(classification *reader.Classification, lineno int,
 		return
 	}
 
+	// For labeled lists, collect continuation lines for multi-line definitions
+	if info.Type == reader.BlockListLabeled {
+		if li, ok := listItem.(*ast.NodeListItem); ok && li.Term != "" {
+			p.collectLabeledListContinuation(li)
+		}
+	}
+
 	// Check if there's a pending block style (e.g., [qanda])
 	listStyle := ""
 	listAttrs := make(map[string]string)
@@ -1737,6 +1755,12 @@ func (p *Parser) addListItemToList(classification *reader.Classification, lineno
 
 	listItem := p.createListItem(info, lineno)
 	if listItem != nil {
+		// For labeled lists, collect continuation lines for multi-line definitions
+		if info.Type == reader.BlockListLabeled {
+			if li, ok := listItem.(*ast.NodeListItem); ok && li.Term != "" {
+				p.collectLabeledListContinuation(li)
+			}
+		}
 		p.currentList.Items = append(p.currentList.Items, listItem)
 	}
 }
@@ -1809,6 +1833,118 @@ func (p *Parser) addNestedList(classification *reader.Classification, lineno int
 	p.currentList = nestedList
 	p.currentListLevel = info.Level
 	p.currentListBlockType = info.Type
+}
+
+// collectLabeledListContinuation collects continuation lines for a labeled list item's definition.
+// In AsciiDoc, lines following a labeled list term that are not blank and not starting a new block
+// are treated as continuation of the definition.
+//
+// Note: This function is called BEFORE the current list item line is consumed by the main loop.
+// We need to first consume the current line, then look ahead for continuation lines.
+func (p *Parser) collectLabeledListContinuation(item *ast.NodeListItem) {
+	// Check if the item has a term (labeled list item)
+	if item.Term == "" {
+		return
+	}
+
+	// Start with the current definition
+	definitionLines := []string{}
+	if item.Definition != "" {
+		definitionLines = append(definitionLines, item.Definition)
+	}
+
+	// First, consume the current line (the list item line itself)
+	// The main loop will also call Advance(), but since this line will already be consumed,
+	// the main loop's Advance() will effectively be a no-op (or consume the next line if we haven't).
+	// To handle this properly, we'll track how many lines we consume.
+	if !p.reader.HasMoreLines() {
+		return
+	}
+
+	// Consume the current list item line first
+	p.reader.Advance()
+
+	// Now look ahead for continuation lines
+	for p.reader.HasMoreLines() {
+		nextLine := p.reader.PeekLine()
+		if nextLine == "" {
+			break
+		}
+		nextClass := p.classifier.ClassifyLine(nextLine)
+
+		// Stop at blank lines
+		if nextClass.Type == reader.BlockBlank {
+			break
+		}
+
+		// Stop at list items (they start a new list item)
+		if nextClass.Type.IsListItem() {
+			break
+		}
+
+		// Stop at other block types (sections, delimited blocks, etc.)
+		// But allow paragraphs as continuation
+		if nextClass.Type != reader.BlockParagraph {
+			break
+		}
+
+		// Check if this is truly a continuation (not a separate paragraph)
+		// A separate paragraph would be preceded by a blank line, which we already checked
+		// Also check if it's not a standalone block like a title, attribute, etc.
+		trimmed := strings.TrimSpace(nextLine)
+		if strings.HasPrefix(trimmed, "=") && len(trimmed) > 0 {
+			// Section header - stop
+			break
+		}
+		if strings.HasPrefix(trimmed, ":") && len(trimmed) > 1 {
+			// Attribute entry - stop
+			break
+		}
+		if strings.HasPrefix(trimmed, "//") && !strings.HasPrefix(trimmed, "///") {
+			// Comment - stop
+			break
+		}
+
+		// This is a continuation line - consume it and add to definition
+		p.reader.Advance()
+		definitionLines = append(definitionLines, trimmed)
+	}
+
+	// If we collected continuation lines, also consume the trailing blank line (if any)
+	// This prevents the blank line from closing the list prematurely
+	if len(definitionLines) > 0 && p.reader.HasMoreLines() {
+		nextLine := p.reader.PeekLine()
+		if nextLine == "" || p.classifier.ClassifyLine(nextLine).Type == reader.BlockBlank {
+			p.reader.Advance()
+			p.linesConsumedByContinuation = len(definitionLines) + 1
+		} else {
+			p.linesConsumedByContinuation = len(definitionLines)
+		}
+	} else {
+		p.linesConsumedByContinuation = len(definitionLines)
+	}
+
+	// Set a flag to indicate we've already consumed the current line
+	// The main loop should skip its Advance() call
+	p.skipNextAdvance = true
+
+	// Update the item's definition with the collected lines
+	if len(definitionLines) > 0 {
+		item.Definition = strings.Join(definitionLines, " ")
+
+		// Re-parse inline markup for the updated definition
+		if len(definitionLines) > 1 || item.DefinitionNodes == nil {
+			defParser := inline.NewParser(item.Definition)
+			defNodes := defParser.Parse()
+			definitionNodes := make([]interface{}, 0, len(defNodes))
+			for _, node := range defNodes {
+				if node.Type != inline.NodeText {
+					definitionNodes = append(definitionNodes, node)
+				}
+			}
+			item.DefinitionNodes = definitionNodes
+		}
+	}
 }
 
 // listItemToBlockType converts a list marker to its block type.

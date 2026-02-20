@@ -364,6 +364,47 @@ em, i {
 .chroma .gr { color: #cf222e; } /* Generic error */
 .chroma .gt { color: #cf222e; } /* Generic traceback */
 .chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+/* Line numbers table styling */
+table.linenums {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 0;
+}
+table.linenums td {
+	padding: 0;
+	margin: 0;
+	border: none;
+	vertical-align: baseline;
+	line-height: 1.45;
+}
+table.linenums .linenum {
+	padding: 0 8px 0 0;
+	text-align: right;
+	color: #999;
+	user-select: none;
+	border-right: 1px solid #ddd;
+	width: 1%;
+	white-space: nowrap;
+	font-size: 12px;
+}
+table.linenums .code {
+	padding: 0 0 0 8px;
+	text-align: left;
+}
+table.linenums .code .chroma {
+	white-space: pre;
+	display: block;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+table.linenums pre,
+table.linenums code {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border-radius: 0;
+}
 </style>
 
 </head>
@@ -474,6 +515,133 @@ em, i {
 </li>
 </ol>
 </div>
+</section>
+<section class="sect2">
+<h3 id="_explicit_numbering_styles">Explicit Numbering Styles</h3>
+<div class="paragraph">
+<p>You can explicitly specify the numbering style using markers before each item. All items in the same list use the same style marker.</p>
+</div>
+<section class="sect3">
+<h4 id="_lower_alpha_a_b_c">Lower-Alpha (a, b, c)</h4>
+<div class="olist loweralpha">
+<ol class="loweralpha">
+<li>
+<p>Prepare the environment</p>
+</li>
+<li>
+<p>Write the code</p>
+</li>
+<li>
+<p>Run the tests</p>
+</li>
+<li>
+<p>Deploy to production</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect3">
+<h4 id="_upper_alpha_a_b_c">Upper-Alpha (A, B, C)</h4>
+<div class="olist upperalpha">
+<ol class="upperalpha">
+<li>
+<p>Initial phase</p>
+</li>
+<li>
+<p>Development phase</p>
+</li>
+<li>
+<p>Testing phase</p>
+</li>
+<li>
+<p>Release phase</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect3">
+<h4 id="_lower_roman_i_ii_iii">Lower-Roman (i, ii, iii)</h4>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Project kickoff</p>
+</li>
+<li>
+<p>Requirements gathering</p>
+</li>
+<li>
+<p>Design specification</p>
+</li>
+<li>
+<p>Implementation</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect3">
+<h4 id="_upper_roman_i_ii_iii">Upper-Roman (I, II, III)</h4>
+<div class="olist upperroman">
+<ol class="upperroman">
+<li>
+<p>Foundation</p>
+</li>
+<li>
+<p>Structure</p>
+</li>
+<li>
+<p>Finishing touches</p>
+</li>
+<li>
+<p>Final inspection</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect3">
+<h4 id="_explicit_arabic_1_2_3">Explicit Arabic (1, 2, 3)</h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Read the documentation</p>
+</li>
+<li>
+<p>Follow the tutorial</p>
+</li>
+<li>
+<p>Practice with examples</p>
+</li>
+</ol>
+</div>
+</section>
+<section class="sect3">
+<h4 id="_long_form_style_names">Long-Form Style Names</h4>
+<div class="olist loweralpha">
+<ol class="loweralpha">
+<li>
+<p>First option</p>
+</li>
+<li>
+<p>Second option</p>
+</li>
+<li>
+<p>Third option</p>
+</li>
+</ol>
+</div>
+<div class="olist upperroman">
+<ol class="upperroman">
+<li>
+<p>Primary goal</p>
+</li>
+<li>
+<p>Secondary objective</p>
+</li>
+<li>
+<p>Tertiary aim</p>
+</li>
+</ol>
+</div>
+</section>
 </section>
 <section class="sect2">
 <h3 id="_nested_ordered_lists">Nested Ordered Lists</h3>
@@ -628,6 +796,9 @@ em, i {
 <li>
 <p>Sub-task b</p>
 </li>
+</ul>
+</div>
+</li>
 <li>
 <p>Main task two</p>
 <div class="ulist">
@@ -642,14 +813,11 @@ em, i {
 </ul>
 </div>
 </li>
+</ul>
+</div>
+</li>
 <li>
 <p>Main task three</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
 </li>
 </ol>
 </div>
@@ -748,13 +916,13 @@ em, i {
 <div class="ulist">
 <ul>
 <li>
-<p><input type="checkbox"> Task not yet done</p>
+<p>Task not yet done</p>
 </li>
 <li>
-<p><input type="checkbox" checked="checked"> Completed task</p>
+<p>Completed task</p>
 </li>
 <li>
-<p><input type="checkbox"> Another pending task</p>
+<p>Another pending task</p>
 </li>
 </ul>
 </div>
@@ -767,16 +935,16 @@ em, i {
 <div class="ulist">
 <ul>
 <li>
-<p><input type="checkbox" checked="checked"> Milk</p>
+<p>Milk</p>
 </li>
 <li>
-<p><input type="checkbox" checked="checked"> Eggs</p>
+<p>Eggs</p>
 </li>
 <li>
-<p><input type="checkbox"> Bread</p>
+<p>Bread</p>
 </li>
 <li>
-<p><input type="checkbox"> Coffee</p>
+<p>Coffee</p>
 </li>
 </ul>
 </div>
@@ -786,13 +954,13 @@ em, i {
 <div class="ulist">
 <ul>
 <li>
-<p><input type="checkbox"> Review PR #123</p>
+<p>Review PR #123</p>
 </li>
 <li>
-<p><input type="checkbox" checked="checked"> Fix bug in table parser</p>
+<p>Fix bug in table parser</p>
 </li>
 <li>
-<p><input type="checkbox"> Update documentation</p>
+<p>Update documentation</p>
 </li>
 </ul>
 </div>
@@ -922,6 +1090,76 @@ em, i {
 </div>
 </li>
 </ul>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_software_development_process_with_explicit_styles">Software Development Process (with Explicit Styles)</h3>
+<div class="paragraph">
+<p>Development phases:</p>
+</div>
+<div class="olist upperroman">
+<ol class="upperroman">
+<li>
+<p>Planning Phase</p>
+</li>
+<li>
+<p>Requirements analysis</p>
+</li>
+<li>
+<p>Architecture design</p>
+</li>
+<li>
+<p>Technology selection</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>[II] Development Phase</p>
+</div>
+<div class="olist loweralpha">
+<ol class="loweralpha">
+<li>
+<p>Backend implementation</p>
+</li>
+<li>
+<p>Frontend development</p>
+</li>
+<li>
+<p>API integration</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>[III] Testing Phase</p>
+</div>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Unit tests</p>
+</li>
+<li>
+<p>Integration tests</p>
+</li>
+<li>
+<p>User acceptance tests</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>[IV] Deployment Phase</p>
+</div>
+<div class="olist lowerroman">
+<ol class="lowerroman">
+<li>
+<p>Staging deployment</p>
+</li>
+<li>
+<p>Production deployment</p>
+</li>
+<li>
+<p>Post-release monitoring</p>
+</li>
+</ol>
 </div>
 </section>
 </div>
@@ -1071,9 +1309,14 @@ em, i {
         <td class="tableblock halign-left valign-top"><p class="tableblock"><code>`* Item`</code></p></td>
       </tr>
       <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Ordered</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Ordered (dot)</p></td>
         <td class="tableblock halign-left valign-top"><p class="tableblock"><code>.</code></p></td>
         <td class="tableblock halign-left valign-top"><p class="tableblock"><code>`. Item`</code></p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Ordered (explicit)</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>[a]</code>, <code>[A]</code>, <code>[i]</code>, <code>[I]</code>, <code>[1]</code></p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>`[a] Item`</code></p></td>
       </tr>
       <tr>
         <td class="tableblock halign-left valign-top"><p class="tableblock">Labeled</p></td>
@@ -1106,7 +1349,16 @@ em, i {
 <p>Complex nested inline formatting in list items</p>
 </li>
 <li>
-<p>Custom list numbering styles</p>
+<p>Multiple nested lists per item (mixed list types)</p>
+</li>
+<li>
+<p>Inline lists (text: item1, item2, and item3)</p>
+</li>
+<li>
+<p>Q&amp;A lists with qanda attribute</p>
+</li>
+<li>
+<p>Bibliography lists</p>
 </li>
 </ul>
 </div>

@@ -35,18 +35,12 @@ See <<section-blocks>> for delimited block examples.
 
 Constrained formatting requires matching delimiters around the text:
 
-[cols="2*"]
-|===
-|
 * **Bold** uses `**text**`
 * _Italic_ uses `_text_`
 * `Monospace` uses ```text```
-
-|
 * ^Superscript^ uses `^text^`
 * ~Subscript~ uses `~text~`
-* `+Passthrough+` uses `+text+`
-|===
+* +Passthrough+ uses `+text+`
 
 === Unconstrained Formatting
 

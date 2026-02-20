@@ -472,20 +472,28 @@ table.linenums code {
 <div class="paragraph">
 <p>Constrained formatting requires matching delimiters around the text:</p>
 </div>
-    <table class="tableblock frame-all grid-all stretch">
-    <colgroup>
-      <col style="width: 100%;">
-      <col style="width: 100%;">
-    </colgroup>
-    <tbody>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* **Bold** uses `**text**`<br>* _Italic_ uses `_text_`<br>* `Monospace` uses ```text```</p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">* ^Superscript^ uses `^text^`<br>* ~Subscript~ uses `~text~`<br>* `+Passthrough+` uses `+text+`</p></td>
-      </tr>
-    </tbody>
-  </table>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Bold</strong> uses <code>**text**</code></p>
+</li>
+<li>
+<p><em>Italic</em> uses <code>_text_</code></p>
+</li>
+<li>
+<p><code>Monospace</code> uses <code>`text`</code></p>
+</li>
+<li>
+<p><sup>Superscript</sup> uses <code>^text^</code></p>
+</li>
+<li>
+<p><sub>Subscript</sub> uses <code>~text~</code></p>
+</li>
+<li>
+<p>Passthrough uses <code>+text+</code></p>
+</li>
+</ul>
+</div>
 </section>
 <section class="sect2">
 <h3 id="_unconstrained_formatting">Unconstrained Formatting</h3>
@@ -855,12 +863,12 @@ All whitespace is preserved.
 </section>
 <section class="sect2">
 <h3 id="_styled_blocks">Styled Blocks</h3>
-  <div class="verseblock">
-    <pre class="content">Roses are red,
+    <div class="verseblock">
+      <pre class="content">Roses are red,
   Violets are blue,
     Sugar is sweet,
       And so are you.</pre>
-  </div>
+    </div>
 <div class="passblock">
 <div class="content">
 This is a *passthrough* block.
@@ -873,62 +881,62 @@ All markup is passed through as-is.
 <section class="sect1">
 <h2 id="tables">Tables</h2>
 <div class="sectionbody">
+    <table class="tableblock frame-all grid-all stretch">
+    <colgroup>
+      <col style="width: 33.3333%;">
+      <col style="width: 33.3333%;">
+      <col style="width: 33.3334%;">
+    </colgroup>
+    <caption>Basic Table</caption>
+    <tbody>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Column 1</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Column 2</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Column 3</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Data 1</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Data 2</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Data 3</p></td>
+      </tr>
+      <tr>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Data 4</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Data 5</p></td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">Data 6</p></td>
+      </tr>
+    </tbody>
+  </table>
   <table class="tableblock frame-all grid-all stretch">
   <colgroup>
     <col style="width: 33.3333%;">
     <col style="width: 33.3333%;">
     <col style="width: 33.3334%;">
   </colgroup>
-  <caption>Basic Table</caption>
+  <caption>Table with Header</caption>
+  <thead>
+    <tr>
+      <th class="tableblock halign-center valign-top"><p class="tableblock">Name</p></th>
+      <th class="tableblock halign-center valign-top"><p class="tableblock">Age</p></th>
+      <th class="tableblock halign-center valign-top"><p class="tableblock">Occupation</p></th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Column 1</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Column 2</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Column 3</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Alice</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">28</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Engineer</p></td>
     </tr>
     <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Data 1</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Data 2</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Data 3</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Bob</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">34</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Designer</p></td>
     </tr>
     <tr>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Data 4</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Data 5</p></td>
-      <td class="tableblock halign-left valign-top"><p class="tableblock">Data 6</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Carol</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">42</p></td>
+      <td class="tableblock halign-left valign-top"><p class="tableblock">Manager</p></td>
     </tr>
   </tbody>
-</table>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-  <col style="width: 33.3333%;">
-  <col style="width: 33.3333%;">
-  <col style="width: 33.3334%;">
-</colgroup>
-<caption>Table with Header</caption>
-<thead>
-  <tr>
-    <th class="tableblock halign-center valign-top"><p class="tableblock">Name</p></th>
-    <th class="tableblock halign-center valign-top"><p class="tableblock">Age</p></th>
-    <th class="tableblock halign-center valign-top"><p class="tableblock">Occupation</p></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Alice</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">28</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Engineer</p></td>
-  </tr>
-  <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Bob</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">34</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Designer</p></td>
-  </tr>
-  <tr>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Carol</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">42</p></td>
-    <td class="tableblock halign-left valign-top"><p class="tableblock">Manager</p></td>
-  </tr>
-</tbody>
 </table>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>

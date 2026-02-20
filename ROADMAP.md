@@ -257,32 +257,19 @@ asciidoctor/test/
   - **Workaround:** Use flat labeled lists or combine items in the definition
 - **Separate `<dl>` elements** - Each labeled list item renders as its own `<dl>` instead of all items in one combined `<dl>`
 
-**Planned Fix:**
-- Add continuation line support (`+` prefix) for labeled list definitions
-- Implement nested labeled list (qfunc) support
-- Group consecutive labeled list items into single `<dl>` element
-- Support multi-paragraph definitions
+**Status (2026-02-20):** PARTIALLY COMPLETED
+- ✅ Multi-line definitions - Lines following a labeled list term that are not blank are treated as continuation of the definition
+- ✅ Single `<dl>` rendering - All labeled list items now render in a single `<dl>` element
+- ⏳ Inline continuation (`+` prefix) - Not yet implemented
+- ⏳ Nested labeled lists (qfunc) - Not yet implemented
 
 ### Ordered Lists
 
-**Current Issues:**
-- **Explicit list numbering styles not supported** - Bracket syntax `[a]`, `[A]`, `[i]`, `[I]` don't create styled ordered lists
-  - **Problem:** `[a] Item` renders as plain text with brackets instead of lettered list
-  - **Workaround:** Use dot notation levels (`.` , `..` , `...` , `....`) for different numbering styles
-  - **Example:**
-    ```asciidoc
-    // Does NOT work:
-    [a] First item
-    [b] Second item
-
-    // Works (gives lower roman):
-    .. First item
-    .. Second item
-    ```
-
-**Planned Fix:**
-- Implement explicit numbering style syntax `[a]`, `[A]`, `[i]`, `[I]`
-- Support `list-style` attribute on ordered lists
+**Status (2026-02-20):** COMPLETED
+- ✅ Explicit numbering styles `[a]`, `[A]`, `[i]`, `[I]`, `[1]` now supported
+- ✅ Valid markers: `[a]` lower-alpha, `[A]` upper-alpha, `[i]` lower-roman, `[I]` upper-roman, `[1]` arabic
+- ✅ All items in a list use the same marker (e.g., `[a]` throughout for lettered list)
+- ⏳ `list-style` attribute on ordered lists - Not yet implemented
 
 ### Special List Types
 
@@ -329,6 +316,6 @@ asciidoctor/test/
 
 ---
 
-**Last Updated:** 2026-02-19
+**Last Updated:** 2026-02-20
 **Asciidoctor Version:** 2.0.26
 **Compatibility:** 32/32 tests passing (100%)

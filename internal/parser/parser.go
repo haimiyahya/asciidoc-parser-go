@@ -6,6 +6,7 @@ import (
 	"io"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
@@ -1339,16 +1340,22 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 				attrs[k] = v
 			}
 		}
+
+		// Parse linenums attribute before clearing pending attrs
+		lineNumbers, startLine := p.parseLineNumbersAttr(p.pendingBlockStyleAttrs)
+
 		p.pendingBlockStyle = ""       // Consume the pending style
 		p.pendingBlockStyleAttrs = nil // Clear attributes
 
 		return &ast.StyledBlockNode{
-			Style:      "source",
-			Content:    cleanedContent,
-			Attributes: attrs,
-			Callouts:   callouts,
-			Caption:    p.parseCaption(caption),
-			Pos:        ast.Position{Line: lineno},
+			Style:            "source",
+			Content:          cleanedContent,
+			Attributes:       attrs,
+			Callouts:         callouts,
+			Caption:          p.parseCaption(caption),
+			LineNumbers:      lineNumbers,
+			StartLineNumber:  startLine,
+			Pos:              ast.Position{Line: lineno},
 		}
 	}
 
@@ -1357,25 +1364,37 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		// Parse callouts in literal blocks
 		calloutParser := NewCalloutParser()
 		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
+
+		// Parse linenums attribute
+		lineNumbers, startLine := p.parseLineNumbersAttr(p.pendingBlockStyleAttrs)
+
 		p.pendingBlockStyle = ""       // Consume the pending style
 		p.pendingBlockStyleAttrs = nil // Clear attributes
 		return &ast.NodeLiteral{
-			Lines:     cleanedLines,
-			Callouts:  callouts,
-			Caption:   p.parseCaption(caption),
-			Pos:       ast.Position{Line: lineno},
+			Lines:           cleanedLines,
+			Callouts:        callouts,
+			Caption:         p.parseCaption(caption),
+			LineNumbers:     lineNumbers,
+			StartLineNumber: startLine,
+			Pos:             ast.Position{Line: lineno},
 		}
 	case reader.BlockVerbatim:
 		// Parse callouts in verbatim blocks
 		calloutParser := NewCalloutParser()
 		cleanedLines, callouts := calloutParser.ParseCalloutsInLiteral(lines)
+
+		// Parse linenums attribute
+		lineNumbers, startLine := p.parseLineNumbersAttr(p.pendingBlockStyleAttrs)
+
 		p.pendingBlockStyle = ""       // Consume the pending style
 		p.pendingBlockStyleAttrs = nil // Clear attributes
 		return &ast.NodeLiteral{
-			Lines:     cleanedLines,
-			Callouts:  callouts,
-			Caption:   p.parseCaption(caption),
-			Pos:       ast.Position{Line: lineno},
+			Lines:           cleanedLines,
+			Callouts:        callouts,
+			Caption:         p.parseCaption(caption),
+			LineNumbers:     lineNumbers,
+			StartLineNumber: startLine,
+			Pos:             ast.Position{Line: lineno},
 		}
 	case reader.BlockExample:
 		return &ast.NodeBlock{
@@ -2082,6 +2101,33 @@ func (p *Parser) parseCaption(captionLine string) string {
 		return strings.TrimSpace(trimmed[1:])
 	}
 	return trimmed
+}
+
+// parseLineNumbersAttr parses the linenums attribute from block attributes.
+// Returns (enabled, startLine) where enabled is true if linenums is set,
+// and startLine is the starting line number (default 1).
+// Supports: linenums, linenums=<number>, %linenums
+func (p *Parser) parseLineNumbersAttr(attrs map[string]string) (bool, int) {
+	if attrs == nil {
+		return false, 1
+	}
+
+	// Check for linenums attribute
+	for key, val := range attrs {
+		lowerKey := strings.ToLower(key)
+		if lowerKey == "linenums" {
+			if val == "" || val == "1" || val == "all" {
+				return true, 1
+			}
+			// Try to parse as starting line number
+			if startLine, err := strconv.Atoi(val); err == nil && startLine > 0 {
+				return true, startLine
+			}
+			return true, 1
+		}
+	}
+
+	return false, 1
 }
 
 // extractAttrName extracts the attribute name from expressions like {attr} or "{attr}"

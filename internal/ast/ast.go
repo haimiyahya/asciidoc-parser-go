@@ -185,6 +185,10 @@ type NodeLiteral struct {
 	LineComment string
 	// Caption is the block title/caption (e.g., from ".Title" before the block).
 	Caption string
+	// LineNumbers enables line number display.
+	LineNumbers bool
+	// StartLineNumber is the starting line number (default 1).
+	StartLineNumber int
 	// Pos is the location in the source.
 	Pos Position
 }
@@ -252,6 +256,10 @@ type StyledBlockNode struct {
 	Callouts []*CalloutNode
 	// Caption is the block title/caption (e.g., from ".Title" before the block).
 	Caption string
+	// LineNumbers enables line number display (for source/listing blocks).
+	LineNumbers bool
+	// StartLineNumber is the starting line number (default 1).
+	StartLineNumber int
 	// Pos is the location in the source.
 	Pos Position
 }

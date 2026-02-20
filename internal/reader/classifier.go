@@ -1456,8 +1456,8 @@ func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 		return nil
 	}
 
-	// Split on comma to separate style name from attributes
-	parts := strings.SplitN(content, ",", 2)
+	// Split on comma
+	parts := strings.Split(content, ",")
 	styleName := strings.TrimSpace(parts[0])
 
 	attrs := make(map[string]string)
@@ -1479,21 +1479,26 @@ func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 
 		attrs[key] = value
 		styleName = "" // No style name, just attributes
+		return &BlockStyleInfo{
+			Name:  styleName,
+			Kind:  StyleInline,
+			Attributes: attrs,
+		}
 	}
 
-	// Handle additional attributes after the style name
-	if len(parts) == 2 {
-		secondPart := strings.TrimSpace(parts[1])
+	// Process remaining parts
+	for i := 1; i < len(parts); i++ {
+		part := strings.TrimSpace(parts[i])
 
-		// Check if it's a simple language identifier (no = sign) for source/listing blocks
-		if !strings.Contains(secondPart, "=") && (styleName == "source" || styleName == "listing") {
-			// Treat as language identifier
-			attrs["language"] = secondPart
-		} else if strings.Contains(secondPart, "=") {
+		if part == "" {
+			continue
+		}
+
+		if strings.Contains(part, "=") {
 			// Parse key=value attribute
-			eqIdx := strings.Index(secondPart, "=")
-			key := strings.TrimSpace(secondPart[:eqIdx])
-			value := strings.TrimSpace(secondPart[eqIdx+1:])
+			eqIdx := strings.Index(part, "=")
+			key := strings.TrimSpace(part[:eqIdx])
+			value := strings.TrimSpace(part[eqIdx+1:])
 
 			// Remove quotes if present
 			if len(value) > 0 {
@@ -1505,8 +1510,15 @@ func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 
 			attrs[key] = value
 		} else {
-			// Store raw value for other cases
-			attrs["raw"] = secondPart
+			// For source/listing blocks, the first non-key=value part is the language
+			// But skip well-known attribute names
+			if (styleName == "source" || styleName == "listing") && attrs["language"] == "" &&
+				part != "linenums" && part != "incremental" && part != "indent" && part != "unbreakable" {
+				attrs["language"] = part
+			} else {
+				// Store raw value for other cases
+				attrs[part] = ""
+			}
 		}
 	}
 

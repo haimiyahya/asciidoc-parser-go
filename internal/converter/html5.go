@@ -513,6 +513,12 @@ func (c *HTML5Converter) convertSourceBlock(block *ast.StyledBlockNode, w io.Wri
 		return
 	}
 
+	// Check if line numbers are enabled
+	if block.LineNumbers {
+		c.convertSourceBlockWithLineNumbers(block, lines, language, w)
+		return
+	}
+
 	// Build a map of line indices to callout numbers
 	// The parser has already extracted callout markers (<1>, <2>, etc.) from the source
 	// and stored them in block.Callouts. We need to add them back as Unicode circled numbers.
@@ -623,6 +629,145 @@ func (c *HTML5Converter) convertSourceBlock(block *ast.StyledBlockNode, w io.Wri
 	}
 
 	fmt.Fprintf(w, `</code></pre>`)
+
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `</div>`)
+
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent = strings.TrimSuffix(c.indent, "  ")
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `</div>`)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	// Render callout descriptions if present
+	if len(block.Callouts) > 0 {
+		c.renderCalloutListForStyled(block, w)
+	}
+}
+
+// convertSourceBlockWithLineNumbers renders a source block with line numbers.
+func (c *HTML5Converter) convertSourceBlockWithLineNumbers(block *ast.StyledBlockNode, lines []string, language string, w io.Writer) {
+	startLine := block.StartLineNumber
+	if startLine < 1 {
+		startLine = 1
+	}
+
+	// Find the lexer for the language
+	lexer := lexers.Get(language)
+	if lexer == nil {
+		lexer = lexers.Fallback
+	}
+
+	// Use the github style for syntax highlighting
+	style := styles.GitHub
+
+	// Format the HTML - use functional options
+	formatter := html.New(
+		html.Standalone(false),
+		html.WithClasses(true),
+	)
+
+	// Build a map of line indices to callout numbers
+	calloutMarkers := make(map[int][]string)
+	unicodeCallouts := []string{"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲", "⑳"}
+
+	for _, co := range block.Callouts {
+		if co.LineIndex >= 0 && co.LineIndex < len(lines) {
+			marker := ""
+			if co.Number <= len(unicodeCallouts) {
+				marker = unicodeCallouts[co.Number-1]
+			} else {
+				marker = fmt.Sprintf("<b>%d</b>", co.Number)
+			}
+			calloutMarkers[co.LineIndex] = append(calloutMarkers[co.LineIndex], marker)
+		}
+	}
+
+	// Build the HTML
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `<div class="listingblock">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+		c.indent += "  "
+	}
+
+	// Write caption if present, otherwise show language name
+	title := block.Caption
+	if title == "" && language != "" {
+		title = strings.Title(strings.ToLower(language))
+	}
+	if title != "" {
+		if c.pretty {
+			fmt.Fprint(w, c.indent)
+		}
+		fmt.Fprintf(w, `<div class="title">%s</div>`, c.escape(title))
+		if c.pretty {
+			fmt.Fprintln(w)
+		}
+	}
+
+	if c.pretty {
+		fmt.Fprint(w, c.indent)
+	}
+	fmt.Fprintf(w, `<div class="content">`)
+	if c.pretty {
+		fmt.Fprintln(w)
+	}
+
+	// Use a table layout for line numbers with syntax highlighting
+	fmt.Fprintf(w, `<table class="linenums highlight">`)
+	fmt.Fprint(w, "\n")
+
+	for lineIdx, line := range lines {
+		lineNum := startLine + lineIdx
+
+		// Add callout markers if present
+		processedLine := line
+		if markers, hasCallouts := calloutMarkers[lineIdx]; hasCallouts {
+			processedLine = line + " " + strings.Join(markers, " ")
+		}
+
+		// Tokenize and highlight this single line
+		var highlightedLine string
+		iterator, err := lexer.Tokenise(nil, processedLine)
+		if err == nil {
+			var buf strings.Builder
+			if formatter.Format(&buf, style, iterator) == nil {
+				highlightedLine = buf.String()
+			}
+		}
+
+		if highlightedLine == "" {
+			highlightedLine = c.escape(processedLine)
+		}
+
+		if c.pretty {
+			fmt.Fprint(w, "\t")
+		}
+		fmt.Fprintf(w, `<tr class="linenum">`)
+
+		// Line number cell
+		fmt.Fprintf(w, `<td class="linenum">%d</td>`, lineNum)
+
+		// Code cell with syntax highlighting
+		fmt.Fprintf(w, `<td class="code"><span class="chroma">%s</span></td>`, highlightedLine)
+
+		fmt.Fprintf(w, `</tr>`)
+		fmt.Fprint(w, "\n")
+	}
+
+	fmt.Fprintf(w, `</table>`)
+	fmt.Fprint(w, "\n")
 
 	if c.pretty {
 		fmt.Fprintln(w)
@@ -1924,7 +2069,10 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 	fmt.Fprintf(w, `<div class="content">`)
 	fmt.Fprint(w, "\n")
 
-	if len(literal.Callouts) == 0 {
+	if literal.LineNumbers {
+		// Render with line numbers using a table layout
+		c.convertLiteralWithLineNumbers(literal, w)
+	} else if len(literal.Callouts) == 0 {
 		// No callouts, simple rendering
 		fmt.Fprintf(w, `<pre>%s</pre>`, c.escape(strings.Join(literal.Lines, "\n")))
 		fmt.Fprint(w, "\n")
@@ -1976,6 +2124,44 @@ func (c *HTML5Converter) convertLiteral(literal *ast.NodeLiteral, w io.Writer) {
 	fmt.Fprint(w, "\n")
 	fmt.Fprintf(w, `</div>`)
 	fmt.Fprint(w, "\n")
+}
+
+// convertLiteralWithLineNumbers renders a literal block with line numbers.
+func (c *HTML5Converter) convertLiteralWithLineNumbers(literal *ast.NodeLiteral, w io.Writer) {
+	startLine := literal.StartLineNumber
+	if startLine < 1 {
+		startLine = 1
+	}
+
+	// Use a table layout for line numbers
+	fmt.Fprintf(w, `<table class="linenums">`)
+	fmt.Fprint(w, "\n")
+
+	for lineIdx, line := range literal.Lines {
+		lineNum := startLine + lineIdx
+
+		if c.pretty {
+			fmt.Fprint(w, "\t")
+		}
+		fmt.Fprintf(w, `<tr class="linenum">`)
+
+		// Line number cell
+		fmt.Fprintf(w, `<td class="linenum">%d</td>`, lineNum)
+
+		// Code cell
+		fmt.Fprintf(w, `<td class="code">%s</td>`, c.escape(line))
+
+		fmt.Fprintf(w, `</tr>`)
+		fmt.Fprint(w, "\n")
+	}
+
+	fmt.Fprintf(w, `</table>`)
+	fmt.Fprint(w, "\n")
+
+	// Render callout descriptions if present
+	if len(literal.Callouts) > 0 {
+		c.renderCalloutList(literal, w)
+	}
 }
 
 // renderCalloutList renders callout descriptions as an HTML list.

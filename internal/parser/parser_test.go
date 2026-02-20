@@ -116,3 +116,132 @@ func TestInlineStyleAdmonition(t *testing.T) {
 		t.Errorf("Inline-style should not have child blocks, got %d", len(admonition.Blocks))
 	}
 }
+
+func TestSourceBlockWithLineNumbers(t *testing.T) {
+	// Test [source,lang,linenums] syntax - ensures language and linenums are parsed correctly
+	source := `[source,go,linenums]
+----
+func main() {
+    println("test")
+}
+----`
+	p, err := NewParserFromReader(strings.NewReader(source))
+	if err != nil {
+		t.Fatalf("Failed to create parser: %v", err)
+	}
+	doc, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse: %v", err)
+	}
+
+	if len(doc.Blocks) != 1 {
+		t.Fatalf("Expected 1 block, got %d", len(doc.Blocks))
+	}
+
+	block, ok := doc.Blocks[0].(*ast.StyledBlockNode)
+	if !ok {
+		t.Fatalf("First block should be a StyledBlockNode, got %T", doc.Blocks[0])
+	}
+
+	// Check line numbers are enabled
+	if !block.LineNumbers {
+		t.Error("Expected LineNumbers to be true")
+	}
+
+	// Check start line number is 1
+	if block.StartLineNumber != 1 {
+		t.Errorf("Expected StartLineNumber 1, got %d", block.StartLineNumber)
+	}
+
+	// Check language attribute is "go" not "go,linenums"
+	if block.Attributes["language"] != "go" {
+		t.Errorf("Expected language 'go', got '%s'", block.Attributes["language"])
+	}
+
+	// Check linenums attribute exists
+	if block.Attributes["linenums"] != "1" {
+		t.Errorf("Expected linenums '1', got '%s'", block.Attributes["linenums"])
+	}
+}
+
+func TestSourceBlockWithLineNumbersCustomStart(t *testing.T) {
+	// Test [source,lang,linenums=N] syntax
+	source := `[source,javascript,linenums=10]
+----
+function greet() {
+    return "hello";
+}
+----`
+	p, err := NewParserFromReader(strings.NewReader(source))
+	if err != nil {
+		t.Fatalf("Failed to create parser: %v", err)
+	}
+	doc, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse: %v", err)
+	}
+
+	if len(doc.Blocks) != 1 {
+		t.Fatalf("Expected 1 block, got %d", len(doc.Blocks))
+	}
+
+	block, ok := doc.Blocks[0].(*ast.StyledBlockNode)
+	if !ok {
+		t.Fatalf("First block should be a StyledBlockNode, got %T", doc.Blocks[0])
+	}
+
+	// Check line numbers are enabled
+	if !block.LineNumbers {
+		t.Error("Expected LineNumbers to be true")
+	}
+
+	// Check start line number is 10
+	if block.StartLineNumber != 10 {
+		t.Errorf("Expected StartLineNumber 10, got %d", block.StartLineNumber)
+	}
+
+	// Check language attribute is "javascript" not "javascript,linenums=10"
+	if block.Attributes["language"] != "javascript" {
+		t.Errorf("Expected language 'javascript', got '%s'", block.Attributes["language"])
+	}
+}
+
+func TestSourceBlockWithMultipleOptions(t *testing.T) {
+	// Test [source,lang,option1,option2] syntax to ensure proper parsing
+	source := `[source,python,linenums,indent=0]
+----
+def hello():
+    pass
+----`
+	p, err := NewParserFromReader(strings.NewReader(source))
+	if err != nil {
+		t.Fatalf("Failed to create parser: %v", err)
+	}
+	doc, err := p.Parse()
+	if err != nil {
+		t.Fatalf("Failed to parse: %v", err)
+	}
+
+	if len(doc.Blocks) != 1 {
+		t.Fatalf("Expected 1 block, got %d", len(doc.Blocks))
+	}
+
+	block, ok := doc.Blocks[0].(*ast.StyledBlockNode)
+	if !ok {
+		t.Fatalf("First block should be a StyledBlockNode, got %T", doc.Blocks[0])
+	}
+
+	// Check language attribute is just "python"
+	if block.Attributes["language"] != "python" {
+		t.Errorf("Expected language 'python', got '%s'", block.Attributes["language"])
+	}
+
+	// Check both linenums and indent attributes
+	if block.Attributes["linenums"] != "1" {
+		t.Errorf("Expected linenums '1', got '%s'", block.Attributes["linenums"])
+	}
+
+	if block.Attributes["indent"] != "0" {
+		t.Errorf("Expected indent '0', got '%s'", block.Attributes["indent"])
+	}
+}

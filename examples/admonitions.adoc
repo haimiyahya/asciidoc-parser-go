@@ -2,7 +2,7 @@
 
 This document demonstrates all admonition blocks available in AsciiDoc.
 
-== Basic Admonitions
+== Basic Inline Admonitions
 
 === Note
 
@@ -24,25 +24,43 @@ CAUTION: This is a caution admonition. Cautions warn about possible damage or da
 
 IMPORTANT: This is an important admonition. Important blocks highlight critical information that readers should pay attention to.
 
-== Multi-Line Admonitions
+== Block-Style Admonitions
 
-Admonitions can span multiple lines. The text continues until a blank line or different block type is encountered.
+Block-style admonitions use `[TYPE]` syntax above the content. This format supports multiple paragraphs and custom titles.
 
-NOTE: This is the first line of the note.
-This is the second line that continues the note.
-This is the third line with more information.
+=== Simple Block Admonition
 
-TIP: First line of the tip.
-Second line with additional details.
-Third line summarizing the point.
+[NOTE]
+This is a block-style note.
+It can span multiple lines.
 
-WARNING: This warning spans multiple lines.
-Each line is accumulated into the warning text.
-The warning ends at the blank line below.
+=== Block Admonition with Custom Title
+
+[TIP]
+.Quick Tip
+This is a tip with a custom title.
+The title is specified using the `.Title` syntax before the content.
+
+=== Multi-Paragraph Block Admonition
+
+[WARNING]
+.Important Warning
+This is the first paragraph of the warning.
+
+This is the second paragraph with more information.
+Blank lines separate paragraphs within the admonition.
+
+=== Block Admonition with List
+
+[CAUTION]
+.Safety Precautions
+* Wear protective equipment
+* Follow all safety guidelines
+* Report any hazards immediately
 
 == Admonitions with Inline Formatting
 
-=== Formatted Admonition
+=== Formatted Inline Admonition
 
 NOTE: This note has **bold text**, _italic text_, and `inline code` within it.
 
@@ -55,6 +73,10 @@ Use kbd:[Ctrl+F] to search within the page.
 
 TIP: Click the btn:[Save] button or press kbd:[Ctrl+S] to save your work.
 See menu:File[Save As] for more options.
+
+=== Icons in Admonitions
+
+IMPORTANT: Here are some useful icons: icon:github[] icon:twitter[] icon:envelope[]
 
 == All Admonitions Side by Side
 
@@ -70,41 +92,40 @@ CAUTION: A caution for possible damage.
 
 IMPORTANT: Important information to remember.
 
-== Short Admonitions
-
-NOTE: Quick note.
-
-TIP: Quick tip.
-
-WARNING: Quick warning.
-
-CAUTION: Be careful!
-
-IMPORTANT: Remember this!
-
 == Admonitions in Context
 
 === Documentation Example
 
 == Installation Guide
 
-NOTE: Make sure you have Go 1.23 or higher installed before proceeding.
+[NOTE]
+.Prerequisites
+Make sure you have Go 1.23 or higher installed before proceeding.
 
 === Step 1: Download
 
-TIP: Use the latest release for the best features and bug fixes.
+[TIP]
+.Recommended
+Use the latest release for the best features and bug fixes.
 
 === Step 2: Build
 
-WARNING: Don't use the `master` branch in production. Always use a tagged release.
+[WARNING]
+.Branch Warning
+Don't use the `master` branch in production.
+Always use a tagged release.
 
 === Step 3: Configure
 
-CAUTION: Back up your existing configuration files before making changes.
+[CAUTION]
+.Backup First
+Back up your existing configuration files before making changes.
 
 === Step 4: Run
 
-IMPORTANT: Review the logs after first run to ensure everything is working correctly.
+[IMPORTANT]
+.Verify
+Review the logs after first run to ensure everything is working correctly.
 
 == Best Practices
 
@@ -130,23 +151,23 @@ IMPORTANT: Use important for must-know information.
 == Summary of Admonition Types
 
 |===
-| Type | Keyword | Purpose | Icon |
-| note | NOTE: | General information | ℹ |
-| tip | TIP: | Helpful suggestions | 💡 |
-| warning | WARNING: | Potential issues | ⚠ |
-| caution | CAUTION: | Possible damage | ☡ |
-| important | IMPORTANT: | Critical information | ❗ |
+| Type | Syntax | Purpose | Icon |
+| note | NOTE: text or [NOTE] | General information | icon:info-circle[] |
+| tip | TIP: text or [TIP] | Helpful suggestions | icon:lightbulb[] |
+| warning | WARNING: text or [WARNING] | Potential issues | icon:exclamation-triangle[] |
+| caution | CAUTION: text or [CAUTION] | Possible damage | icon:fire[] |
+| important | IMPORTANT: text or [IMPORTANT] | Critical information | icon:exclamation-circle[] |
 |===
 
-== Current Limitations
+== Inline vs Block Style
 
-The following features are not yet fully supported:
+Inline style (`NOTE: text`) is best for:
+* Single-line admonitions
+* Admonitions within paragraphs
+* Quick notes without titles
 
-* Block-style admonitions (`[NOTE]` above content)
-  * Use inline syntax instead: `NOTE: text here`
-* Admonitions with custom titles (`.Title` in block style)
-* Lists within admonitions (lists render as separate blocks after the admonition)
-* Code blocks within admonitions (code blocks render separately)
-* Multi-paragraph admonitions with blank lines (each paragraph renders separately)
-
-If you need these features, consider using regular paragraphs with inline formatting or separating the content into adjacent blocks.
+Block style (`[NOTE]` above content) is best for:
+* Multi-paragraph admonitions
+* Admonitions with custom titles
+* Longer, detailed notes
+* Admonitions containing lists or other structured content

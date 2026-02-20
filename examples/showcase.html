@@ -27,6 +27,16 @@ ul, ol {
 	margin: 0.5em 0;
 	padding-left: 2em;
 }
+/* Unordered list marker styles */
+ul.disc {
+	list-style-type: disc;
+}
+ul.circle {
+	list-style-type: circle;
+}
+ul.square {
+	list-style-type: square;
+}
 code {
 	background-color: #f4f4f4;
 	padding: 0.2em 0.4em;
@@ -67,6 +77,48 @@ table.tableblock thead th {
 table.tableblock.frame-all {
 	border: 1px solid #ddd;
 }
+table.tableblock.frame-topbot {
+	border-top: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
+}
+table.tableblock.frame-sides {
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+}
+table.tableblock.frame-none {
+	border: none;
+}
+/* Frame-specific cell border overrides */
+table.tableblock.frame-topbot th,
+table.tableblock.frame-topbot td {
+	border-left: none;
+	border-right: none;
+}
+table.tableblock.frame-topbot.grid-all th,
+table.tableblock.frame-topbot.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-topbot.grid-all th:first-child,
+table.tableblock.frame-topbot.grid-all td:first-child {
+	border-left: none;
+}
+table.tableblock.frame-sides th,
+table.tableblock.frame-sides td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.frame-none th,
+table.tableblock.frame-none td {
+	border: none;
+}
+table.tableblock.frame-none.grid-all th,
+table.tableblock.frame-none.grid-all td {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.frame-none.grid-all th:first-child,
+table.tableblock.frame-none.grid-all td:first-child {
+	border-left: none;
+}
 table.tableblock.grid-all td,
 table.tableblock.grid-all th {
 	border-left: 1px solid #ddd;
@@ -74,6 +126,60 @@ table.tableblock.grid-all th {
 table.tableblock.grid-all td:first-child,
 table.tableblock.grid-all th:first-child {
 	border-left: none;
+}
+/* Grid rows: only horizontal borders (between rows) */
+table.tableblock.grid-rows th,
+table.tableblock.grid-rows td {
+	border-left: none;
+	border-right: none;
+}
+/* Grid cols: only vertical borders (between columns) */
+table.tableblock.grid-cols th,
+table.tableblock.grid-cols td {
+	border-top: none;
+	border-bottom: none;
+}
+table.tableblock.grid-cols td,
+table.tableblock.grid-cols th {
+	border-left: 1px solid #ddd;
+}
+table.tableblock.grid-cols td:first-child,
+table.tableblock.grid-cols th:first-child {
+	border-left: none;
+}
+/* Grid none: no internal borders */
+table.tableblock.grid-none th,
+table.tableblock.grid-none td {
+	border-left: none;
+	border-right: none;
+}
+/* Stripe patterns */
+table.tableblock.stripes-even tr:nth-child(even) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-odd tr:nth-child(odd) {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-all tr {
+	background-color: #f9f9f9;
+}
+table.tableblock.stripes-last tr:last-child {
+	background-color: #f0f0f0;
+}
+/* Auto width: columns size to content */
+table.tableblock.autowidth {
+	width: auto;
+	table-layout: auto;
+}
+/* Horizontal alignment */
+table.tableblock .halign-left {
+	text-align: left;
+}
+table.tableblock .halign-right {
+	text-align: right;
+}
+table.tableblock .halign-center {
+	text-align: center;
 }
 .admonitionblock {
 	margin: 1em 0;
@@ -258,6 +364,47 @@ em, i {
 .chroma .gr { color: #cf222e; } /* Generic error */
 .chroma .gt { color: #cf222e; } /* Generic traceback */
 .chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+/* Line numbers table styling */
+table.linenums {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 0;
+}
+table.linenums td {
+	padding: 0;
+	margin: 0;
+	border: none;
+	vertical-align: baseline;
+	line-height: 1.45;
+}
+table.linenums .linenum {
+	padding: 0 8px 0 0;
+	text-align: right;
+	color: #999;
+	user-select: none;
+	border-right: 1px solid #ddd;
+	width: 1%;
+	white-space: nowrap;
+	font-size: 12px;
+}
+table.linenums .code {
+	padding: 0 0 0 8px;
+	text-align: left;
+}
+table.linenums .code .chroma {
+	white-space: pre;
+	display: block;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+table.linenums pre,
+table.linenums code {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border-radius: 0;
+}
 </style>
 
 </head>
@@ -275,7 +422,7 @@ em, i {
 <h2 id="introduction">Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <strong>asciidoc-parser-go</strong> project is a native Go implementation that targets near-full compliance with the <a href="https://asciidoc.org/[AsciiDoc" class="bare">https://asciidoc.org/[AsciiDoc</a> Language Specification] while maintaining compatibility with <a href="https://asciidoctor.org/[Asciidoctor" class="bare">https://asciidoctor.org/[Asciidoctor</a>].</p>
+<p>The <strong>asciidoc-parser-go</strong> project is a native Go implementation that targets near-full compliance with the <a href="https://asciidoc.org/">AsciiDoc Language Specification</a> while maintaining compatibility with <a href="https://asciidoctor.org/">Asciidoctor</a>.</p>
 </div>
 <div class="paragraph">
 <p>This document features:</p>
@@ -315,39 +462,14 @@ em, i {
     <table class="tableblock frame-all grid-all stretch">
     <colgroup>
       <col style="width: 100%;">
+      <col style="width: 100%;">
     </colgroup>
     <tbody>
       <tr>
-        <td class="tableblock halign-left valign-top"><div class="ulist">
-<ul>
-<li>
-<p><strong>Bold</strong> uses <code>**text**</code></p>
-</li>
-<li>
-<p><em>Italic</em> uses <code>_text_</code></p>
-</li>
-<li>
-<p><code>Monospace</code> uses <code>`text`</code></p>
-</li>
-</ul>
-</div>
-</td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">* **Bold** uses `**text**`<br>* _Italic_ uses `_text_`<br>* `Monospace` uses ```text```</p></td>
       </tr>
       <tr>
-        <td class="tableblock halign-left valign-top"><div class="ulist">
-<ul>
-<li>
-<p><sup>Superscript</sup> uses <code>^text^</code></p>
-</li>
-<li>
-<p><sub>Subscript</sub> uses <code>~text~</code></p>
-</li>
-<li>
-<p><code>+Passthrough+</code> uses <code>+text+</code></p>
-</li>
-</ul>
-</div>
-</td>
+        <td class="tableblock halign-left valign-top"><p class="tableblock">* ^Superscript^ uses `^text^`<br>* ~Subscript~ uses `~text~`<br>* `+Passthrough+` uses `+text+`</p></td>
       </tr>
     </tbody>
   </table>
@@ -367,7 +489,7 @@ em, i {
 <p><strong>External link</strong>: <a href="https://github.com/haimiyahya/asciidoc-parser-go" class="bare">https://github.com/haimiyahya/asciidoc-parser-go</a></p>
 </div>
 <div class="paragraph">
-<p><strong>Link with text</strong>: <a href="GitHub">https://github.com/haimiyahya/asciidoc-parser-go</a></p>
+<p><strong>Link with text</strong>: <a href="GitHub"><a href="https://github.com/haimiyahya/asciidoc-parser-go" class="bare">https://github.com/haimiyahya/asciidoc-parser-go</a></a></p>
 </div>
 <div class="paragraph">
 <p><strong>Email</strong>: mailto:example@example.com</p>
@@ -513,6 +635,8 @@ em, i {
 <section class="sect1">
 <h2 id="admonitions">Admonitions</h2>
 <div class="sectionbody">
+<section class="sect2">
+<h3 id="_inline_admonitions">Inline Admonitions</h3>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -520,7 +644,7 @@ em, i {
 <div class="title">Note</div>
 </td>
 <td class="content">
-This is a note. Use notes to provide additional information or tips that are helpful but not essential.
+<p class="tableblock">This is a note. Use notes to provide additional information or tips that are helpful but not essential.</p>
 </td>
 </tr>
 </table>
@@ -532,7 +656,7 @@ This is a note. Use notes to provide additional information or tips that are hel
 <div class="title">Tip</div>
 </td>
 <td class="content">
-This is a tip. Tips are helpful suggestions for making tasks easier or more efficient.
+<p class="tableblock">This is a tip. Tips are helpful suggestions for making tasks easier or more efficient.</p>
 </td>
 </tr>
 </table>
@@ -544,7 +668,7 @@ This is a tip. Tips are helpful suggestions for making tasks easier or more effi
 <div class="title">Warning</div>
 </td>
 <td class="content">
-This is a warning. Warnings alert the reader to potential problems or risks.
+<p class="tableblock">This is a warning. Warnings alert the reader to potential problems or risks.</p>
 </td>
 </tr>
 </table>
@@ -556,7 +680,7 @@ This is a warning. Warnings alert the reader to potential problems or risks.
 <div class="title">Caution</div>
 </td>
 <td class="content">
-This is a caution. Cautions indicate moderate-risk situations that could lead to minor problems.
+<p class="tableblock">This is a caution. Cautions indicate moderate-risk situations that could lead to minor problems.</p>
 </td>
 </tr>
 </table>
@@ -568,11 +692,96 @@ This is a caution. Cautions indicate moderate-risk situations that could lead to
 <div class="title">Important</div>
 </td>
 <td class="content">
-This is important information that the reader should pay special attention to.
+<p class="tableblock">This is important information that the reader should pay special attention to.</p>
 </td>
 </tr>
 </table>
 </div>
+</section>
+<section class="sect2">
+<h3 id="_block_style_admonitions">Block-Style Admonitions</h3>
+<div class="paragraph">
+<p>Block-style admonitions support multi-paragraph content and custom titles:</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Prerequisites</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Make sure you have Go 1.23 or higher installed before proceeding.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Recommended Approach</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Use the latest release for the best features and bug fixes.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>First, download the package. Then, extract it to your preferred directory.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important Warning</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Don&#39;t use the <code>master</code> branch in production.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Always use a tagged release for production deployments.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Backup Warning</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Back up your existing configuration files before making changes.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This includes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Configuration files</p>
+</li>
+<li>
+<p>Data directories</p>
+</li>
+<li>
+<p>Custom templates</p>
+</li>
+</ul>
+</div>
+</section>
 </div>
 </section>
 <section class="sect1">
@@ -774,9 +983,9 @@ All markup is passed through as-is.
 </table>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-  <col style="width: 33.3333%;">
-  <col style="width: 33.3333%;">
-  <col style="width: 33.3334%;">
+  <col style="width: 20%;">
+  <col style="width: 50%;">
+  <col style="width: 30%;">
 </colgroup>
 <caption>Table with Column Widths</caption>
 <thead>
@@ -812,34 +1021,36 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="_go_example">Go Example</h3>
 <div class="listingblock">
+  <div class="title">Go</div>
   <div class="content">
     <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&#34;AsciiDoc&#34;</span><span class="w"> </span><span class="c1">// ①</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;Hello, %s!\n&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="c1">// ②</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&#34;AsciiDoc&#34;</span><span class="w"> </span><span class="err">①</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;Hello, %s!\n&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="err">②</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
   </div>
 </div>
 <div class="colist arabic">
-  <div class="li"><b class="conum" data-value="1"></b> <span>Variable declaration</span></div>
-  <div class="li"><b class="conum" data-value="2"></b> <span>Formatted output</span></div>
+  <div class="li">① <span>Variable declaration</span></div>
+  <div class="li">② <span>Formatted output</span></div>
 </div>
 </section>
 <section class="sect2">
 <h3 id="_bash_example">Bash Example</h3>
 <div class="listingblock">
+  <div class="title">Bash</div>
   <div class="content">
     <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">#!/bin/bash
-</span></span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Starting build...&#34;</span> <span class="c1"># ①</span>
-</span></span><span class="line"><span class="cl">go build ./... <span class="c1"># ②</span>
-</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Build complete!&#34;</span> <span class="c1"># ③</span></span></span></code></pre></code></pre>
+</span></span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Starting build...&#34;</span> ①
+</span></span><span class="line"><span class="cl">go build ./... ②
+</span></span><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Build complete!&#34;</span> ③</span></span></code></pre></code></pre>
   </div>
 </div>
 <div class="colist arabic">
-  <div class="li"><b class="conum" data-value="1"></b> <span>Print start message</span></div>
-  <div class="li"><b class="conum" data-value="2"></b> <span>Build all packages</span></div>
-  <div class="li"><b class="conum" data-value="3"></b> <span>Print completion message</span></div>
+  <div class="li">① <span>Print start message</span></div>
+  <div class="li">② <span>Build all packages</span></div>
+  <div class="li">③ <span>Print completion message</span></div>
 </div>
 </section>
 </div>
@@ -853,37 +1064,41 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="_go_golang">Go (Golang)</h3>
 <div class="listingblock">
+  <div class="title">Go</div>
   <div class="content">
-    <pre class="highlight"><code class="language-go chroma" data-lang="go">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="p">(</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;fmt&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;net/http&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="c1">// Handler processes HTTP requests</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">Handler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nf">Query</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">&#34;name&#34;</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nx">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;World&#34;</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">w</span><span class="p">.</span><span class="nf">Header</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nf">Set</span><span class="p">(</span><span class="s">&#34;Content-Type&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;text/plain&#34;</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Hello, %s!\n&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nf">HandleFunc</span><span class="p">(</span><span class="s">&#34;/&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">Handler</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Server starting on :8080&#34;</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nf">ListenAndServe</span><span class="p">(</span><span class="s">&#34;:8080&#34;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-  </div>
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">1</td><td class="code"><span class="chroma"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">2</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">3</td><td class="code"><span class="chroma"><span class="kn">import</span><span class="w"> </span><span class="p">(</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">4</td><td class="code"><span class="chroma"><span class="w">    </span><span class="s">&#34;fmt&#34;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">5</td><td class="code"><span class="chroma"><span class="w">    </span><span class="s">&#34;net/http&#34;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">6</td><td class="code"><span class="chroma"><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">7</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">8</td><td class="code"><span class="chroma"><span class="c1">// Handler processes HTTP requests</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">9</td><td class="code"><span class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">Handler</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span><span class="w"> </span><span class="nx">r</span><span class="w"> </span><span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">10</td><td class="code"><span class="chroma"><span class="w">    </span><span class="nx">name</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">URL</span><span class="p">.</span><span class="nf">Query</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">&#34;name&#34;</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">11</td><td class="code"><span class="chroma"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&#34;&#34;</span><span class="w"> </span><span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">12</td><td class="code"><span class="chroma"><span class="w">        </span><span class="nx">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;World&#34;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">13</td><td class="code"><span class="chroma"><span class="w">    </span><span class="p">}</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">14</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">15</td><td class="code"><span class="chroma"><span class="w">    </span><span class="nx">w</span><span class="p">.</span><span class="nf">Header</span><span class="p">(</span><span class="p">)</span><span class="p">.</span><span class="nf">Set</span><span class="p">(</span><span class="s">&#34;Content-Type&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;text/plain&#34;</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">16</td><td class="code"><span class="chroma"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Fprintf</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Hello, %s!\n&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">17</td><td class="code"><span class="chroma"><span class="p">}</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">18</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">19</td><td class="code"><span class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">20</td><td class="code"><span class="chroma"><span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nf">HandleFunc</span><span class="p">(</span><span class="s">&#34;/&#34;</span><span class="p">,</span><span class="w"> </span><span class="nx">Handler</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">21</td><td class="code"><span class="chroma"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Server starting on :8080&#34;</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">22</td><td class="code"><span class="chroma"><span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nf">ListenAndServe</span><span class="p">(</span><span class="s">&#34;:8080&#34;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">23</td><td class="code"><span class="chroma"><span class="p">}</span></span></td></tr>
+</table>
+
+</div>
 </div>
 </section>
 <section class="sect2">
 <h3 id="sql">SQL</h3>
 <div class="listingblock">
+  <div class="title">Sql</div>
   <div class="content">
     <pre class="highlight"><code class="language-sql chroma" data-lang="sql">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">-- Create a users table
@@ -914,6 +1129,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="c">C#</h3>
 <div class="listingblock">
+  <div class="title">Csharp</div>
   <div class="content">
     <pre class="highlight"><code class="language-csharp chroma" data-lang="csharp">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
@@ -957,51 +1173,58 @@ All markup is passed through as-is.
 </div>
 </section>
 <section class="sect2">
-<h3 id="_javascript_typescript">JavaScript/TypeScript</h3>
+<h3 id="_javascript_typescript_with_line_numbers">JavaScript/TypeScript with Line Numbers</h3>
 <div class="listingblock">
+  <div class="title">Javascript</div>
   <div class="content">
-    <pre class="highlight"><code class="language-javascript chroma" data-lang="javascript">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// Async function to fetch user data
-</span></span></span><span class="line"><span class="cl"><span class="kr">async</span> <span class="kd">function</span> <span class="nx">fetchUserData</span><span class="p">(</span><span class="nx">userId</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="k">try</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="sb">`</span><span class="sb">/api/users/</span><span class="si">${</span><span class="nx">userId</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">response</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="sb">`</span><span class="sb">HTTP error! status: </span><span class="si">${</span><span class="nx">response</span><span class="p">.</span><span class="nx">status</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">userData</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="p">)</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="c1">// Transform the data
-</span></span></span><span class="line"><span class="cl">        <span class="kr">const</span> <span class="nx">user</span> <span class="o">=</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">id</span><span class="o">:</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">fullName</span><span class="o">:</span> <span class="sb">`</span><span class="si">${</span><span class="nx">userData</span><span class="p">.</span><span class="nx">firstName</span><span class="si">}</span><span class="sb"> </span><span class="si">${</span><span class="nx">userData</span><span class="p">.</span><span class="nx">lastName</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">email</span><span class="o">:</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">(</span><span class="p">)</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">            <span class="nx">isAdmin</span><span class="o">:</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">roles</span><span class="o">?</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="kc">false</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">user</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Failed to fetch user:&#39;</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">        <span class="k">throw</span> <span class="nx">error</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="p">}</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="c1">// Usage with arrow functions and promises
-</span></span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">getUsers</span> <span class="o">=</span> <span class="kr">async</span> <span class="p">(</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">users</span> <span class="o">=</span> <span class="kr">await</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="p">[</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">fetchUserData</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">fetchUserData</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="p">,</span>
-</span></span><span class="line"><span class="cl">        <span class="nx">fetchUserData</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-</span></span><span class="line"><span class="cl">    <span class="p">]</span><span class="p">)</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nx">users</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">u</span> <span class="p">=&gt;</span> <span class="nx">u</span><span class="p">.</span><span class="nx">isAdmin</span><span class="p">)</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span><span class="p">;</span></span></span></code></pre></code></pre>
-  </div>
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">100</td><td class="code"><span class="chroma"><span class="c1">// Async function to fetch user data
+</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">101</td><td class="code"><span class="chroma"><span class="kr">async</span> <span class="kd">function</span> <span class="nx">fetchUserData</span><span class="p">(</span><span class="nx">userId</span><span class="p">)</span> <span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">102</td><td class="code"><span class="chroma">    <span class="k">try</span> <span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">103</td><td class="code"><span class="chroma">        <span class="kr">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="sb">`</span><span class="sb">/api/users/</span><span class="si">${</span><span class="nx">userId</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">104</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">105</td><td class="code"><span class="chroma">        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">response</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span> <span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">106</td><td class="code"><span class="chroma">            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="sb">`</span><span class="sb">HTTP error! status: </span><span class="si">${</span><span class="nx">response</span><span class="p">.</span><span class="nx">status</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">107</td><td class="code"><span class="chroma">        <span class="p">}</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">108</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">109</td><td class="code"><span class="chroma">        <span class="kr">const</span> <span class="nx">userData</span> <span class="o">=</span> <span class="kr">await</span> <span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">(</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">110</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">111</td><td class="code"><span class="chroma">        <span class="c1">// Transform the data
+</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">112</td><td class="code"><span class="chroma">        <span class="kr">const</span> <span class="nx">user</span> <span class="o">=</span> <span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">113</td><td class="code"><span class="chroma">            <span class="nx">id</span><span class="o">:</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">114</td><td class="code"><span class="chroma">            <span class="nx">fullName</span><span class="o">:</span> <span class="sb">`</span><span class="si">${</span><span class="nx">userData</span><span class="p">.</span><span class="nx">firstName</span><span class="si">}</span><span class="sb"> </span><span class="si">${</span><span class="nx">userData</span><span class="p">.</span><span class="nx">lastName</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">115</td><td class="code"><span class="chroma">            <span class="nx">email</span><span class="o">:</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">(</span><span class="p">)</span><span class="p">,</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">116</td><td class="code"><span class="chroma">            <span class="nx">isAdmin</span><span class="o">:</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">roles</span><span class="o">?</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;admin&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="kc">false</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">117</td><td class="code"><span class="chroma">        <span class="p">}</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">118</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">119</td><td class="code"><span class="chroma">        <span class="k">return</span> <span class="nx">user</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">120</td><td class="code"><span class="chroma">    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">121</td><td class="code"><span class="chroma">        <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Failed to fetch user:&#39;</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">122</td><td class="code"><span class="chroma">        <span class="k">throw</span> <span class="nx">error</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">123</td><td class="code"><span class="chroma">    <span class="p">}</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">124</td><td class="code"><span class="chroma"><span class="p">}</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">125</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">126</td><td class="code"><span class="chroma"><span class="c1">// Usage with arrow functions and promises
+</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">127</td><td class="code"><span class="chroma"><span class="kr">const</span> <span class="nx">getUsers</span> <span class="o">=</span> <span class="kr">async</span> <span class="p">(</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">128</td><td class="code"><span class="chroma">    <span class="kr">const</span> <span class="nx">users</span> <span class="o">=</span> <span class="kr">await</span> <span class="nb">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="p">[</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">129</td><td class="code"><span class="chroma">        <span class="nx">fetchUserData</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="p">,</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">130</td><td class="code"><span class="chroma">        <span class="nx">fetchUserData</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="p">,</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">131</td><td class="code"><span class="chroma">        <span class="nx">fetchUserData</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">132</td><td class="code"><span class="chroma">    <span class="p">]</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">133</td><td class="code"><span class="chroma">    <span class="k">return</span> <span class="nx">users</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">u</span> <span class="p">=&gt;</span> <span class="nx">u</span><span class="p">.</span><span class="nx">isAdmin</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">134</td><td class="code"><span class="chroma"><span class="p">}</span><span class="p">;</span></span></td></tr>
+</table>
+
+</div>
 </div>
 </section>
 <section class="sect2">
 <h3 id="xml">XML</h3>
 <div class="listingblock">
+  <div class="title">Xml</div>
   <div class="content">
     <pre class="highlight"><code class="language-xml chroma" data-lang="xml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
@@ -1039,6 +1262,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="json">JSON</h3>
 <div class="listingblock">
+  <div class="title">Json</div>
   <div class="content">
     <pre class="highlight"><code class="language-json chroma" data-lang="json">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="p">{</span>
@@ -1073,6 +1297,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="yaml">YAML</h3>
 <div class="listingblock">
+  <div class="title">Yaml</div>
   <div class="content">
     <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c"># Application Configuration</span><span class="w">
@@ -1109,6 +1334,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="python">Python</h3>
 <div class="listingblock">
+  <div class="title">Python</div>
   <div class="content">
     <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
@@ -1168,6 +1394,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="rust">Rust</h3>
 <div class="listingblock">
+  <div class="title">Rust</div>
   <div class="content">
     <pre class="highlight"><code class="language-rust chroma" data-lang="rust">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">use</span><span class="w"> </span><span class="n">std</span>::<span class="n">collections</span>::<span class="n">HashMap</span><span class="p">;</span><span class="w">
@@ -1254,6 +1481,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="css">CSS</h3>
 <div class="listingblock">
+  <div class="title">Css</div>
   <div class="content">
     <pre class="highlight"><code class="language-css chroma" data-lang="css">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c">/* Base styles */</span>
@@ -1333,6 +1561,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="html">HTML</h3>
 <div class="listingblock">
+  <div class="title">Html</div>
   <div class="content">
     <pre class="highlight"><code class="language-html chroma" data-lang="html">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">&lt;!DOCTYPE html&gt;</span>
@@ -1455,6 +1684,85 @@ All markup is passed through as-is.
 </div>
 </section>
 <section class="sect1">
+<h2 id="icons">Icons</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Icons use the <code>icon:name[]</code> syntax and are rendered with Font Awesome classes:</p>
+</div>
+<div class="paragraph">
+<p><strong>Basic icons</strong>: <i class="fab fa-github"></i> <i class="fab fa-twitter"></i> <i class="fa fa-envelope"></i> <i class="fa fa-heart"></i></p>
+</div>
+<div class="paragraph">
+<p><strong>Sized icons</strong>: <i class="fa fa-camera"></i> <i class="fa fa-star"></i> <i class="fa fa-check-circle"></i></p>
+</div>
+<div class="paragraph">
+<p><strong>Common icons</strong>: <i class="fa fa-info-circle"></i> <i class="fa fa-exclamation-triangle"></i> <i class="fa fa-lightbulb"></i> <i class="fa fa-fire"></i></p>
+</div>
+<section class="sect2">
+<h3 id="_icons_in_context">Icons in Context</h3>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+<p class="tableblock">Click <i class="fab fa-github"></i> to view the source code on GitHub.</p>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+<p class="tableblock">Always <i class="fa fa-exclamation-circle"></i> read the documentation before using <i class="fa fa-fire"></i> experimental features.</p>
+</td>
+</tr>
+</table>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_icon_size_examples">Icon Size Examples</h3>
+<div class="paragraph">
+<p><i class="fa fa-home"></i> <i class="fa fa-home"></i> <i class="fa fa-home"></i> <i class="fa fa-home"></i> <i class="fa fa-search"></i> <i class="fa fa-search"></i></p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
+<h2 id="footnotes">Footnotes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Footnotes allow you to add supplementary information without disrupting the main text flow.<sup class="footnote" id="_frsample">[<a href="#_fnsample">1</a>]</sup></p>
+</div>
+<section class="sect2">
+<h3 id="_basic_footnote_references">Basic Footnote References</h3>
+<div class="paragraph">
+<p>The AsciiDoc format was designed to be human-readable and easy to write.<sup class="footnote" id="_frreadable">[<a href="#_fnreadable">2</a>]</sup> It supports many document types including articles, books, and technical documentation.<sup class="footnote" id="_frdocs">[<a href="#_fndocs">3</a>]</sup></p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_numbered_footnotes">Numbered Footnotes</h3>
+<div class="paragraph">
+<p>When you use the same footnote ID multiple times, it references the same note:</p>
+</div>
+<div class="paragraph">
+<p>This concept appears again later in the document.<sup class="footnote" id="_frconcept">[<a href="#_fnconcept">4</a>]</sup> And here it is once more.<sup class="footnote" id="_frconcept">[<a href="#_fnconcept">4</a>]</sup></p>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_anonymous_footnotes">Anonymous Footnotes</h3>
+<div class="paragraph">
+<p>You can also create footnotes without explicit IDs: footnote:This footnote will be auto-numbered.</p>
+</div>
+</section>
+</div>
+</section>
+<section class="sect1">
 <h2 id="_ui_macros_extensions">UI Macros (Extensions)</h2>
 <div class="sectionbody">
 <section class="sect2">
@@ -1559,12 +1867,23 @@ All markup is passed through as-is.
 </div>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
 <div class="exampleblock">
 <div class="content">
 <div class="paragraph">
 <p>This note appears when NOT generating PDF.</p>
 </div>
 </div>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <!-- ifeval::{&#34;{asciidoctor-version}&#34; &gt;= &#34;2.0&#34;} -->
 <div class="paragraph">
@@ -1603,7 +1922,7 @@ All markup is passed through as-is.
 <section class="sect2">
 <h3 id="_image_with_attributes">Image with Attributes</h3>
 <div class="paragraph">
-<p><span class="image"><img src="https://picsum.photos/400/200" alt="Alt Text, width=400, height=200, title=Sample Image"></span></p>
+<p><span class="image"><img src="https://picsum.photos/400/200" alt="Alt Text" width="width=400" height="height=200"></span></p>
 </div>
 </section>
 <section class="sect2">
@@ -1696,6 +2015,14 @@ All markup is passed through as-is.
 </div>
 </div>
 </section>
+
+<div id="footnotes">
+<hr>
+	<div class="footnote" id="_fnsample">[1] This is a footnote that provides additional context.</div>
+	<div class="footnote" id="_fnreadable">[2] Readability is a core design principle of AsciiDoc.</div>
+	<div class="footnote" id="_fndocs">[3] Technical documentation was one of the primary use cases for AsciiDoc.</div>
+	<div class="footnote" id="_fnconcept">[4] This is a reusable footnote reference.</div>
+</div>
 </article>
 </body>
 </html>

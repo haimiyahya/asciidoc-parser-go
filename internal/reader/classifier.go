@@ -1511,10 +1511,13 @@ func (lc *LineClassifier) parseBlockStyle(line string) *BlockStyleInfo {
 			attrs[key] = value
 		} else {
 			// For source/listing blocks, the first non-key=value part is the language
-			// But skip well-known attribute names
+			// But skip well-known attribute names (and store them as attributes)
 			if (styleName == "source" || styleName == "listing") && attrs["language"] == "" &&
 				part != "linenums" && part != "incremental" && part != "indent" && part != "unbreakable" {
 				attrs["language"] = part
+			} else if part == "linenums" || part == "incremental" || part == "indent" || part == "unbreakable" {
+				// Store these well-known attributes as boolean-style attributes
+				attrs[part] = "1"
 			} else {
 				// Store raw value for other cases
 				attrs[part] = ""

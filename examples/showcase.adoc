@@ -1,5 +1,5 @@
 = AsciiDoc Parser Go - Feature Showcase
-v0.2.0
+v0.3.5
 :author: <Your Name>
 :email: <your.email@example.com>
 :revdate: 2026-02-17
@@ -104,6 +104,8 @@ Term 3:: Definition with *inline formatting* and `code`.
 
 == Admonitions
 
+=== Inline Admonitions
+
 NOTE: This is a note. Use notes to provide additional information or tips that are helpful but not essential.
 
 TIP: This is a tip. Tips are helpful suggestions for making tasks easier or more efficient.
@@ -113,6 +115,36 @@ WARNING: This is a warning. Warnings alert the reader to potential problems or r
 CAUTION: This is a caution. Cautions indicate moderate-risk situations that could lead to minor problems.
 
 IMPORTANT: This is important information that the reader should pay special attention to.
+
+=== Block-Style Admonitions
+
+Block-style admonitions support multi-paragraph content and custom titles:
+
+[NOTE]
+.Prerequisites
+Make sure you have Go 1.23 or higher installed before proceeding.
+
+[TIP]
+.Recommended Approach
+Use the latest release for the best features and bug fixes.
+
+First, download the package.
+Then, extract it to your preferred directory.
+
+[WARNING]
+.Important Warning
+Don't use the `master` branch in production.
+
+Always use a tagged release for production deployments.
+
+[CAUTION]
+.Backup Warning
+Back up your existing configuration files before making changes.
+
+This includes:
+* Configuration files
+* Data directories
+* Custom templates
 
 == Delimited Blocks
 
@@ -247,7 +279,7 @@ The parser supports syntax highlighting for multiple programming languages using
 
 === Go (Golang)
 
-[source,go]
+[source,go,linenums]
 ----
 package main
 
@@ -345,9 +377,9 @@ namespace AsciiDocParser
 }
 ----
 
-=== JavaScript/TypeScript
+=== JavaScript/TypeScript with Line Numbers
 
-[source,javascript]
+[source,javascript,linenums=100]
 ----
 // Async function to fetch user data
 async function fetchUserData(userId) {
@@ -782,6 +814,44 @@ ifdef::team-info[]
 include::includes/team.adoc[]
 endif::[]
 
+== Icons
+
+Icons use the `icon:name[]` syntax and are rendered with Font Awesome classes:
+
+*Basic icons*: icon:github[] icon:twitter[] icon:envelope[] icon:heart[]
+
+*Sized icons*: icon:camera[2x] icon:star[3x] icon:check-circle[lg]
+
+*Common icons*: icon:info-circle[] icon:exclamation-triangle[] icon:lightbulb[] icon:fire[]
+
+=== Icons in Context
+
+TIP: Click icon:github[] to view the source code on GitHub.
+
+IMPORTANT: Always icon:exclamation-circle[] read the documentation before using icon:fire[] experimental features.
+
+=== Icon Size Examples
+
+icon:home[] icon:home[2x] icon:home[3x] icon:home[4x] icon:search[] icon:search[lg]
+
+== Footnotes
+
+Footnotes allow you to add supplementary information without disrupting the main text flow.footnote:sample[This is a footnote that provides additional context.]
+
+=== Basic Footnote References
+
+The AsciiDoc format was designed to be human-readable and easy to write.footnote:readable[Readability is a core design principle of AsciiDoc.] It supports many document types including articles, books, and technical documentation.footnote:docs[Technical documentation was one of the primary use cases for AsciiDoc.]
+
+=== Numbered Footnotes
+
+When you use the same footnote ID multiple times, it references the same note:
+
+This concept appears again later in the document.footnote:concept[This is a reusable footnote reference.] And here it is once more.footnote:concept[]
+
+=== Anonymous Footnotes
+
+You can also create footnotes without explicit IDs: footnote:This footnote will be auto-numbered.
+
 == UI Macros (Extensions)
 
 === Keyboard Shortcuts
@@ -894,9 +964,6 @@ Paragraphs can have IDs for direct linking.
 
 == Extensions and Macros
 
-// Footnotes (Not Yet Implemented)
-// footnote:reference[text] syntax and footnote rendering are planned for a future release.
-
 === Image with Attributes
 
 image:https://picsum.photos/400/200[Alt Text, width=400, height=200, title=Sample Image]
@@ -925,9 +992,9 @@ Chemical formulas:
 [cols="2*"]
 |===
 |Document Title |AsciiDoc Parser Go - Feature Showcase
-|Version |v0.2.0
+|Version |v0.3.5
 |Date |2026-02-18
-|Generator |asciidoc-parser-go v0.2.0
+|Generator |asciidoc-parser-go v0.3.5
 |Backends |HTML5, PDF, DocBook, Man Page, EPUB
 |Compatibility |100% Asciidoctor compatible
 |===

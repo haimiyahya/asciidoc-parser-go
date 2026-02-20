@@ -1,5 +1,5 @@
 = Advanced Table Features Showcase
-v0.3.1
+v0.3.5
 :toc:
 :table-caption: Table
 

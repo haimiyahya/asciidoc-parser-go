@@ -71,14 +71,64 @@ def greet(name: str) -> str:
 
 === Listing with Line Numbers
 
-[source,go]
+Line numbers are added using the `linenums` option:
+
+[source,go,linenums]
 ----
 func main() {
     fmt.Println("Hello, World!")
 }
 ----
 
-*Note: Line numbering with `linenums` option is not yet fully supported.*
+=== Line Numbers with Custom Start
+
+You can specify the starting line number with `linenums=N`:
+
+[source,javascript,linenums=10]
+----
+function greet(name) {
+    console.log(`Hello, ${name}!`);
+}
+----
+
+=== Listing Block with Title and Line Numbers
+
+[source,python,linenums]
+.Fibonacci Sequence
+----
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))
+----
+
+=== Literal Block with Line Numbers
+
+Line numbers also work with literal blocks:
+
+[listing,linenums]
+----
+Plain text listing
+with line numbers
+for documentation purposes
+----
+
+=== Multiple Code Blocks with Line Numbers
+
+[source,rust,linenums]
+----
+fn main() {
+    println!("Hello from Rust!");
+}
+----
+
+[source,python,linenums=5]
+----
+def main():
+    print("Hello from Python!")
+----
 
 === Language Gallery
 
@@ -413,7 +463,7 @@ Currently supported languages include:
 * SQL (sql)
 * And many more...
 
-== Current Limitations
+== Notes
 
-* Line numbering syntax (`linenums` option) is not supported
 * Some languages may not have perfect syntax highlighting
+* Line numbers use HTML table layout for proper alignment with syntax highlighting

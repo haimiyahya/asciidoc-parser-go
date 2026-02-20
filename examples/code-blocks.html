@@ -27,6 +27,16 @@ ul, ol {
 	margin: 0.5em 0;
 	padding-left: 2em;
 }
+/* Unordered list marker styles */
+ul.disc {
+	list-style-type: disc;
+}
+ul.circle {
+	list-style-type: circle;
+}
+ul.square {
+	list-style-type: square;
+}
 code {
 	background-color: #f4f4f4;
 	padding: 0.2em 0.4em;
@@ -354,6 +364,47 @@ em, i {
 .chroma .gr { color: #cf222e; } /* Generic error */
 .chroma .gt { color: #cf222e; } /* Generic traceback */
 .chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+/* Line numbers table styling */
+table.linenums {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 0;
+}
+table.linenums td {
+	padding: 0;
+	margin: 0;
+	border: none;
+	vertical-align: baseline;
+	line-height: 1.45;
+}
+table.linenums .linenum {
+	padding: 0 8px 0 0;
+	text-align: right;
+	color: #999;
+	user-select: none;
+	border-right: 1px solid #ddd;
+	width: 1%;
+	white-space: nowrap;
+	font-size: 12px;
+}
+table.linenums .code {
+	padding: 0 0 0 8px;
+	text-align: left;
+}
+table.linenums .code .chroma {
+	white-space: pre;
+	display: block;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+table.linenums pre,
+table.linenums code {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border-radius: 0;
+}
 </style>
 
 </head>
@@ -450,73 +501,150 @@ em, i {
 </section>
 <section class="sect2">
 <h3 id="_listing_with_line_numbers">Listing with Line Numbers</h3>
+<div class="paragraph">
+<p>Line numbers are added using the <code>linenums</code> option:</p>
+</div>
     <div class="listingblock">
       <div class="title">Go</div>
       <div class="content">
-        <pre class="highlight"><code class="language-go chroma" data-lang="go">
-<pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Hello, World!&#34;</span><span class="p">)</span><span class="w">
-</span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">1</td><td class="code"><span class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">2</td><td class="code"><span class="chroma"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="s">&#34;Hello, World!&#34;</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">3</td><td class="code"><span class="chroma"><span class="p">}</span></span></td></tr>
+</table>
+
     </div>
+  </div>
+</section>
+<section class="sect2">
+<h3 id="_line_numbers_with_custom_start">Line Numbers with Custom Start</h3>
 <div class="paragraph">
-<p><strong>Note: Line numbering with `linenums` option is not yet fully supported.</strong></p>
+<p>You can specify the starting line number with <code>linenums=N</code>:</p>
+</div>
+  <div class="listingblock">
+    <div class="title">Javascript</div>
+    <div class="content">
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">10</td><td class="code"><span class="chroma"><span class="kd">function</span> <span class="nx">greet</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">11</td><td class="code"><span class="chroma">    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`</span><span class="sb">Hello, </span><span class="si">${</span><span class="nx">name</span><span class="si">}</span><span class="sb">!</span><span class="sb">`</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">12</td><td class="code"><span class="chroma"><span class="p">}</span></span></td></tr>
+</table>
+
+  </div>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_listing_block_with_title_and_line_numbers">Listing Block with Title and Line Numbers</h3>
+<div class="listingblock">
+  <div class="title">Fibonacci Sequence</div>
+  <div class="content">
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">1</td><td class="code"><span class="chroma"><span class="k">def</span> <span class="nf">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="p">:</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">2</td><td class="code"><span class="chroma">    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span><span class="o">=</span> <span class="mi">1</span><span class="p">:</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">3</td><td class="code"><span class="chroma">        <span class="k">return</span> <span class="n">n</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">4</td><td class="code"><span class="chroma">    <span class="k">return</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">5</td><td class="code"><span class="chroma"></span></td></tr>
+	<tr class="linenum"><td class="linenum">6</td><td class="code"><span class="chroma"><span class="nb">print</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="p">)</span></span></td></tr>
+</table>
+
+</div>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_literal_block_with_line_numbers">Literal Block with Line Numbers</h3>
+<div class="paragraph">
+<p>Line numbers also work with literal blocks:</p>
+</div>
+<div class="listingblock">
+  <div class="title">Text</div>
+  <div class="content">
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">1</td><td class="code"><span class="chroma">Plain text listing</span></td></tr>
+	<tr class="linenum"><td class="linenum">2</td><td class="code"><span class="chroma">with line numbers</span></td></tr>
+	<tr class="linenum"><td class="linenum">3</td><td class="code"><span class="chroma">for documentation purposes</span></td></tr>
+</table>
+
+</div>
+</div>
+</section>
+<section class="sect2">
+<h3 id="_multiple_code_blocks_with_line_numbers">Multiple Code Blocks with Line Numbers</h3>
+<div class="listingblock">
+  <div class="title">Rust</div>
+  <div class="content">
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">1</td><td class="code"><span class="chroma"><span class="k">fn</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">2</td><td class="code"><span class="chroma"><span class="w">    </span><span class="fm">println!</span><span class="w"></span><span class="p">(</span><span class="w"></span><span class="s">&#34;</span><span class="s">Hello from Rust!</span><span class="s">&#34;</span><span class="p">)</span><span class="p">;</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">3</td><td class="code"><span class="chroma"><span class="p">}</span></span></td></tr>
+</table>
+
+</div>
+</div>
+<div class="listingblock">
+  <div class="title">Python</div>
+  <div class="content">
+<table class="linenums highlight">
+	<tr class="linenum"><td class="linenum">5</td><td class="code"><span class="chroma"><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="p">:</span></span></td></tr>
+	<tr class="linenum"><td class="linenum">6</td><td class="code"><span class="chroma">    <span class="nb">print</span><span class="p">(</span><span class="sa"></span><span class="s2">&#34;</span><span class="s2">Hello from Python!</span><span class="s2">&#34;</span><span class="p">)</span></span></td></tr>
+</table>
+
+</div>
 </div>
 </section>
 <section class="sect2">
 <h3 id="_language_gallery">Language Gallery</h3>
-    <div class="listingblock">
-      <div class="title">Bash</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
+<div class="listingblock">
+  <div class="title">Bash</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nb">echo</span> <span class="s2">&#34;Hello from Bash&#34;</span>
 </span></span><span class="line"><span class="cl">curl https://example.com</span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="listingblock">
-      <div class="title">Yaml</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
+  </div>
+</div>
+<div class="listingblock">
+  <div class="title">Yaml</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nt">server</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l">localhost</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="m">8080</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="listingblock">
-      <div class="title">Json</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-json chroma" data-lang="json">
+  </div>
+</div>
+<div class="listingblock">
+  <div class="title">Json</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-json chroma" data-lang="json">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="p">{</span>
 </span></span><span class="line"><span class="cl">  <span class="nt">&#34;name&#34;</span><span class="p">:</span> <span class="s2">&#34;example&#34;</span><span class="p">,</span>
 </span></span><span class="line"><span class="cl">  <span class="nt">&#34;version&#34;</span><span class="p">:</span> <span class="s2">&#34;1.0.0&#34;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="listingblock">
-      <div class="title">Xml</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-xml chroma" data-lang="xml">
+  </div>
+</div>
+<div class="listingblock">
+  <div class="title">Xml</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-xml chroma" data-lang="xml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
 </span></span><span class="line"><span class="cl"><span class="nt">&lt;root</span><span class="nt">&gt;</span>
 </span></span><span class="line"><span class="cl">  <span class="nt">&lt;item</span><span class="nt">&gt;</span>Example<span class="nt">&lt;/item&gt;</span>
 </span></span><span class="line"><span class="cl"><span class="nt">&lt;/root&gt;</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="listingblock">
-      <div class="title">Css</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-css chroma" data-lang="css">
+  </div>
+</div>
+<div class="listingblock">
+  <div class="title">Css</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-css chroma" data-lang="css">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="nt">body</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">    <span class="k">font-family</span><span class="p">:</span> <span class="kc">sans-serif</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="k">margin</span><span class="p">:</span> <span class="mi">0</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="k">padding</span><span class="p">:</span> <span class="mi">0</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="listingblock">
-      <div class="title">Html</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-html chroma" data-lang="html">
+  </div>
+</div>
+<div class="listingblock">
+  <div class="title">Html</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-html chroma" data-lang="html">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 </span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">html</span><span class="p"></span><span class="p">&gt;</span>
 </span></span><span class="line"><span class="cl">  <span class="p">&lt;</span><span class="nt">head</span><span class="p"></span><span class="p">&gt;</span>
@@ -526,8 +654,8 @@ em, i {
 </span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">h1</span><span class="p"></span><span class="p">&gt;</span>Hello<span class="p">&lt;</span><span class="p">/</span><span class="nt">h1</span><span class="p">&gt;</span>
 </span></span><span class="line"><span class="cl">  <span class="p">&lt;</span><span class="p">/</span><span class="nt">body</span><span class="p">&gt;</span>
 </span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="p">/</span><span class="nt">html</span><span class="p">&gt;</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 </section>
 </div>
 </section>
@@ -575,26 +703,26 @@ PASS</pre>
 <div class="sectionbody">
 <section class="sect2">
 <h3 id="_basic_callouts">Basic Callouts</h3>
-    <div class="listingblock">
-      <div class="title">Go</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-go chroma" data-lang="go">
+<div class="listingblock">
+  <div class="title">Go</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="err">①</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">b</span><span class="w"> </span><span class="err">②</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="colist arabic">
-      <div class="li">① <span>Function parameters</span></div>
-      <div class="li">② <span>Return statement</span></div>
-    </div>
+  </div>
+</div>
+<div class="colist arabic">
+  <div class="li">① <span>Function parameters</span></div>
+  <div class="li">② <span>Return statement</span></div>
+</div>
 </section>
 <section class="sect2">
 <h3 id="_multiple_callouts_in_one_block">Multiple Callouts in One Block</h3>
-    <div class="listingblock">
-      <div class="title">Bash</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
+<div class="listingblock">
+  <div class="title">Bash</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-bash chroma" data-lang="bash">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Install dependencies ①</span>
 </span></span><span class="line"><span class="cl">go mod download
 </span></span><span class="line"><span class="cl">
@@ -603,33 +731,33 @@ PASS</pre>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="c1"># Build binary ③</span>
 </span></span><span class="line"><span class="cl">go build -o app ./cmd/app</span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="colist arabic">
-      <div class="li">① <span>Downloads all required modules</span></div>
-      <div class="li">② <span>Runs all tests in the project</span></div>
-      <div class="li">③ <span>Creates the executable binary</span></div>
-    </div>
+  </div>
+</div>
+<div class="colist arabic">
+  <div class="li">① <span>Downloads all required modules</span></div>
+  <div class="li">② <span>Runs all tests in the project</span></div>
+  <div class="li">③ <span>Creates the executable binary</span></div>
+</div>
 </section>
 <section class="sect2">
 <h3 id="_complex_callout_example">Complex Callout Example</h3>
-    <div class="listingblock">
-      <div class="title">Python</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-python chroma" data-lang="python">
+<div class="listingblock">
+  <div class="title">Python</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="p">:</span> <span class="err">①</span>
 </span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="err">②</span>
 </span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span> <span class="err">③</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">calculate</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="p">)</span> <span class="err">④</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="colist arabic">
-      <div class="li">① <span>Function definition with two parameters</span></div>
-      <div class="li">② <span>Addition operation</span></div>
-      <div class="li">③ <span>Returns the calculated result</span></div>
-      <div class="li">④ <span>Prints: 8</span></div>
-    </div>
+  </div>
+</div>
+<div class="colist arabic">
+  <div class="li">① <span>Function definition with two parameters</span></div>
+  <div class="li">② <span>Addition operation</span></div>
+  <div class="li">③ <span>Returns the calculated result</span></div>
+  <div class="li">④ <span>Prints: 8</span></div>
+</div>
 </section>
 </div>
 </section>
@@ -638,18 +766,18 @@ PASS</pre>
 <div class="sectionbody">
 <section class="sect2">
 <h3 id="_listing_with_caption">Listing with Caption</h3>
-    <div class="listingblock">
-      <div class="title">Standards-compliant code example</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-c chroma" data-lang="c">
+<div class="listingblock">
+  <div class="title">Standards-compliant code example</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-c chroma" data-lang="c">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="cp">#</span><span class="cp">include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
 </span></span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">    <span class="nf">printf</span><span class="p">(</span><span class="sa"></span><span class="s">&#34;</span><span class="s">Hello, World!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">)</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 </section>
 </div>
 </section>
@@ -661,10 +789,10 @@ PASS</pre>
 <div class="paragraph">
 <p>Here&#39;s how to create a simple HTTP server in Go:</p>
 </div>
-    <div class="listingblock">
-      <div class="title">Go</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-go chroma" data-lang="go">
+<div class="listingblock">
+  <div class="title">Go</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kn">package</span><span class="w"> </span><span class="nx">main</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;net/http&#34;</span><span class="w">
@@ -675,23 +803,23 @@ PASS</pre>
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">http</span><span class="p">.</span><span class="nf">ListenAndServe</span><span class="p">(</span><span class="s">&#34;:8080&#34;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 <div class="paragraph">
 <p>The server listens on port 8080.</p>
 </div>
 </section>
 <section class="sect2">
 <h3 id="_code_with_notes_after">Code with Notes After</h3>
-    <div class="listingblock">
-      <div class="title">Rust</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-rust chroma" data-lang="rust">
+<div class="listingblock">
+  <div class="title">Rust</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-rust chroma" data-lang="rust">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="k">fn</span> <span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="fm">println!</span><span class="w"></span><span class="p">(</span><span class="w"></span><span class="s">&#34;</span><span class="s">Hello!</span><span class="s">&#34;</span><span class="p">)</span><span class="p">;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -712,10 +840,10 @@ PASS</pre>
 <div class="sectionbody">
 <section class="sect2">
 <h3 id="_configuration_file_example">Configuration File Example</h3>
-    <div class="listingblock">
-      <div class="title">Yaml</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
+<div class="listingblock">
+  <div class="title">Yaml</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-yaml chroma" data-lang="yaml">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c"># Application Configuration</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="nt">app</span><span class="p">:</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">MyApp</span><span class="w">
@@ -734,15 +862,15 @@ PASS</pre>
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">mydb</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l">admin</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l">secret</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 </section>
 <section class="sect2">
 <h3 id="_api_response_example">API Response Example</h3>
-    <div class="listingblock">
-      <div class="title">Json</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-json chroma" data-lang="json">
+<div class="listingblock">
+  <div class="title">Json</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-json chroma" data-lang="json">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="p">{</span>
 </span></span><span class="line"><span class="cl">  <span class="nt">&#34;status&#34;</span><span class="p">:</span> <span class="s2">&#34;success&#34;</span><span class="p">,</span>
 </span></span><span class="line"><span class="cl">  <span class="nt">&#34;data&#34;</span><span class="p">:</span> <span class="p">{</span>
@@ -765,8 +893,8 @@ PASS</pre>
 </span></span><span class="line"><span class="cl">    <span class="nt">&#34;total&#34;</span><span class="p">:</span> <span class="mi">2</span>
 </span></span><span class="line"><span class="cl">  <span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 </section>
 </div>
 </section>
@@ -775,35 +903,35 @@ PASS</pre>
 <div class="sectionbody">
 <section class="sect2">
 <h3 id="_same_code_in_different_languages">Same Code in Different Languages</h3>
-    <div class="listingblock">
-      <div class="title">Javascript</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-javascript chroma" data-lang="javascript">
+<div class="listingblock">
+  <div class="title">Javascript</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-javascript chroma" data-lang="javascript">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// JavaScript
 </span></span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">greet</span> <span class="o">=</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sb">`</span><span class="sb">Hello, </span><span class="si">${</span><span class="nx">name</span><span class="si">}</span><span class="sb">!</span><span class="sb">`</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span><span class="p">;</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="listingblock">
-      <div class="title">Typescript</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-typescript chroma" data-lang="typescript">
+  </div>
+</div>
+<div class="listingblock">
+  <div class="title">Typescript</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-typescript chroma" data-lang="typescript">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1">// TypeScript
 </span></span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">greet</span> <span class="o">=</span> <span class="p">(</span><span class="nx">name</span>: <span class="kt">string</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="o">=</span><span class="o">&gt;</span> <span class="p">{</span>
 </span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sb">`</span><span class="sb">Hello, </span><span class="si">${</span><span class="nx">name</span><span class="si">}</span><span class="sb">!</span><span class="sb">`</span><span class="p">;</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span><span class="p">;</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
-    <div class="listingblock">
-      <div class="title">Python</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-python chroma" data-lang="python">
+  </div>
+</div>
+<div class="listingblock">
+  <div class="title">Python</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Python</span>
 </span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-</span><span class="o">&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sa">f</span><span class="s2">&#34;</span><span class="s2">Hello, </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!</span><span class="s2">&#34;</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 </section>
 </div>
 </section>
@@ -812,31 +940,31 @@ PASS</pre>
 <div class="sectionbody">
 <section class="sect2">
 <h3 id="_code_with_special_characters">Code with Special Characters</h3>
-    <div class="listingblock">
-      <div class="title">Go</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-go chroma" data-lang="go">
+<div class="listingblock">
+  <div class="title">Go</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-go chroma" data-lang="go">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// Special characters: * / + - ?</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">str</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">&#34;text with *bold* and _italic_&#34;</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">regex</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="s">`</span><span class="s">\w+\s+\w+</span><span class="s">`</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Println</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span><span class="w">
 </span></span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 </section>
 <section class="sect2">
 <h3 id="_code_with_unicode">Code with Unicode</h3>
-    <div class="listingblock">
-      <div class="title">Python</div>
-      <div class="content">
-        <pre class="highlight"><code class="language-python chroma" data-lang="python">
+<div class="listingblock">
+  <div class="title">Python</div>
+  <div class="content">
+    <pre class="highlight"><code class="language-python chroma" data-lang="python">
 <pre class="chroma"><code><span class="line"><span class="cl"><span class="c1"># Unicode characters in code</span>
 </span></span><span class="line"><span class="cl"><span class="n">greeting</span> <span class="o">=</span> <span class="sa"></span><span class="s2">&#34;</span><span class="s2">Hello, 世界!</span><span class="s2">&#34;</span>
 </span></span><span class="line"><span class="cl"><span class="n">emoji</span> <span class="o">=</span> <span class="sa"></span><span class="s2">&#34;</span><span class="s2">😀</span><span class="s2">&#34;</span>
 </span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">greeting</span><span class="p">,</span> <span class="n">emoji</span><span class="p">)</span></span></span></code></pre></code></pre>
-      </div>
-    </div>
+  </div>
+</div>
 </section>
 <section class="sect2">
 <h3 id="_inline_code_in_prose">Inline Code in Prose</h3>
@@ -869,35 +997,35 @@ PASS</pre>
 <section class="sect1">
 <h2 id="_summary_of_code_block_types">Summary of Code Block Types</h2>
 <div class="sectionbody">
-    <table class="tableblock frame-all grid-all stretch">
-    <colgroup>
-      <col style="width: 33.3333%;">
-      <col style="width: 33.3333%;">
-      <col style="width: 33.3334%;">
-    </colgroup>
-    <tbody>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Type</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Delimiter</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Use Case</p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Listing</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>----</code></p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Source code with syntax highlighting</p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Literal</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>....</code></p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Verbatim text, command output</p></td>
-      </tr>
-      <tr>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Passthrough</p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock"><code>++++</code></p></td>
-        <td class="tableblock halign-left valign-top"><p class="tableblock">Raw output without escaping</p></td>
-      </tr>
-    </tbody>
-  </table>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3333%;">
+  <col style="width: 33.3334%;">
+</colgroup>
+<tbody>
+  <tr>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Type</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Delimiter</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Use Case</p></td>
+  </tr>
+  <tr>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Listing</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock"><code>----</code></p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Source code with syntax highlighting</p></td>
+  </tr>
+  <tr>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Literal</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock"><code>....</code></p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Verbatim text, command output</p></td>
+  </tr>
+  <tr>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Passthrough</p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock"><code>++++</code></p></td>
+    <td class="tableblock halign-left valign-top"><p class="tableblock">Raw output without escaping</p></td>
+  </tr>
+</tbody>
+</table>
 </div>
 </section>
 <section class="sect1">
@@ -961,15 +1089,15 @@ PASS</pre>
 </div>
 </section>
 <section class="sect1">
-<h2 id="_current_limitations">Current Limitations</h2>
+<h2 id="notes">Notes</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>Line numbering syntax (<code>linenums</code> option) is not supported</p>
+<p>Some languages may not have perfect syntax highlighting</p>
 </li>
 <li>
-<p>Some languages may not have perfect syntax highlighting</p>
+<p>Line numbers use HTML table layout for proper alignment with syntax highlighting</p>
 </li>
 </ul>
 </div>

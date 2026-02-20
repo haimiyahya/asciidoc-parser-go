@@ -488,6 +488,47 @@ em, i {
 .chroma .gr { color: #cf222e; } /* Generic error */
 .chroma .gt { color: #cf222e; } /* Generic traceback */
 .chroma .gl { color: #24292e; text-decoration: underline; } /* Generic link */
+/* Line numbers table styling */
+table.linenums {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 0;
+}
+table.linenums td {
+	padding: 0;
+	margin: 0;
+	border: none;
+	vertical-align: baseline;
+	line-height: 1.45;
+}
+table.linenums .linenum {
+	padding: 0 8px 0 0;
+	text-align: right;
+	color: #999;
+	user-select: none;
+	border-right: 1px solid #ddd;
+	width: 1%;
+	white-space: nowrap;
+	font-size: 12px;
+}
+table.linenums .code {
+	padding: 0 0 0 8px;
+	text-align: left;
+}
+table.linenums .code .chroma {
+	white-space: pre;
+	display: block;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.45;
+}
+table.linenums pre,
+table.linenums code {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border-radius: 0;
+}
 </style>
 `
 	if c.pretty {
@@ -751,6 +792,17 @@ func (c *HTML5Converter) convertSourceBlockWithLineNumbers(block *ast.StyledBloc
 			highlightedLine = c.escape(processedLine)
 		}
 
+		// Strip <pre> and <code> tags from Chroma output since we're in a table
+		// Chroma outputs: <pre class="chroma"><code>...</code></pre>
+		// We want just the inner content for table cells
+		highlightedLine = strings.TrimPrefix(highlightedLine, `<pre class="chroma"><code><span class="line"><span class="cl">`)
+		highlightedLine = strings.TrimSuffix(highlightedLine, `</span></span></code></pre>`)
+		// Also handle other Chroma output formats
+		highlightedLine = strings.ReplaceAll(highlightedLine, `<pre class="chroma"><code>`, "")
+		highlightedLine = strings.ReplaceAll(highlightedLine, `</code></pre>`, "")
+		highlightedLine = strings.ReplaceAll(highlightedLine, `<span class="line"><span class="cl">`, "")
+		highlightedLine = strings.ReplaceAll(highlightedLine, `</span></span>`, "")
+
 		if c.pretty {
 			fmt.Fprint(w, "\t")
 		}
@@ -759,7 +811,7 @@ func (c *HTML5Converter) convertSourceBlockWithLineNumbers(block *ast.StyledBloc
 		// Line number cell
 		fmt.Fprintf(w, `<td class="linenum">%d</td>`, lineNum)
 
-		// Code cell with syntax highlighting
+		// Code cell with syntax highlighting (no pre/code tags)
 		fmt.Fprintf(w, `<td class="code"><span class="chroma">%s</span></td>`, highlightedLine)
 
 		fmt.Fprintf(w, `</tr>`)

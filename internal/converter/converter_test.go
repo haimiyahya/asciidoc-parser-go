@@ -11,6 +11,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// ExampleConverterFactory demonstrates converting an AST to HTML5.
+func ExampleConverterFactory() {
+	// Create a simple document AST
+	doc := &ast.NodeDocument{
+		Header: &ast.DocumentHeader{Title: "Hello, AsciiDoc!"},
+		Blocks: []ast.Node{
+			&ast.NodeParagraph{
+				Text: "This is a paragraph.",
+				Pos:  ast.Position{Line: 1},
+			},
+		},
+	}
+
+	// Get the HTML5 converter
+	factory := NewConverterFactory()
+	c := factory.GetDefault()
+
+	// Convert to HTML5
+	var buf bytes.Buffer
+	_ = c.Convert(doc, &buf)
+
+	// buf.String() now contains the complete HTML5 document
+	_ = buf.String()
+
+	// Output:
+}
+
 func TestHTML5ConverterParagraph(t *testing.T) {
 	doc := &ast.NodeDocument{
 		Blocks: []ast.Node{
@@ -63,7 +90,7 @@ func TestHTML5ConverterUnorderedList(t *testing.T) {
 	doc := &ast.NodeDocument{
 		Blocks: []ast.Node{
 			&ast.NodeList{
-				Kind:  ast.TypeList,
+				Kind: ast.TypeList,
 				Items: []ast.Node{
 					&ast.NodeListItem{
 						Kind:   ast.TypeListItem,
@@ -110,18 +137,18 @@ func TestHTML5ConverterOrderedList(t *testing.T) {
 				Kind: ast.TypeList,
 				Items: []ast.Node{
 					&ast.NodeListItem{
-						Kind:   ast.TypeListItem,
-						Marker: ".",
-						Text:   "First",
+						Kind:    ast.TypeListItem,
+						Marker:  ".",
+						Text:    "First",
 						Ordinal: 1,
-						Pos:    ast.Position{Line: 1},
+						Pos:     ast.Position{Line: 1},
 					},
 					&ast.NodeListItem{
-						Kind:   ast.TypeListItem,
-						Marker: ".",
-						Text:   "Second",
+						Kind:    ast.TypeListItem,
+						Marker:  ".",
+						Text:    "Second",
 						Ordinal: 2,
-						Pos:    ast.Position{Line: 2},
+						Pos:     ast.Position{Line: 2},
 					},
 				},
 				Pos: ast.Position{Line: 1},
@@ -148,17 +175,17 @@ func TestHTML5ConverterLabeledList(t *testing.T) {
 				Kind: ast.TypeList,
 				Items: []ast.Node{
 					&ast.NodeListItem{
-						Kind:      ast.TypeListItem,
+						Kind:       ast.TypeListItem,
 						Marker:     "::",
-						Term:        "Term 1",
-						Definition:  "Definition 1",
+						Term:       "Term 1",
+						Definition: "Definition 1",
 						Pos:        ast.Position{Line: 1},
 					},
 					&ast.NodeListItem{
-						Kind:      ast.TypeListItem,
+						Kind:       ast.TypeListItem,
 						Marker:     "::",
-						Term:        "Term 2",
-						Definition:  "Definition 2",
+						Term:       "Term 2",
+						Definition: "Definition 2",
 						Pos:        ast.Position{Line: 2},
 					},
 				},
@@ -208,9 +235,9 @@ func TestHTML5ConverterDelimitedBlock(t *testing.T) {
 		Blocks: []ast.Node{
 			&ast.NodeBlock{
 				Kind:      ast.TypeBlock,
-				Delimiter:  "=",
-				Lines:      []string{"This is an example block"},
-				Pos:        ast.Position{Line: 1},
+				Delimiter: "=",
+				Lines:     []string{"This is an example block"},
+				Pos:       ast.Position{Line: 1},
 			},
 		},
 	}
@@ -360,9 +387,9 @@ func TestHTML5ConverterQuoteBlock(t *testing.T) {
 		Blocks: []ast.Node{
 			&ast.NodeBlock{
 				Kind:      ast.TypeBlock,
-				Delimiter:  "_",
-				Lines:      []string{"This is a quote"},
-				Pos:        ast.Position{Line: 1},
+				Delimiter: "_",
+				Lines:     []string{"This is a quote"},
+				Pos:       ast.Position{Line: 1},
 			},
 		},
 	}
@@ -493,7 +520,7 @@ func TestHTML5ConverterTableWithoutHeader(t *testing.T) {
 func TestHTML5ConverterTableFrameClasses(t *testing.T) {
 	// Test that frame attribute is rendered as CSS class
 	testCases := []struct {
-		frame     ast.TableFrame
+		frame       ast.TableFrame
 		classSubstr string
 	}{
 		{ast.FrameAll, "frame-all"},
@@ -533,7 +560,7 @@ func TestHTML5ConverterTableFrameClasses(t *testing.T) {
 func TestHTML5ConverterTableGridClasses(t *testing.T) {
 	// Test that grid attribute is rendered as CSS class
 	testCases := []struct {
-		grid       ast.TableGrid
+		grid        ast.TableGrid
 		classSubstr string
 	}{
 		{ast.GridAll, "grid-all"},
@@ -698,4 +725,3 @@ func TestHTML5ConverterExplicitStyleOrderedList(t *testing.T) {
 	assert.Contains(t, output, `<ol class="loweralpha">`, "Should be ordered list with loweralpha class")
 	assert.Contains(t, output, `<div class="olist loweralpha">`, "Should have olist wrapper with loweralpha class")
 }
-

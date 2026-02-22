@@ -1,16 +1,57 @@
 // Package ast defines the Abstract Syntax Tree for AsciiDoc documents.
+//
+// The AST represents the hierarchical structure of a parsed AsciiDoc document.
+// All nodes implement the Node interface, providing Type() and Position()
+// methods for introspection.
+//
+// # Node Hierarchy
+//
+// The document root is a NodeDocument, which contains:
+//   - A DocumentHeader with title, author, and metadata
+//   - Top-level blocks (sections, paragraphs, lists, tables, etc.)
+//   - Document-level attributes
+//
+// Sections (NodeSection) can contain nested blocks, including subsections.
+// Lists (NodeList) contain ListItems, which may have nested lists.
+//
+// # Node Types
+//
+// The NodeType enum identifies all node types:
+//   - TypeDocument: Root document node
+//   - TypeSection: Section heading
+//   - TypeParagraph: Text paragraph
+//   - TypeList: Ordered/unordered/labeled list
+//   - TypeListItem: Single list item
+//   - TypeAdmonition: NOTE/TIP/WARNING/CAUTION/IMPORTANT
+//   - TypeLiteral: Verbatim/literal block
+//   - TypeBlock: Generic delimited block
+//   - TypeTable: Data table
+//   - TypeStyledBlock: Styled block (pass, sidebar, verse, etc.)
+//   - TypeMacro: Block macro (image, include, etc.)
+//   - And more specialized types...
+//
+// # Position Tracking
+//
+// Each node carries a Position field indicating its location in the
+// source document for error reporting and debugging.
 package ast
 
-// Node is the interface for all AST nodes.
+// Node is the interface implemented by all AST nodes.
+//
+// The Node interface provides type identification and source location
+// tracking for all nodes in the AST.
 type Node interface {
-	// Type returns the node type.
+	// Type returns the node type for type switching and identification.
 	Type() NodeType
 
-	// Position returns the source location.
+	// Position returns the source location for error reporting.
 	Position() Position
 }
 
 // DocumentHeader contains the document header information.
+//
+// The header stores document-level metadata including the title,
+// author, version, and other front-matter attributes.
 type DocumentHeader struct {
 	// Title is the document title.
 	Title string
@@ -26,12 +67,15 @@ type DocumentHeader struct {
 
 // RevisionInfo contains document revision information.
 type RevisionInfo struct {
-	Number    string
-	Date      string
-	Remark    string
+	Number string
+	Date   string
+	Remark string
 }
 
 // NodeType represents the type of an AST node.
+//
+// NodeType is an enumeration that identifies the kind of node
+// for type switching and pattern matching.
 type NodeType int
 
 const (
@@ -79,13 +123,19 @@ const (
 	TypeBibliographyEntry
 )
 
-// Position represents a location in the source.
+// Position represents a location in the source document.
+//
+// Position tracks the file and line number for error reporting
+// and source mapping.
 type Position struct {
-	File   string
-	Line   int
+	File string
+	Line int
 }
 
 // NodeDocument is the root document node.
+//
+// The NodeDocument represents the entire parsed AsciiDoc document,
+// including the header, all blocks, and document-level attributes.
 type NodeDocument struct {
 	// Kind is the node type.
 	Kind NodeType
@@ -102,6 +152,9 @@ type NodeDocument struct {
 }
 
 // NodeSection is a section heading.
+//
+// Sections have a level (0-6, where 0 is the document title),
+// a title, an optional ID for cross-references, and child blocks.
 type NodeSection struct {
 	// Level is the section level (1-6, where 1 is document title).
 	Level int
@@ -118,6 +171,9 @@ type NodeSection struct {
 }
 
 // NodeParagraph is a paragraph.
+//
+// Paragraphs contain text with optional inline markup nodes
+// (bold, italic, links, etc.) for formatting.
 type NodeParagraph struct {
 	// Kind is the node type.
 	Kind NodeType
@@ -130,6 +186,9 @@ type NodeParagraph struct {
 }
 
 // NodeList is a list (ordered, unordered, labeled, checklist).
+//
+// Lists contain items and may have an optional style (e.g., "qanda")
+// and list-level attributes.
 type NodeList struct {
 	// Kind is the node type.
 	Kind NodeType
@@ -348,53 +407,53 @@ type BibliographyEntryNode struct {
 
 // Node interface methods for each type.
 
-func (n *NodeDocument) Type() NodeType   { return n.Kind }
+func (n *NodeDocument) Type() NodeType     { return n.Kind }
 func (n *NodeDocument) Position() Position { return n.Pos }
 
-func (n *NodeSection) Type() NodeType   { return TypeSection }
+func (n *NodeSection) Type() NodeType     { return TypeSection }
 func (n *NodeSection) Position() Position { return n.Pos }
 
-func (n *NodeParagraph) Type() NodeType   { return TypeParagraph }
+func (n *NodeParagraph) Type() NodeType     { return TypeParagraph }
 func (n *NodeParagraph) Position() Position { return n.Pos }
 
-func (n *NodeList) Type() NodeType   { return TypeList }
+func (n *NodeList) Type() NodeType     { return TypeList }
 func (n *NodeList) Position() Position { return n.Pos }
 
-func (n *NodeListItem) Type() NodeType   { return TypeListItem }
+func (n *NodeListItem) Type() NodeType     { return TypeListItem }
 func (n *NodeListItem) Position() Position { return n.Pos }
 
-func (n *NodeLiteral) Type() NodeType   { return TypeLiteral }
+func (n *NodeLiteral) Type() NodeType     { return TypeLiteral }
 func (n *NodeLiteral) Position() Position { return n.Pos }
 
-func (n *NodeBlock) Type() NodeType   { return TypeBlock }
+func (n *NodeBlock) Type() NodeType     { return TypeBlock }
 func (n *NodeBlock) Position() Position { return n.Pos }
 
-func (n *AdmonitionNode) Type() NodeType   { return TypeAdmonition }
+func (n *AdmonitionNode) Type() NodeType     { return TypeAdmonition }
 func (n *AdmonitionNode) Position() Position { return n.Pos }
 
-func (n *MacroNode) Type() NodeType   { return TypeMacro }
+func (n *MacroNode) Type() NodeType     { return TypeMacro }
 func (n *MacroNode) Position() Position { return n.Pos }
 
-func (n *StyledBlockNode) Type() NodeType   { return TypeStyledBlock }
+func (n *StyledBlockNode) Type() NodeType     { return TypeStyledBlock }
 func (n *StyledBlockNode) Position() Position { return n.Pos }
 
-func (n *SidebarNode) Type() NodeType   { return TypeSidebar }
+func (n *SidebarNode) Type() NodeType     { return TypeSidebar }
 func (n *SidebarNode) Position() Position { return n.Pos }
 
-func (n *PassThroughNode) Type() NodeType   { return TypePassThrough }
+func (n *PassThroughNode) Type() NodeType     { return TypePassThrough }
 func (n *PassThroughNode) Position() Position { return n.Pos }
 
-func (n *VerseNode) Type() NodeType   { return TypeVerse }
+func (n *VerseNode) Type() NodeType     { return TypeVerse }
 func (n *VerseNode) Position() Position { return n.Pos }
 
-func (n *CalloutNode) Type() NodeType   { return TypeCallout }
+func (n *CalloutNode) Type() NodeType     { return TypeCallout }
 func (n *CalloutNode) Position() Position { return n.Pos }
 
-func (n *CalloutListNode) Type() NodeType   { return TypeCalloutList }
+func (n *CalloutListNode) Type() NodeType     { return TypeCalloutList }
 func (n *CalloutListNode) Position() Position { return n.Pos }
 
-func (n *BibliographyNode) Type() NodeType   { return TypeBibliography }
+func (n *BibliographyNode) Type() NodeType     { return TypeBibliography }
 func (n *BibliographyNode) Position() Position { return n.Pos }
 
-func (n *BibliographyEntryNode) Type() NodeType   { return TypeBibliographyEntry }
+func (n *BibliographyEntryNode) Type() NodeType     { return TypeBibliographyEntry }
 func (n *BibliographyEntryNode) Position() Position { return n.Pos }

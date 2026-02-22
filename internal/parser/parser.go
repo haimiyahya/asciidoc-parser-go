@@ -1,4 +1,39 @@
-// Package parser provides AsciiDoc parsing functionality.
+// Package parser provides AsciiDoc source parsing functionality.
+//
+// The parser transforms AsciiDoc source text into an Abstract Syntax Tree (AST)
+// defined in the ast package. It supports the full AsciiDoc syntax including
+// sections, paragraphs, lists, tables, delimited blocks, inline markup,
+// attributes, conditionals, and more.
+//
+// # Basic Usage
+//
+//	p := parser.NewParserFromString("= Hello, AsciiDoc!")
+//	doc, err := p.Parse()
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	// doc is now an *ast.NodeDocument ready for conversion
+//
+// # Parser Options
+//
+// The parser accepts optional configuration functions:
+//
+//	p := parser.NewParserFromString(source,
+//	    parser.WithBaseDir("/path/to/includes"),
+//	    parser.WithIncludeProcessor(ip),
+//	    parser.WithExtensionRegistry(registry),
+//	)
+//
+// # Architecture
+//
+// The parser is line-oriented and mimics how humans visually parse AsciiDoc:
+//   - Classifies each line into block types (section, list, table, etc.)
+//   - Accumulates paragraph lines until a blank line or new block
+//   - Handles nested structures (lists, sections, delimited blocks)
+//   - Parses inline markup within text blocks
+//
+// This design mirrors Asciidoctor's Reader → Parser → AST architecture.
+// Reference: https://github.com/asciidoctor/asciidoctor
 package parser
 
 import (
@@ -23,7 +58,12 @@ type listStackEntry struct {
 	blockType reader.BlockType
 }
 
-// Parser parses AsciiDoc source into an AST.
+// Parser parses AsciiDoc source into an Abstract Syntax Tree.
+//
+// The parser is line-oriented and processes source text sequentially,
+// classifying each line and building the corresponding AST nodes.
+// It maintains state for sections, lists, delimited blocks, and other
+// nested structures.
 type Parser struct {
 	// reader is the source reader.
 	reader *reader.Reader
@@ -39,28 +79,28 @@ type Parser struct {
 	currentSection *ast.NodeSection
 
 	// List tracking state
-	listStack         []listStackEntry
-	currentList      *ast.NodeList
+	listStack            []listStackEntry
+	currentList          *ast.NodeList
 	currentListBlockType reader.BlockType
-	currentListLevel int
+	currentListLevel     int
 
 	// Continuation tracking - when a labeled list item consumes continuation lines,
 	// we need to skip the next Advance() call in the main loop
-	skipNextAdvance            bool
+	skipNextAdvance             bool
 	linesConsumedByContinuation int
 
 	// Block anchor tracking - [[id]] before a section applies to that section
 	pendingAnchorID string
 
 	// Block style tracking - [style] before a section applies to that section
-	pendingBlockStyle string
+	pendingBlockStyle      string
 	pendingBlockStyleAttrs map[string]string
 
 	// Admonition tracking - for block-style admonitions [NOTE], [TIP], etc.
-	pendingAdmonitionKind string // "NOTE", "TIP", "WARNING", etc.
-	pendingAdmonitionTitle string
+	pendingAdmonitionKind   string // "NOTE", "TIP", "WARNING", etc.
+	pendingAdmonitionTitle  string
 	pendingAdmonitionBlocks []ast.Node
-	pendingAdmonitionAttrs map[string]string
+	pendingAdmonitionAttrs  map[string]string
 
 	// Bibliography tracking
 	currentBibliography *ast.BibliographyNode
@@ -91,15 +131,21 @@ type conditionalState struct {
 	depth int
 }
 
-// ParserOption configures a parser.
+// ParserOption configures a Parser during creation.
+//
+// Options are functions that modify the Parser's configuration,
+// such as setting the include processor, base directory, or extension registry.
 type ParserOption func(*Parser)
 
-// NewParser creates a new Parser.
+// NewParser creates a new Parser from a Reader.
+//
+// The Reader provides the source lines to parse. Use NewParserFromString
+// or NewParserFromReader for convenient constructors.
 func NewParser(r *reader.Reader, opts ...ParserOption) *Parser {
 	p := &Parser{
-		reader:    r,
+		reader:     r,
 		classifier: reader.NewLineClassifier(),
-		options:   opts,
+		options:    opts,
 	}
 	// Apply options
 	for _, opt := range opts {
@@ -108,7 +154,10 @@ func NewParser(r *reader.Reader, opts ...ParserOption) *Parser {
 	return p
 }
 
-// NewParserFromReader creates a parser from an io.Reader.
+// NewParserFromReader creates a Parser from an io.Reader.
+//
+// This constructor reads the entire source from the reader into memory
+// before parsing. For very large documents, consider memory implications.
 func NewParserFromReader(r io.Reader, opts ...ParserOption) (*Parser, error) {
 	rd, err := reader.NewReaderFromReader(r)
 	if err != nil {
@@ -117,7 +166,9 @@ func NewParserFromReader(r io.Reader, opts ...ParserOption) (*Parser, error) {
 	return NewParser(rd, opts...), nil
 }
 
-// NewParserFromString creates a parser from a string.
+// NewParserFromString creates a Parser from a source string.
+//
+// This is the most common way to create a parser for in-memory AsciiDoc content.
 func NewParserFromString(source string, opts ...ParserOption) (*Parser, error) {
 	rd, err := reader.NewReader(source)
 	if err != nil {
@@ -127,13 +178,19 @@ func NewParserFromString(source string, opts ...ParserOption) (*Parser, error) {
 }
 
 // WithIncludeProcessor sets an include processor for handling include::[] directives.
+//
+// The include processor is responsible for resolving and reading
+// included files during parsing.
 func WithIncludeProcessor(ip *processor.IncludeProcessor) ParserOption {
 	return func(p *Parser) {
 		p.includeProcessor = ip
 	}
 }
 
-// WithBaseDir sets the base directory for resolving relative paths (e.g., includes).
+// WithBaseDir sets the base directory for resolving relative paths.
+//
+// This is used primarily for include::[] directives to locate
+// files relative to the document being parsed.
 func WithBaseDir(dir string) ParserOption {
 	return func(p *Parser) {
 		p.reader.SetDir(dir)
@@ -141,6 +198,9 @@ func WithBaseDir(dir string) ParserOption {
 }
 
 // WithExtensionRegistry sets an extension registry for custom macros and processors.
+//
+// The registry allows the parser to handle custom block macros,
+// inline macros, tree processors, and block processors.
 func WithExtensionRegistry(registry *extension.Registry) ParserOption {
 	return func(p *Parser) {
 		p.extensionRegistry = registry
@@ -148,6 +208,13 @@ func WithExtensionRegistry(registry *extension.Registry) ParserOption {
 }
 
 // Parse parses the AsciiDoc source into a document AST.
+//
+// Parse processes all lines from the Reader, building a complete
+// Abstract Syntax Tree. It handles nested structures, attributes,
+// conditionals, and includes. The returned *ast.NodeDocument
+// can be converted to output formats using the converter package.
+//
+// Returns an error if parsing encounters a fatal issue.
 func (p *Parser) Parse() (*ast.NodeDocument, error) {
 	doc := &ast.NodeDocument{
 		Attributes: make(map[string]string),
@@ -879,7 +946,7 @@ func (p *Parser) createParagraph(lines []string, lineno int) ast.Node {
 	return &ast.NodeParagraph{
 		Text:        cleanedContent,
 		InlineNodes: adjustedNodes,
-		Pos:  ast.Position{Line: lineno},
+		Pos:         ast.Position{Line: lineno},
 	}
 }
 
@@ -1066,10 +1133,10 @@ func (p *Parser) createSection(info *reader.SectionInfo, lineno int) ast.Node {
 	if info.Level == 0 {
 		return &ast.NodeSection{
 			Level:      0,
-			Title:       info.Title,
-			ID:          sectionID,
-			Attributes:  attrs,
-			Pos:         ast.Position{Line: lineno},
+			Title:      info.Title,
+			ID:         sectionID,
+			Attributes: attrs,
+			Pos:        ast.Position{Line: lineno},
 		}
 	}
 
@@ -1091,10 +1158,10 @@ func (p *Parser) createSection(info *reader.SectionInfo, lineno int) ast.Node {
 
 	return &ast.NodeSection{
 		Level:      info.Level,
-		Title:       info.Title,
-		ID:          sectionID,
-		Attributes:  attrs,
-		Pos:         ast.Position{Line: lineno},
+		Title:      info.Title,
+		ID:         sectionID,
+		Attributes: attrs,
+		Pos:        ast.Position{Line: lineno},
 	}
 }
 
@@ -1141,7 +1208,7 @@ func (p *Parser) createListItem(info *reader.ListInfo, lineno int) ast.Node {
 	checked := info.ChecklistState == reader.ChecklistChecked
 
 	return &ast.NodeListItem{
-		Kind:           ast.TypeListItem,
+		Kind:            ast.TypeListItem,
 		Marker:          info.Marker,
 		Level:           info.Level,
 		Ordinal:         info.Ordinal,
@@ -1213,10 +1280,10 @@ func (p *Parser) createBibliographyEntry(info *reader.ListInfo, lineno int) *ast
 	}
 
 	return &ast.BibliographyEntryNode{
-		Label:        label,
-		XRefText:     xrefText,
-		Text:         entryText,
-		InlineNodes:  nodes,
+		Label:       label,
+		XRefText:    xrefText,
+		Text:        entryText,
+		InlineNodes: nodes,
 		Pos:         ast.Position{Line: lineno},
 	}
 }
@@ -1276,10 +1343,10 @@ func (p *Parser) createMacro(macro *reader.MacroInfo, lineno int) ast.Node {
 	// Default: create standard macro node
 	return &ast.MacroNode{
 		Kind:       ast.TypeMacro,
-		Target:      macro.Target,
-		Path:        macro.Path,
-		Attributes:  macro.Attributes,
-		Pos:         ast.Position{Line: lineno},
+		Target:     macro.Target,
+		Path:       macro.Path,
+		Attributes: macro.Attributes,
+		Pos:        ast.Position{Line: lineno},
 	}
 }
 
@@ -1359,14 +1426,14 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		p.pendingBlockStyleAttrs = nil // Clear attributes
 
 		return &ast.StyledBlockNode{
-			Style:            "source",
-			Content:          cleanedContent,
-			Attributes:       attrs,
-			Callouts:         callouts,
-			Caption:          p.parseCaption(caption),
-			LineNumbers:      lineNumbers,
-			StartLineNumber:  startLine,
-			Pos:              ast.Position{Line: lineno},
+			Style:           "source",
+			Content:         cleanedContent,
+			Attributes:      attrs,
+			Callouts:        callouts,
+			Caption:         p.parseCaption(caption),
+			LineNumbers:     lineNumbers,
+			StartLineNumber: startLine,
+			Pos:             ast.Position{Line: lineno},
 		}
 	}
 
@@ -1410,7 +1477,7 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 	case reader.BlockExample:
 		return &ast.NodeBlock{
 			Delimiter: "=",
-			Lines:    strings.Split(content, "\n"),
+			Lines:     strings.Split(content, "\n"),
 			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockQuote:
@@ -1425,13 +1492,13 @@ func (p *Parser) createDelimitedBlock(blockType reader.BlockType, lines []string
 		}
 		return &ast.NodeBlock{
 			Delimiter: "_",
-			Lines:    strings.Split(content, "\n"),
+			Lines:     strings.Split(content, "\n"),
 			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockSidebar:
 		return &ast.NodeBlock{
 			Delimiter: "*",
-			Lines:    strings.Split(content, "\n"),
+			Lines:     strings.Split(content, "\n"),
 			Pos:       ast.Position{Line: lineno},
 		}
 	case reader.BlockPassthrough:

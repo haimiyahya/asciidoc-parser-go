@@ -3,6 +3,31 @@
 // This handles inline markup like bold, italic, links, monospace,
 // superscript, subscript, and other phrasal elements.
 //
+// # Basic Usage
+//
+//	p := inline.NewParser("**Bold** and `monospace` text")
+//	nodes := p.Parse()
+//	for _, node := range nodes {
+//	    switch node.Type {
+//	    case inline.NodeBold:
+//	        fmt.Println("Bold:", node.Text)
+//	    case inline.NodeMonospace:
+//	        fmt.Println("Monospace:", node.Text)
+//	    }
+//	}
+//
+// # Supported Inline Markup
+//
+//   - **bold** or *bold* (constrained/unconstrained)
+//   - __italic__ or _italic_ (constrained/unconstrained)
+//   - `monospace` (backticks)
+//   - ^superscript^ and ~subscript~
+//   - link:url[text] or bare URLs
+//   - image:url[alt, width, height]
+//   - <<id>> or <<id,text>> cross-references
+//   - ((term)) index terms
+//   - And more...
+//
 // Reference: https://docs.asciidoctor.org/asciidoc/latest/text/bold-italic.html
 package inline
 
@@ -75,23 +100,23 @@ const (
 // String returns the string representation of NodeType.
 func (nt NodeType) String() string {
 	names := map[NodeType]string{
-		NodeText:       "Text",
-		NodeBold:       "Bold",
-		NodeItalic:     "Italic",
-		NodeMonospace:  "Monospace",
-		NodeSubscript:  "Subscript",
-		NodeSuperscript: "Superscript",
-		NodeLink:       "Link",
-		NodeImage:      "Image",
-		NodeCrossRef:   "CrossRef",
-		NodeIndexTerm:   "IndexTerm",
-		NodeCustomMacro: "CustomMacro",
+		NodeText:           "Text",
+		NodeBold:           "Bold",
+		NodeItalic:         "Italic",
+		NodeMonospace:      "Monospace",
+		NodeSubscript:      "Subscript",
+		NodeSuperscript:    "Superscript",
+		NodeLink:           "Link",
+		NodeImage:          "Image",
+		NodeCrossRef:       "CrossRef",
+		NodeIndexTerm:      "IndexTerm",
+		NodeCustomMacro:    "CustomMacro",
 		NodePassThrough:    "PassThrough",
 		NodeRawPassThrough: "RawPassThrough",
-		NodeMenu:            "Menu",
-		NodeButton:          "Button",
-		NodeFootnote:        "Footnote",
-		NodeIcon:            "Icon",
+		NodeMenu:           "Menu",
+		NodeButton:         "Button",
+		NodeFootnote:       "Footnote",
+		NodeIcon:           "Icon",
 	}
 	if name, ok := names[nt]; ok {
 		return name
@@ -144,15 +169,15 @@ type Node struct {
 	IndexTermPrimary   string // Primary index term
 	IndexTermSecondary string // Secondary index term (optional)
 	IndexTermTertiary  string // Tertiary index term (optional)
-	IndexTermConcealed  bool   // True for concealed index terms (((...))) - hidden from text
+	IndexTermConcealed bool   // True for concealed index terms (((...))) - hidden from text
 
 	// Custom macro fields (for NodeCustomMacro)
-	MacroName  string            // Macro name (e.g., "badge", "version")
+	MacroName   string            // Macro name (e.g., "badge", "version")
 	MacroTarget string            // Macro target (text between : and [)
 	MacroAttrs  map[string]string // Macro attributes from square brackets
 
 	// Footnote fields (for NodeFootnote)
-	FootnoteID   string // Footnote identifier (e.g., "note1", "note2")
+	FootnoteID    string // Footnote identifier (e.g., "note1", "note2")
 	FootnoteText  string // Footnote text content
 	FootnoteIndex int    // Assigned footnote number (for auto-numbering)
 
@@ -281,8 +306,8 @@ func (p *Parser) Parse() []*Node {
 		//    and only then is the link text recursively parsed for inline macros
 		remaining := p.text[p.pos:]
 		if (strings.HasPrefix(remaining, "link:") ||
-		   (strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://"))) &&
-		   !strings.HasPrefix(remaining, "link=") {
+			(strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://"))) &&
+			!strings.HasPrefix(remaining, "link=") {
 			if node, newPos := p.tryLink(); node != nil {
 				p.applyRoles(node, pendingRoles)
 				pendingRoles = nil
@@ -547,7 +572,7 @@ func isValidItalicStart(text string, i int) bool {
 	return false
 }
 
-// isValidMonospaceStart checks if position i is the start of valid monospace markup (`` or `)
+// isValidMonospaceStart checks if position i is the start of valid monospace markup (“ or `)
 func isValidMonospaceStart(text string, i int) bool {
 	if i >= len(text) {
 		return false
@@ -618,10 +643,10 @@ func (p *Parser) tryImage() (*Node, int) {
 			// Trim any trailing whitespace
 			url = strings.TrimRight(url, " \t\n")
 			return &Node{
-				Type: NodeImage,
-				URL:  url,
-				Alt:  "",
-				Text: "",
+				Type:     NodeImage,
+				URL:      url,
+				Alt:      "",
+				Text:     "",
 				StartPos: p.pos,
 				Position: p.pos + len(url) + 6,
 			}, p.pos + len(url) + 6
@@ -635,10 +660,10 @@ func (p *Parser) tryImage() (*Node, int) {
 			// No [ found, treat entire spec as URL without alt
 			url := strings.TrimRight(imageSpec, " \t\n")
 			return &Node{
-				Type: NodeImage,
-				URL:  url,
-				Alt:  "",
-				Text: "",
+				Type:     NodeImage,
+				URL:      url,
+				Alt:      "",
+				Text:     "",
 				StartPos: p.pos,
 				Position: p.pos + closeBracket + 1,
 			}, p.pos + closeBracket + 1
@@ -656,12 +681,12 @@ func (p *Parser) tryImage() (*Node, int) {
 		attrs := p.parseImageAttributes(attrsStr)
 
 		return &Node{
-			Type:   NodeImage,
-			URL:    url,
-			Alt:    attrs.alt,
-			Width:  attrs.width,
-			Height: attrs.height,
-			Text:   attrs.alt, // Use alt as display text
+			Type:     NodeImage,
+			URL:      url,
+			Alt:      attrs.alt,
+			Width:    attrs.width,
+			Height:   attrs.height,
+			Text:     attrs.alt, // Use alt as display text
 			StartPos: p.pos,
 			Position: p.pos + closeBracket + 1,
 		}, p.pos + closeBracket + 1
@@ -770,7 +795,7 @@ func (p *Parser) tryLink() (*Node, int) {
 	// Simple heuristic: starts with http:// or https://
 	// Exclude inline image macro: link=https://...
 	if (strings.HasPrefix(remaining, "https://") || strings.HasPrefix(remaining, "http://")) &&
-	   !strings.HasPrefix(remaining, "link=") {
+		!strings.HasPrefix(remaining, "link=") {
 		// First, check if there's a [text] syntax after the URL
 		// Syntax: https://example.com[custom text] or https://example.com[custom text, attrs...]
 		openBracket := strings.Index(remaining, "[")
@@ -841,10 +866,10 @@ func (p *Parser) tryLink() (*Node, int) {
 		}
 		url := remaining[:end]
 		return &Node{
-			Type:  NodeLink,
-			Text:  url,
-			URL:   url,
-			Roles: []string{"bare"}, // Add "bare" role for Asciidoctor compatibility
+			Type:     NodeLink,
+			Text:     url,
+			URL:      url,
+			Roles:    []string{"bare"}, // Add "bare" role for Asciidoctor compatibility
 			StartPos: p.pos,
 			Position: p.pos + end,
 		}, p.pos + end
@@ -908,9 +933,9 @@ func (p *Parser) tryBold() (*Node, int) {
 			return &Node{
 				Type:     NodeBold,
 				Text:     text,
-				Children:  children,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 4,
+				Children: children,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 4,
 			}, p.pos + closeIndex + 4
 		}
 	}
@@ -928,8 +953,8 @@ func (p *Parser) tryBold() (*Node, int) {
 			return &Node{
 				Type:     NodeBold,
 				Text:     text,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 2,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
 		}
 	}
@@ -951,9 +976,9 @@ func (p *Parser) tryItalic() (*Node, int) {
 			return &Node{
 				Type:     NodeItalic,
 				Text:     text,
-				Children:  children,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 4,
+				Children: children,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 4,
 			}, p.pos + closeIndex + 4
 		}
 	}
@@ -971,8 +996,8 @@ func (p *Parser) tryItalic() (*Node, int) {
 			return &Node{
 				Type:     NodeItalic,
 				Text:     text,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 2,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
 		}
 	}
@@ -998,8 +1023,8 @@ func (p *Parser) tryMonospace() (*Node, int) {
 				Type:     NodeMonospace,
 				Text:     "`" + innerContent + "`",
 				Children: nil,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 6,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 6,
 			}, p.pos + closeIndex + 6
 		}
 	}
@@ -1014,8 +1039,8 @@ func (p *Parser) tryMonospace() (*Node, int) {
 				Type:     NodeMonospace,
 				Text:     "`" + innerContent + "`",
 				Children: nil,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 4,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 4,
 			}, p.pos + closeIndex + 4
 		}
 	}
@@ -1030,8 +1055,8 @@ func (p *Parser) tryMonospace() (*Node, int) {
 				Type:     NodeMonospace,
 				Text:     text,
 				Children: nil, // No children - monospace is literal
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 2,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
 		}
 	}
@@ -1081,8 +1106,8 @@ func (p *Parser) trySubscript() (*Node, int) {
 			return &Node{
 				Type:     NodeSubscript,
 				Text:     text,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 2,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
 		}
 	}
@@ -1106,8 +1131,8 @@ func (p *Parser) trySuperscript() (*Node, int) {
 			return &Node{
 				Type:     NodeSuperscript,
 				Text:     text,
-				StartPos:  p.pos,
-				Position:  p.pos + closeIndex + 2,
+				StartPos: p.pos,
+				Position: p.pos + closeIndex + 2,
 			}, p.pos + closeIndex + 2
 		}
 	}
@@ -1227,7 +1252,7 @@ func (p *Parser) tryIndexTerm() (*Node, int) {
 			terms := p.parseIndexTerms(content)
 			if len(terms) > 0 && terms[0] != "" {
 				node := &Node{
-					Type:              NodeIndexTerm,
+					Type:               NodeIndexTerm,
 					IndexTermPrimary:   terms[0],
 					IndexTermConcealed: true,
 					StartPos:           p.pos,
@@ -1254,7 +1279,7 @@ func (p *Parser) tryIndexTerm() (*Node, int) {
 
 			if content != "" {
 				return &Node{
-					Type:              NodeIndexTerm,
+					Type:               NodeIndexTerm,
 					IndexTermPrimary:   content,
 					IndexTermConcealed: false,
 					Text:               content, // Flow terms show the text
@@ -1357,23 +1382,22 @@ func (p *Parser) tryInlinePassThrough() (*Node, int) {
 
 // DebugTest function for troubleshooting
 func DebugTestInline() {
-    tests := []string{
-        `**Bold** uses **text**`,
-        `* **Bold** uses **text**`,
-    }
-    
-    for _, text := range tests {
-        parser := NewParser(text)
-        nodes := parser.Parse()
-        
-        fmt.Printf("\nInput: %q\n", text)
-        fmt.Printf("Node count: %d\n", len(nodes))
-        for i, node := range nodes {
-            fmt.Printf("  [%d] Type=%v, Text=%q\n", i, node.Type, node.Text)
-        }
-    }
-}
+	tests := []string{
+		`**Bold** uses **text**`,
+		`* **Bold** uses **text**`,
+	}
 
+	for _, text := range tests {
+		parser := NewParser(text)
+		nodes := parser.Parse()
+
+		fmt.Printf("\nInput: %q\n", text)
+		fmt.Printf("Node count: %d\n", len(nodes))
+		for i, node := range nodes {
+			fmt.Printf("  [%d] Type=%v, Text=%q\n", i, node.Type, node.Text)
+		}
+	}
+}
 
 // tryInlineMacro tries to parse inline macros of the form macro:[content].
 // Handles: pass:[content], menu:[path], btn:[label], kbd:[key], link:[url] (inline image)
@@ -1388,12 +1412,12 @@ func (p *Parser) tryInlineMacro() (*Node, int) {
 	// Check for pattern: macro:[...]
 	// Valid macros: pass, raw (passthrough), menu, btn, kbd, link (inline image)
 	validMacros := map[string]NodeType{
-		"pass": NodePassThrough,     // pass:[...] passes through with substitutions
-		"raw":  NodeRawPassThrough,  // raw:[...] passes through without substitutions
+		"pass": NodePassThrough,    // pass:[...] passes through with substitutions
+		"raw":  NodeRawPassThrough, // raw:[...] passes through without substitutions
 		"menu": NodeMenu,
 		"btn":  NodeButton,
 		"kbd":  NodeMonospace, // kbd uses monospace styling
-		"link": NodeImage,      // link:[url] is inline image syntax
+		"link": NodeImage,     // link:[url] is inline image syntax
 	}
 
 	for macroName, nodeType := range validMacros {
@@ -1409,7 +1433,7 @@ func (p *Parser) tryInlineMacro() (*Node, int) {
 		}
 
 		// Extract content between [ and ]
-		content := s[len(prefix):len(prefix)+closeIndex]
+		content := s[len(prefix) : len(prefix)+closeIndex]
 		endPos := p.pos + len(prefix) + closeIndex + 1
 
 		// For link:[url], create an image node
@@ -1519,12 +1543,12 @@ func (p *Parser) tryFootnote() (*Node, int) {
 	endPos := p.pos + closeBracket + 1
 
 	return &Node{
-		Type:         NodeFootnote,
-		FootnoteID:   footnoteID,
-		FootnoteText: footnoteText,
+		Type:          NodeFootnote,
+		FootnoteID:    footnoteID,
+		FootnoteText:  footnoteText,
 		FootnoteIndex: 0, // Will be assigned during document processing
-		StartPos:     p.pos,
-		Position:     endPos,
+		StartPos:      p.pos,
+		Position:      endPos,
 	}, endPos
 }
 
@@ -1598,11 +1622,11 @@ func (p *Parser) tryIcon() (*Node, int) {
 	endPos := p.pos + closeBracket + 1
 
 	return &Node{
-		Type:     NodeIcon,
-		IconName: iconName,
-		IconSize: iconSize,
+		Type:      NodeIcon,
+		IconName:  iconName,
+		IconSize:  iconSize,
 		IconAttrs: attrs,
-		StartPos: p.pos,
-		Position: endPos,
+		StartPos:  p.pos,
+		Position:  endPos,
 	}, endPos
 }

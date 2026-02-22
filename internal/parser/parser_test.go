@@ -7,6 +7,40 @@ import (
 	"github.com/haimiyahya/asciidoc-parser-go/internal/ast"
 )
 
+// ExampleNewParserFromString demonstrates basic parsing of AsciiDoc source.
+func ExampleNewParserFromString() {
+	source := `= Document Title
+
+This is a paragraph with *bold* and _italic_ text.
+
+* First item
+* Second item
+* Third item
+`
+
+	p, err := NewParserFromString(source)
+	if err != nil {
+		panic(err)
+	}
+
+	doc, err := p.Parse()
+	if err != nil {
+		panic(err)
+	}
+
+	// Access document header
+	if doc.Header != nil {
+		_ = doc.Header.Title
+	}
+
+	// Iterate through blocks
+	for _, block := range doc.Blocks {
+		_ = block.Type()
+	}
+
+	// Output:
+}
+
 func TestParser(t *testing.T) {
 	// Minimal placeholder test - will be expanded
 	// This ensures the test file compiles

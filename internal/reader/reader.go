@@ -6,6 +6,22 @@
 //   - Minimal backtracking with lookahead capabilities
 //   - Context-aware line tracking (file, line number, position)
 //
+// # Basic Usage
+//
+//	r := reader.NewReader("= Document Title\n\nSome content")
+//	for r.HasMoreLines() {
+//	    line, _ := r.NextLine()
+//	    fmt.Println(line)
+//	}
+//
+// # Reader Options
+//
+//	r := reader.NewReader(source,
+//	    reader.WithFile("document.adoc"),
+//	    reader.WithDir("/path/to/docs"),
+//	    reader.WithStartingLine(1),
+//	)
+//
 // Reference: https://github.com/asciidoctor/asciidoctor/blob/main/lib/asciidoctor/reader.rb
 package reader
 
@@ -458,7 +474,7 @@ func (r *Reader) SkipCommentLines() int {
 				break
 			}
 		}
-			r.Advance()
+		r.Advance()
 		skipped++
 	}
 	return skipped

@@ -157,16 +157,12 @@ jobs:
           find . -type f -o -type d | sort
           echo ""
           # Move all files from subdirectories to current directory
-          for dir in */; do
-            dir="${dir%/}"
-            for file in "${dir}"/*; do
-              if [ -f "$file" ]; then
-                base=$(basename "$file")
-                # If a directory with same name exists, remove it first
-                [ -d "$base" ] && rm -rf "$base"
-                mv "$file" .
-              fi
-            done
+          # Using find to avoid glob issues
+          find . -mindepth 2 -type f -print0 | while IFS= read -r -d '' file; do
+            base=$(basename "$file")
+            # If a directory with same name exists, remove it first
+            [ -d "$base" ] && rm -rf "$base"
+            mv "$file" .
           done
           # Remove all empty subdirectories
           find . -mindepth 1 -type d -delete

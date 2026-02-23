@@ -156,12 +156,17 @@ jobs:
           echo "Directory structure:"
           find . -type f -o -type d | sort
           echo ""
-          # Find all files in subdirectories and move them to current directory
-          # Artifact names are already unique, so no duplicate handling needed
+          # Move all files from subdirectories to current directory
           for dir in */; do
-            if [ -f "${dir}${dir%/}" ]; then
-              mv "${dir}${dir%/}" .
-            fi
+            dir="${dir%/}"
+            for file in "${dir}"/*; do
+              if [ -f "$file" ]; then
+                base=$(basename "$file")
+                # If a directory with same name exists, remove it first
+                [ -d "$base" ] && rm -rf "$base"
+                mv "$file" .
+              fi
+            done
           done
           # Remove all empty subdirectories
           find . -mindepth 1 -type d -delete

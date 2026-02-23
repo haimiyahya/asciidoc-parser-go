@@ -95,19 +95,9 @@ jobs:
             goarch: amd64
             binary: asciidoc
             ext: ''
-          - name: asciidoc-darwin-arm64
-            goos: darwin
-            goarch: arm64
-            binary: asciidoc
-            ext: ''
           - name: asciidoc-lsp-darwin-amd64
             goos: darwin
             goarch: amd64
-            binary: asciidoc-lsp
-            ext: ''
-          - name: asciidoc-lsp-darwin-arm64
-            goos: darwin
-            goarch: arm64
             binary: asciidoc-lsp
             ext: ''
     steps:
@@ -148,26 +138,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+          pattern: '*'
+          merge-multiple: true
 
-      - name: Prepare release assets
+      - name: List artifacts
         run: |
-          cd artifacts
-          # Show structure for debugging
-          echo "Directory structure:"
-          find . -type f -o -type d | sort
-          echo ""
-          # Move all files from subdirectories to current directory
-          # Using find to avoid glob issues
-          find . -mindepth 2 -type f -print0 | while IFS= read -r -d '' file; do
-            base=$(basename "$file")
-            # If a directory with same name exists, remove it first
-            [ -d "$base" ] && rm -rf "$base"
-            mv "$file" .
-          done
-          # Remove all empty subdirectories
-          find . -mindepth 1 -type d -delete
-          echo "Final structure:"
-          ls -la
+          echo "Artifact contents:"
+          ls -la artifacts/
 
       - name: Generate checksums
         run: |
@@ -206,13 +183,17 @@ jobs:
             Download the binary for your platform, make it executable (Linux/macOS), and place it in your PATH.
 
             ```bash
-            # Linux/macOS (Intel)
-            chmod +x asciidoc-linux-amd64  # or asciidoc-darwin-amd64
+            # Linux (Intel/AMD64)
+            chmod +x asciidoc-linux-amd64
             mv asciidoc-linux-amd64 /usr/local/bin/asciidoc
 
-            # macOS (Apple Silicon M1/M2/M3)
-            chmod +x asciidoc-darwin-arm64
-            mv asciidoc-darwin-arm64 /usr/local/bin/asciidoc
+            # Linux (ARM64)
+            chmod +x asciidoc-linux-arm64
+            mv asciidoc-linux-arm64 /usr/local/bin/asciidoc
+
+            # macOS (Intel)
+            chmod +x asciidoc-darwin-amd64
+            mv asciidoc-darwin-amd64 /usr/local/bin/asciidoc
 
             # Windows
             # Rename asciidoc-windows-amd64.exe to asciidoc.exe and add to PATH
